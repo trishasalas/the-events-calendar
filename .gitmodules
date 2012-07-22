@@ -1,0 +1,3 @@
+[submodule "vendor/appstore"]
+	path = vendor/appstore
+	url = https://github.com/wpappstore/store-for-product-integration.git
