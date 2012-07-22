@@ -188,9 +188,13 @@ if ( !class_exists( 'TribeEvents' ) ) {
 			require_once( 'tribe-debug-bar.class.php' );
 
 			// App Shop
-			if (!defined("TRIBE_DISABLE_SHOP") || TRIBE_DISABLE_SHOP !== true ){
-				require_once( 'tribe-app-shop.class.php' );
-			}
+//			if (!defined("TRIBE_DISABLE_SHOP") || TRIBE_DISABLE_SHOP !== true ){
+//				require_once( 'tribe-app-shop.class.php' );
+//			}
+
+			// WP App Store integration
+
+			require_once( $this->pluginPath.'vendor/appstore/wp-app-store-integration.php' );
 
 		}
 
