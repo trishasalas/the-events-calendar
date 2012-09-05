@@ -149,7 +149,7 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		 * @return void
 		 */
 		public function initAddon() {
-			$plugins['bkjaSKJ'] = array( 'plugin_name' => static::$pluginName, 'required_version' => static::$requiredTecVersion, 'current_version' => static::$currentVersion, 'plugin_dir_file' => static::$pluginFilePath );
+			$plugins[] = array( 'plugin_name' => static::$pluginName, 'required_version' => static::$requiredTecVersion, 'current_version' => static::$currentVersion, 'plugin_dir_file' => static::$pluginFilePath );
 			return $plugins;
 		}
 		 
@@ -188,8 +188,8 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		 *
 		 * @return string The origin slug for a given importer.
 		 */
-		private static function addEventOrigin() {
-			return self::$eventOrigin;
+		public static function addEventOrigin() {
+			return static::$eventOrigin;
 		}
 		 
 		
