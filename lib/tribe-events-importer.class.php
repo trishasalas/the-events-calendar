@@ -24,23 +24,73 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		 * The singleton instance of the class.
 		 * @var object $instance
 		 */
-		private static $instance;
+		protected static $instance;
+		
+		/**
+		 * The child's classname.
+		 * @static
+		 * @var string $className
+		 */
+		protected static $className;
+		
+		/**
+		 * The child plugin name.
+		 * @static
+		 * @var string $pluginName
+		 */
+		protected static $pluginName;
+		
+		/**
+		 * The required TEC version.
+		 * @static
+		 * @var string $requiredTecVersion
+		 */
+		protected static $requiredTecVersion;
+		
+		/**
+		 * The plugin's current version.
+		 * @static
+		 * @var string $currentVersion
+		 */
+		protected static $currentVersion;
+		
+		/**
+		 * The path to the plugin's main file.
+		 * @static
+		 * @var string $pluginFilePath
+		 */
+		protected static $pluginFilePath;
 		
 		
 		
 		
 		/**
-		 * Singleton method.
+		 * Must be defined as a singleton method by the child class.
 		 *
 		 * @static
 		 * @return self
 		 */
-		private static function instance() {
-			if ( !is_a( self::$instance, __CLASS__ ) ) {
-				self::$instance = new self();
-			}
-			return self::$instance;
-		}
+		abstract static function instance();
+		
+		/**
+		 * The method used by the child class to add WordPress actions.
+		 *
+		 * @since 0.1
+		 * @author PaulHughes01
+		 *
+		 * @return void
+		 */
+		abstract protected function addActions();
+		
+		/**
+		 * The method used by the child class to add WordPress filters.
+		 *
+		 * @since 0.1
+		 * @author PaulHughes01
+		 *
+		 * @return void
+		 */
+		abstract protected function addFilters();
 		
 		/**
 		 * Abstract method that is used to get event data from a source.
@@ -73,16 +123,46 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		abstract protected function setEventsData( $eventsData );
 		
 		/**
-		 * The method used to add the actions necessary for the class to work.
-		 * This can be overridden by a child class, but it is highly recommended that it incorporate
-		 * parent::addActions() so that these essential ones are included. :-p
+		 * The class constructor function.
 		 *
 		 * @since 0.1
 		 * @author PaulHughes01
 		 *
 		 * @return void
 		 */
-		protected function addActions() {
+		protected function __construct() {
+			$this->className = get_class( $this );
+			
+			$this->_addActions();
+			$this->_addFilters();
+			
+			$this->addActions();
+			$this->addFilters();
+		}
+		
+		/**
+		 * The function used to compare versions and initialize the addon.
+		 *
+		 * @since 0.1
+		 * @author PaulHughes01
+		 *
+		 * @return void
+		 */
+		public function initAddon() {
+			$plugins['bkjaSKJ'] = array( 'plugin_name' => static::$pluginName, 'required_version' => static::$requiredTecVersion, 'current_version' => static::$currentVersion, 'plugin_dir_file' => static::$pluginFilePath );
+			return $plugins;
+		}
+		 
+		
+		/**
+		 * The method used to add the actions necessary for the class to work.
+		 *
+		 * @since 0.1
+		 * @author PaulHughes01
+		 *
+		 * @return void
+		 */
+		protected function _addActions() {
 		
 		}
 		
@@ -96,7 +176,7 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		 *
 		 * @return void
 		 */
-		protected function addFilters() {
+		protected function _addFilters() {
 			add_filter( 'tribe-post-origin', array( $this, 'addEventOrigin' ) );
 		}
 		
