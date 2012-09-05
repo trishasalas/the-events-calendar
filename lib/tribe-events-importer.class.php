@@ -61,6 +61,20 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		 */
 		protected static $pluginFilePath;
 		
+		/**
+		 * The name of the Import Page.
+		 * @static
+		 * @var string $importPageName
+		 */
+		protected static $importPageName;
+		
+		/**
+		 * The plugin slug, used in various places.
+		 * @static
+		 * @var string $pluginSlug
+		 */
+		protected static $pluginSlug;
+		
 		
 		
 		
@@ -123,6 +137,16 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		abstract protected function setEventsData( $eventsData );
 		
 		/**
+		 * Create the import submenu page.
+		 *
+		 * @since 0.1
+		 * @author PaulHughes01
+		 *
+		 * @return void
+		 */
+		abstract public function doImportPage();
+		
+		/**
 		 * The class constructor function.
 		 *
 		 * @since 0.1
@@ -141,20 +165,6 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		}
 		
 		/**
-		 * The function used to compare versions and initialize the addon.
-		 *
-		 * @since 0.1
-		 * @author PaulHughes01
-		 *
-		 * @return void
-		 */
-		public function initAddon() {
-			$plugins[] = array( 'plugin_name' => static::$pluginName, 'required_version' => static::$requiredTecVersion, 'current_version' => static::$currentVersion, 'plugin_dir_file' => static::$pluginFilePath );
-			return $plugins;
-		}
-		 
-		
-		/**
 		 * The method used to add the actions necessary for the class to work.
 		 *
 		 * @since 0.1
@@ -163,7 +173,7 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		 * @return void
 		 */
 		protected function _addActions() {
-		
+			add_action( 'admin_menu', array( $this, 'addImportPage' ) );
 		}
 		
 		/**
@@ -181,7 +191,17 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		}
 		
 		/**
-		 * The method used to set the event origin.
+		 * The function used to compare versions and initialize the addon.
+		 *
+		 * @since 0.1
+		 * @author PaulHughes01
+		 *
+		 * @return void
+		 */
+		public function initAddon() {
+			$plugins[] = array( 'plugin_name' => static::$pluginName, 'required_version' => static::$requiredTecVersion, 'current_version' => static::$currentVersion, 'plugin_dir_file' => static::$pluginFilePath );
+			return $plugins;
+		}
 		
 		/**
 		 * The method is used to add the event origin slug to the event's audit trail.
@@ -191,7 +211,19 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		public static function addEventOrigin() {
 			return static::$eventOrigin;
 		}
-		 
+		
+		/**
+		 * Add import submenu page and set the callback function to the abstract
+		 * method doImportPage().
+		 *
+		 * @since 0.1
+		 * @author PaulHughes01
+		 *
+		 * @return void
+		 */
+		public function addImportPage() {
+			add_submenu_page( '/edit.php?post_type=' . TribeEvents::POSTTYPE, static::$importPageName, static::$importPageName, 'edit_posts', static::$pluginSlug, array( $this, 'doImportPage' ) );
+		}
 		
 		/**
 		 * Class method that is used to save a standardized events array (see the setEventsData() method).
