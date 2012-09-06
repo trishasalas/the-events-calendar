@@ -55,6 +55,20 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		protected static $currentVersion;
 		
 		/**
+		 * The path to the plugin's main directory.
+		 * @static
+		 * @var string $pluginPath
+		 */
+		protected static $pluginPath;
+		
+		/**
+		 * The URL of the plugin's main directory.
+		 * @static
+		 * @var string $pluginUrl
+		 */
+		protected static $pluginUrl;
+		
+		/**
 		 * The path to the plugin's main file.
 		 * @static
 		 * @var string $pluginFilePath
