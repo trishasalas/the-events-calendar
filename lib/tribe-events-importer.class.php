@@ -89,6 +89,11 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		 */
 		protected static $pluginSlug;
 		
+		/**
+		 * Any errors that may have come up during a function.
+		 * @var array $errors
+		 */
+		protected $errors;
 		
 		
 		
@@ -188,6 +193,8 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		 */
 		protected function _addActions() {
 			add_action( 'admin_menu', array( $this, 'addImportPage' ) );
+			add_action( 'admin_head', array( $this, 'getEventsData' ) );
+			add_action( 'admin_notices', array( $this, 'displayErrors' ) );
 		}
 		
 		/**
@@ -227,7 +234,7 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		}
 		
 		/**
-		 * Add import submenu page and set the callback function to the abstract
+		 * Add import submenu page and set the callback function to the abstract.
 		 * method doImportPage().
 		 *
 		 * @since 0.1
@@ -237,6 +244,24 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		 */
 		public function addImportPage() {
 			add_submenu_page( '/edit.php?post_type=' . TribeEvents::POSTTYPE, static::$importPageName, static::$importPageName, 'edit_posts', static::$pluginSlug, array( $this, 'doImportPage' ) );
+		}
+		
+		/**
+		 * Display errors messages.
+		 *
+		 * @since 0.1
+		 * @author PaulHughes01
+		 *
+		 * @return void
+		 */
+		public function displayErrors() {
+			if ( isset( $this->errors ) && is_array( $this->errors ) ) {
+				foreach ( $this->errors as $error ) {
+					echo '<div class="error">';
+					echo '<p>' . $error . '</p>';
+					echo '</div>';
+				}
+			}
 		}
 		
 		/**
