@@ -193,7 +193,6 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		 */
 		protected function _addActions() {
 			add_action( 'admin_menu', array( $this, 'addImportPage' ) );
-			add_action( 'admin_head', array( $this, 'getEventsData' ) );
 			add_action( 'admin_notices', array( $this, 'displayErrors' ) );
 		}
 		
@@ -261,6 +260,36 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 					echo '<p>' . $error . '</p>';
 					echo '</div>';
 				}
+			}
+		}
+		
+		/**
+		 * Displays a checkbox list of possible events to import.
+		 *
+		 * @since 0.1
+		 * @author PaulHughes01
+		 *
+		 * @param array $eventsData An array of event titles, dates, and unique ids (specific to the importer).
+		 * @return void
+		 */
+		protected function displayPossibleEventsList( $eventsData ) {
+			if ( is_array( $eventsData ) ) {
+				do_action( 'tribe_events_before_possible_import_list' );
+				echo '<div id="tribe-events-possible-import-events-wrapper">';
+				echo apply_filters( 'tribe-events-possible-import-form', '<form method="post">' );
+				echo '<ul id="tribe-events-possible-import-events-list">';
+				$sep = ' - ';
+				foreach ( $eventsData as $event ) {
+					if ( $event['startDate'] == $event['endDate'] || $event['endDate'] == '' ) {
+						$event['endDate'] = '';
+						$sep = '';
+					}
+					echo '<li><input type="checkbox" name="tribe_events_events_to_import[]" value="' . $event['uid'] . '" /> <strong>' . $event['startDate'] . $sep . $event['endDate'] . '</strong> ' . $event['title'] . '</li>';
+				}
+				echo '</ul>';
+				echo '</form>';
+				echo '</div>';
+				do_action( 'tribe_events_after_possible_import_list' );
 			}
 		}
 		
