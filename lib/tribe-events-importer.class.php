@@ -278,8 +278,8 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 				echo '<div id="tribe-events-possible-import-events-wrapper">';
 				echo apply_filters( 'tribe-events-possible-import-form', '<form method="post">' );
 				echo '<ul id="tribe-events-possible-import-events-list">';
-				$sep = ' - ';
 				foreach ( $eventsData as $event ) {
+					$sep = ' - ';
 					if ( $event['startDate'] == $event['endDate'] || $event['endDate'] == '' ) {
 						$event['endDate'] = '';
 						$sep = '';
@@ -287,6 +287,7 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 					echo '<li><input type="checkbox" name="tribe_events_events_to_import[]" value="' . $event['uid'] . '" /> <strong>' . $event['startDate'] . $sep . $event['endDate'] . '</strong> ' . $event['title'] . '</li>';
 				}
 				echo '</ul>';
+				echo '<input id="tribe-events-' . static::$pluginSlug . '-import-submit" name="tribe-events-' . static::$pluginSlug . '-import-submit" class="button-primary" type="submit" value="' . apply_filters( 'tribe_events_importer_import_events_button', __( 'Import Selected Events', self::$pluginSlug ) ) . '" />';
 				echo '</form>';
 				echo '</div>';
 				do_action( 'tribe_events_after_possible_import_list' );
