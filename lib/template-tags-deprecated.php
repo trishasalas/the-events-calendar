@@ -581,5 +581,25 @@ if ( class_exists('TribeEvents') ) {
 		return tribe_get_venue_link( $postId, false );
 	}
 
+	function tribe_previous_event_link( $anchor = false )  {
+		_deprecated_function( __FUNCTION__, '2.1', 'echo tribe_the_prev_event_link( $anchor )' );
+		echo apply_filters('tribe_previous_event_link', tribe_get_prev_event_link( $anchor ));
+	}
+	function tribe_next_event_link( $anchor = false )  {
+		_deprecated_function( __FUNCTION__, '2.1', 'echo tribe_the_next_event_link( $anchor )' );
+		echo apply_filters('tribe_next_event_link', tribe_get_next_event_link( $anchor ));
+	}
+	if( !function_exists('display_day_title')) {
+		function display_day_title( $day, $monthView, $date ) {
+			_deprecated_function( __FUNCTION__, '2.1', 'echo tribe_get_display_day_title( $day, $monthView, $date )' );
+			return tribe_get_display_day_title( $day, $monthView, $date );
+		}
+	}
+	if( !function_exists('display_day')) {
+		function display_day( $day, $monthView ) {
+			_deprecated_function( __FUNCTION__, '2.1', 'tribe_the_display_day( $day, $monthView )' );
+			tribe_the_display_day( $day, $monthView );
+		}
+	}
+
 }
-?>

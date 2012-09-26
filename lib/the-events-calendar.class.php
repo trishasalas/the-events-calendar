@@ -169,6 +169,7 @@ if ( !class_exists( 'TribeEvents' ) ) {
 			require_once( $this->pluginPath.'public/template-tags/venue.php' );
 			require_once( $this->pluginPath.'public/template-tags/date.php' );
 			require_once( $this->pluginPath.'public/template-tags/link.php' );
+			require_once( $this->pluginPath.'public/template-tags/widgets.php' );
 
 			// Load Advanced Functions
 			require_once( $this->pluginPath.'public/advanced-functions/event.php' );
@@ -182,6 +183,7 @@ if ( !class_exists( 'TribeEvents' ) ) {
 			require_once( 'widget-list.class.php' );
 			require_once( 'tribe-admin-events-list.class.php' );
 			require_once( 'tribe-date-utils.class.php' );
+			require_once( 'tribe-template-factory.class.php' );
 			require_once( 'tribe-templates.class.php' );
 			require_once( 'tribe-event-api.class.php' );
 			require_once( 'tribe-event-query.class.php' );
@@ -222,6 +224,7 @@ if ( !class_exists( 'TribeEvents' ) ) {
 		protected function addActions() {
 			add_action( 'init', array( $this, 'init'), 10 );
 			add_action( 'template_redirect', array( $this, 'loadStyle' ) );
+			add_action( 'wp_enqueue_scripts', array( $this, 'loadStyle' ) );
 			add_action( 'admin_menu', array( $this, 'addEventBox' ) );	
 			add_action( 'wp_insert_post', array( $this, 'addPostOrigin' ), 10, 2 );		
 			add_action( 'save_post', array( $this, 'addEventMeta' ), 15, 2 );
@@ -230,7 +233,7 @@ if ( !class_exists( 'TribeEvents' ) ) {
 			add_action( 'save_post', array( $this, 'addToPostAuditTrail' ), 10, 2 );
 			add_action( 'save_post', array( $this, 'publishAssociatedTypes'), 25, 2 );
 			add_action( 'pre_get_posts', array( $this, 'setDate' ));
-			add_action( 'wp', array( $this, 'setDisplay' ));
+			add_action( 'parse_query', array( $this, 'setDisplay' ));
 			add_action( 'tribe_events_post_errors', array( 'TribeEventsPostException', 'displayMessage' ) );
 			add_action( 'tribe_settings_top', array( 'TribeEventsOptionsException', 'displayMessage') );
 			add_action( 'admin_enqueue_scripts', array( $this, 'addAdminScriptsAndStyles' ) );
@@ -312,6 +315,7 @@ if ( !class_exists( 'TribeEvents' ) ) {
 			$this->maybeMigrateDatabase();
 			$this->maybeRenameOptions();
 			$this->maybeSetTECVersion();
+			// TribeEventsQuery::deregister();
 		}
 
 		public function maybeMigrateDatabase( ) {
@@ -463,7 +467,7 @@ if ( !class_exists( 'TribeEvents' ) ) {
 				),
 				'info-box-description' => array(
 					'type' => 'html',
-					'html' => '<p>' . __('For all of Modern Tribe\'s paid Add-ons, the license key you received when completing your purchase is what grants you access to future updates + support. Keep in mind that you do not have to enter your key below for the plugins to work! All functionality is available whether or not a key is present. However, you will not receive prompts for automatic updates without a key in place...and our support team won\'t be able to help you until it is added and current, either.</p><p>Each plugin/add-on has its own unique license key. Simply paste the keys into their appropriate fields on the list below, and give it a moment to validate. When the green expiration date appears alongside a "Valid" message, you\'ll be set. If you\'re seeing red message instead, either telling you the key isn\'t valid or is out of installs, it means your key was not accepted. Visit <a href="http://tri.be">http://tri.be</a>, log in and navigate to <i>Account Central -> Licenses</i> on the tri.be site to see if the key is tied to another site or past its expiration date. For more on automatic updates and using your license key, please <a href="http://tri.be/updating-the-plugin/">see this blog post</a>.</p><p>Not seeing an update but expecting one? In WordPress go to <i>Dashboard -> Updates</i> and click "Check Again".', 'tribe-events-calendar') . '</p>',
+					'html' => '<p>' . __('The license key you received when completing your purchase will grant you access to support and updates. You do not need to enter the key below for the plugins to work, but you will need to enter it to get automatic updates, and our support team won\'t be able to help you out unless it is added and current.</p><p>Each plugin/add-on has its own unique license key. Simply paste the key into its appropriate field on the list below, and give it a moment to validate. You know you\'re set when a green expiration date appears alongside a "valid" message.</p><p>If you\'re seeing a red message telling you that your key isn\'t valid or is out of installs, it means that your key was not accepted. Visit <a href="http://tri.be">http://tri.be</a>, log in and navigate to <i>Account Central > Licenses</i> on the tri.be site to see if the key is tied to another site or past its expiration date. For more on automatic updates and using your license key, please see <a href="http://tri.be/updating-the-plugin/">this blog post</a>.</p><p>Not seeing an update but expecting one? In WordPress go to <i>Dashboard > Updates</i> and click "Check Again".', 'tribe-events-calendar') . '</p>',
 				),
 				'info-end' => array(
 					'type' => 'html',
@@ -1267,23 +1271,22 @@ if ( !class_exists( 'TribeEvents' ) ) {
 		}
 
 		public function loadStyle() {
-
 			$eventsURL = trailingslashit( $this->pluginUrl ) . 'resources/';
-			wp_enqueue_script('tribe-events-pjax', $eventsURL.'jquery.pjax.js', array('jquery') );			
-			wp_enqueue_script('tribe-events-calendar-script', $eventsURL.'events.js', array('jquery', 'tribe-events-pjax') );
+			wp_enqueue_script('tribe-events-pjax', $eventsURL . 'jquery.pjax.js', array('jquery') );
+			wp_enqueue_script('tribe-events-calendar-script', $eventsURL.'events.js', array('query', 'tribe-events-pjax') );
 			// is there an events.css file in the theme?
-			if ( $user_style = locate_template(array('events/events.css')) ) {
-				$styleUrl = str_replace( get_theme_root(), get_theme_root_uri(), $user_style );
-			}
-			else {
-				$styleUrl = $eventsURL.'events.css';
-			}
+			$event_file = 'events.css';
+			$styleUrl = locate_template( array( 'events/' . $event_file ) ) ?
+				str_replace( get_theme_root(), get_theme_root_uri(), locate_template( array( 'events/' . $event_file ) ) ) : 
+				$eventsURL . $event_file;
 			$styleUrl = apply_filters( 'tribe_events_stylesheet_url', $styleUrl );
-
 			if ( $styleUrl )
 				wp_enqueue_style('tribe-events-calendar-style', $styleUrl);
+				
+			wp_register_style('custom-jquery-styles', $eventsURL . 'smoothness/jquery-ui-1.8.23.custom.css' );
+			wp_register_style('select2-css', $eventsURL . 'select2/select2.css' );
+			wp_register_script('select2', $eventsURL . 'select2/select2.min.js', 'jquery' );
 		}
-
 
 		public function setDate($query) {
 			if ( $query->get('eventDisplay') == 'month' ) {
@@ -1654,7 +1657,7 @@ if ( !class_exists( 'TribeEvents' ) ) {
 		 */
 		public function fullAddress( $postId=null, $includeVenueName=false ) {
 			ob_start();
-			load_template( TribeEventsTemplates::getTemplateHierarchy( 'full-address' ), false );
+			load_template( TribeEventsTemplates::getTemplateHierarchy( 'address', 'modules' ), false );
 			$address = ob_get_contents();
 			ob_end_clean();
 			return $address;
@@ -1784,8 +1787,8 @@ if ( !class_exists( 'TribeEvents' ) ) {
 			if ( !current_user_can( 'edit_tribe_events' ) )
 				return;
 
-			$_POST['Organizer'] = stripslashes_deep($_POST['organizer']);
-			$_POST['Venue'] = stripslashes_deep($_POST['venue']);
+			$_POST['Organizer'] = isset($_POST['organizer']) ? stripslashes_deep($_POST['organizer']) : null;
+			$_POST['Venue'] = isset($_POST['venue']) ? stripslashes_deep($_POST['venue']) : null;
 
 
 			/**
@@ -2312,9 +2315,9 @@ if ( !class_exists( 'TribeEvents' ) ) {
 				<div id='eventDetails' class="inside eventForm">
 					<table cellspacing="0" cellpadding="0" id="EventInfo" class="VenueInfo">
 					<?php
-					$venue_meta_box_template = $this->pluginPath . 'admin-views/venue-meta-box.php';
-					$venue_meta_box_template = apply_filters('tribe_events_venue_meta_box_template', $venue_meta_box_template);
-					include( $venue_meta_box_template );
+					$venue_meta_box_template = apply_filters('tribe_events_venue_meta_box_template', $this->pluginPath . 'admin-views/venue-meta-box.php');
+					if( !empty($venue_meta_box_template) )
+						include( $venue_meta_box_template );
 					?>
 					</table>
 				</div>
@@ -2351,9 +2354,9 @@ if ( !class_exists( 'TribeEvents' ) ) {
 				<div id='eventDetails' class="inside eventForm">
 					<table cellspacing="0" cellpadding="0" id="EventInfo" class="OrganizerInfo">
 					<?php
-					$organizer_meta_box_template = $this->pluginPath . 'admin-views/organizer-meta-box.php';
-					$organizer_meta_box_template = apply_filters('tribe_events_organizer_meta_box_template', $organizer_meta_box_template);
-					include( $organizer_meta_box_template );
+					$organizer_meta_box_template = apply_filters('tribe_events_organizer_meta_box_template', $this->pluginPath . 'admin-views/organizer-meta-box.php');
+					if( !empty($organizer_meta_box_template) )
+						include( $organizer_meta_box_template );
 					?>
 					</table>
 				</div>
@@ -2439,7 +2442,6 @@ if ( !class_exists( 'TribeEvents' ) ) {
 		 */
 		public function previousMonth( $date ) {
 			$dateParts = split( '-', $date );
-
 			if ( $dateParts[1] == 1 ) {
 				$dateParts[0]--;
 				$dateParts[1] = "12";
@@ -2477,6 +2479,13 @@ if ( !class_exists( 'TribeEvents' ) ) {
 			$timestamp = mktime( 0, 0, 0, $dateParts[1], 1, $dateParts[0] );
 			return $monthNames[date( "F", $timestamp )] . " " . $dateParts[0];
 		}
+
+		public function getDateStringShortened( $date ) {
+			$monthNames = $this->monthNames();
+			$dateParts = split( '-', $date );
+			$timestamp = mktime( 0, 0, 0, $dateParts[1], 1, $dateParts[0] );
+			return $monthNames[date( "F", $timestamp )];
+		}
 		/**
 		 * echo the next tab index
 		 * @return void
@@ -2486,16 +2495,7 @@ if ( !class_exists( 'TribeEvents' ) ) {
 			$this->tabIndexStart++;
 		}
 
-		public function getEvents( $args = '' ) {
-			$tribe_ecp = TribeEvents::instance();
-			$defaults = array(
-				'posts_per_page' => tribe_get_option( 'postsPerPage', 10 ),
-				'post_type' => TribeEvents::POSTTYPE,
-				'orderby' => 'event_date',
-				'order' => 'ASC'
-			);
-
-			$args = wp_parse_args( $args, $defaults);
+		public function getEvents( $args = array() ) {
 			return TribeEventsQuery::getEvents($args);
 		}
 
@@ -2562,17 +2562,34 @@ if ( !class_exists( 'TribeEvents' ) ) {
 				AND ($wpdb->posts.ID != $id OR d1.meta_value != '$date')
 				ORDER BY TIMESTAMP(d1.meta_value) $order, ID $order
 				LIMIT 1";
+			$args = array(
+				'post_type' => self::POSTTYPE,
+				'post_status' => 'publish',
+				'post__not_in' => array( $post->ID ),
+				'order' => $order, 
+				'orderby' => 'TIMESTAMP(wp_postmeta.meta_value) ID',
+				'posts_per_page' => 1,
+				'meta_query' => array(
+					array(
+						'key' => '_EventStartDate',
+						'value' => $post->EventStartDate,
+						'type' => 'DATE'
+					)
+				)
+			);
+			// TODO: Finish rewriting this query to be WP_QUERY based
+			// TribeEventsQuery::deregister();
+			// $event_link = new WP_Query($args);
+			// print_r($event_link);
 
 			$results = $wpdb->get_row($eventsQuery, OBJECT);
 			if(is_object($results)) {
 				if ( !$anchor ) {
 					$anchor = $results->post_title;
-            } elseif ( strpos( $anchor, '%title%' ) !== false ) {
+	            } elseif ( strpos( $anchor, '%title%' ) !== false ) {
 					$anchor = preg_replace( '|%title%|', $results->post_title, $anchor );
 				}
-
-				echo '<a href='.tribe_get_event_link($results).'>'.$anchor.'</a>';
-
+				return apply_filters('tribe_events_get_event_link', '<a href='.tribe_get_event_link($results).'>'.$anchor.'</a>');
 			}
 		}
 
@@ -2638,7 +2655,7 @@ if ( !class_exists( 'TribeEvents' ) ) {
 			</tr>
 			<tr class="eventBritePluginPlug">
 				<td colspan="2">
-					<p><?php _e('Looking for additional functionality including recurring events, custom meta, community events, ticket sales and more?', 'tribe-events-calendar' ) ?> <?php printf( __('Check out the <a href="%s">available Add-Ons</a>.', 'tribe-events-calendar' ), TribeEvents::$tribeUrl.'shop/?ref=tec-event' ); ?></p>
+					<p><?php _e('Looking for additional functionality including recurring events, custom meta, community events, ticket sales and more?', 'tribe-events-calendar' ) ?> <?php printf( __('Check out the <a href="%s">available add-ons</a>.', 'tribe-events-calendar' ), TribeEvents::$tribeUrl.'shop/?ref=tec-event' ); ?></p>
 				</td>
 			</tr><?php
 		}
