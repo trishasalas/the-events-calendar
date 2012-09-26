@@ -95,6 +95,12 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		 */
 		protected $errors;
 		
+		/**
+		 * A basic array of possible events to import.
+		 * @var $possibleEvents
+		 */
+		protected $possibleEvents;
+		
 		
 		
 		/**
@@ -194,6 +200,8 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		protected function _addActions() {
 			add_action( 'admin_menu', array( $this, 'addImportPage' ) );
 			add_action( 'admin_notices', array( $this, 'displayErrors' ) );
+			
+			add_action( 'wp_ajax_tribe_events_' . static::$pluginSlug . '_get_possible_events', array( $this->ajaxGetPossibleEvents ) );
 		}
 		
 		/**
@@ -287,11 +295,30 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 					echo '<li><input type="checkbox" name="tribe_events_events_to_import[]" value="' . $event['uid'] . '" /> <strong>' . $event['startDate'] . $sep . $event['endDate'] . '</strong> ' . $event['title'] . '</li>';
 				}
 				echo '</ul>';
+				echo '<a href="" id="tribe-events-' . static::$pluginSlug . '-view-more-events" class="tribe-events-importer-view-more">' . apply_filters( 'tribe_events_importer_view_more_events_link', __( 'View more...' ) ) . '</a>';
 				echo '<input id="tribe-events-' . static::$pluginSlug . '-import-submit" name="tribe-events-' . static::$pluginSlug . '-import-submit" class="button-primary" type="submit" value="' . apply_filters( 'tribe_events_importer_import_events_button', __( 'Import Selected Events', self::$pluginSlug ) ) . '" />';
 				echo '</form>';
 				echo '</div>';
 				do_action( 'tribe_events_after_possible_import_list' );
 			}
+		}
+		
+		/**
+		 * Gets events using AJAX.
+		 *
+		 * @since 0.1
+		 * @author PaulHughes01
+		 *
+		 * @uses self::getEvents()
+		 * @return void
+		 */
+		public function ajaxGetPossibleEvents() {
+			$possible_events = $this->getEvents();
+			
+			$json_possible_events = json_encode( $possible_events );
+			
+			echo $json_possible_events;
+			die();
 		}
 		
 		/**

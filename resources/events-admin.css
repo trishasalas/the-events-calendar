@@ -179,3 +179,7 @@ td.tribe_message {padding-bottom: 10px !important;}
 .ui-dialog .ui-dialog-buttonpane .ui-dialog-buttonset {float: none !important; text-align: center;}
 .ui-button-text-only .ui-button-text {padding: .4em 1em;}
 .ui-button .ui-button-text {display: block; line-height: 1.4;}
+
+/* = Miscellaneous
+=============================================*/
+.tribe-events-importer-view-more { display: block; margin-bottom: 8px; }
