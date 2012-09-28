@@ -132,14 +132,30 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		abstract protected function addFilters();
 		
 		/**
+		 * Abstract method that processes the import form.
+		 *
+		 * @since 0.1
+		 * @author PaulHughes01
+		 */
+		abstract public function processImportForm();
+		
+		/**
 		 * Abstract method that is used to get event data from a source.
 		 * The source could be an HTTP request, an XML document, or any other number of types of sources.
-		 * It should return data that can be  parsed by the setEventData() method.
+		 * It should return data that can be parsed by the setEventData() method.
 		 *
 		 * @since 0.1
 		 * @author PaulHughes01
 		 */
 		abstract protected function getEventsData();
+		
+		/**
+		 * Parse into events list.
+		 *
+		 * @param mixed $eventsData
+		 * @return array For the events list.
+		 */
+		abstract protected function parseIntoEventsList( $eventsData );
 		
 		/**
 		 * Abstract method that is used to set a given event's data to a standardized 
@@ -201,7 +217,7 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 			add_action( 'admin_menu', array( $this, 'addImportPage' ) );
 			add_action( 'admin_notices', array( $this, 'displayErrors' ) );
 			
-			add_action( 'wp_ajax_tribe_events_' . static::$pluginSlug . '_get_possible_events', array( $this->ajaxGetPossibleEvents ) );
+			add_action( 'wp_ajax_' . static::$pluginSlug . '_get_possible_events', array( $this, 'ajaxGetPossibleEvents' ) );
 		}
 		
 		/**
@@ -285,23 +301,37 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 				do_action( 'tribe_events_before_possible_import_list' );
 				echo '<div id="tribe-events-possible-import-events-wrapper">';
 				echo apply_filters( 'tribe-events-possible-import-form', '<form method="post">' );
+				echo '<div id="tribe-events-possible-import-events-list-wrapper">';
 				echo '<ul id="tribe-events-possible-import-events-list">';
-				foreach ( $eventsData as $event ) {
-					$sep = ' - ';
-					if ( $event['startDate'] == $event['endDate'] || $event['endDate'] == '' ) {
-						$event['endDate'] = '';
-						$sep = '';
-					}
-					echo '<li><input type="checkbox" name="tribe_events_events_to_import[]" value="' . $event['uid'] . '" /> <strong>' . $event['startDate'] . $sep . $event['endDate'] . '</strong> ' . $event['title'] . '</li>';
-				}
+				$this->buildPossibleEventsListItems( $eventsData );
 				echo '</ul>';
-				echo '<a href="" id="tribe-events-' . static::$pluginSlug . '-view-more-events" class="tribe-events-importer-view-more">' . apply_filters( 'tribe_events_importer_view_more_events_link', __( 'View more...' ) ) . '</a>';
+				echo '</div>';
+				echo '<div style="clear:left;">';
 				echo '<input id="tribe-events-' . static::$pluginSlug . '-import-submit" name="tribe-events-' . static::$pluginSlug . '-import-submit" class="button-primary" type="submit" value="' . apply_filters( 'tribe_events_importer_import_events_button', __( 'Import Selected Events', self::$pluginSlug ) ) . '" />';
+				echo '</div>';
 				echo '</form>';
 				echo '</div>';
 				do_action( 'tribe_events_after_possible_import_list' );
 			}
 		}
+		
+		/**
+		 * Builds and echoes each list item in the possible events list.
+		 *
+		 * @param array $eventsData
+		 * @return null
+		 */
+		protected function buildPossibleEventsListItems( $eventsData ) {
+			foreach ( $eventsData as $event ) {
+				$sep = ' - ';
+				if ( $event['startDate'] == $event['endDate'] || $event['endDate'] == '' ) {
+					$event['endDate'] = '';
+					$sep = '';
+				}
+				echo '<li><input type="checkbox" name="tribe_events_events_to_import[]" value="' . $event['uid'] . '" /> <strong>' . $event['startDate'] . $sep . $event['endDate'] . '</strong> ' . $event['title'] . '</li>';
+			}
+		}
+		 
 		
 		/**
 		 * Gets events using AJAX.
@@ -313,11 +343,11 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		 * @return void
 		 */
 		public function ajaxGetPossibleEvents() {
-			$possible_events = $this->getEvents();
+			$possible_events = $this->getEventsData();
 			
-			$json_possible_events = json_encode( $possible_events );
+			$possible_events_list = $this->parseIntoEventsList( $possible_events );
 			
-			echo $json_possible_events;
+			$this->buildPossibleEventsListItems( $possible_events_list );
 			die();
 		}
 		
