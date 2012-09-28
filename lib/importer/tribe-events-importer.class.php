@@ -8,7 +8,7 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 	/**
 	 * Abstract class that is extended to create individual importers.
 	 *
-	 * @since 0.1
+	 * @since 2.1
 	 * @author PaulHughes01
 	 */
 	abstract class Tribe_Events_Importer {
@@ -39,6 +39,13 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		 * @var string $pluginName
 		 */
 		protected static $pluginName;
+		
+		/**
+		 * The child plugin short name.
+		 * @static
+		 * @var string $pluginShortName
+		 */
+		protected static $pluginShortName;
 		
 		/**
 		 * The required TEC version.
@@ -114,7 +121,7 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		/**
 		 * The method used by the child class to add WordPress actions.
 		 *
-		 * @since 0.1
+		 * @since 2.1
 		 * @author PaulHughes01
 		 *
 		 * @return void
@@ -124,7 +131,7 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		/**
 		 * The method used by the child class to add WordPress filters.
 		 *
-		 * @since 0.1
+		 * @since 2.1
 		 * @author PaulHughes01
 		 *
 		 * @return void
@@ -134,7 +141,7 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		/**
 		 * Abstract method that processes the import form.
 		 *
-		 * @since 0.1
+		 * @since 2.1
 		 * @author PaulHughes01
 		 */
 		abstract public function processImportForm();
@@ -144,7 +151,7 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		 * The source could be an HTTP request, an XML document, or any other number of types of sources.
 		 * It should return data that can be parsed by the setEventData() method.
 		 *
-		 * @since 0.1
+		 * @since 2.1
 		 * @author PaulHughes01
 		 */
 		abstract protected function getEventsData();
@@ -169,7 +176,7 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		 * [eventAllDay], [eventHideFromUpcoming], [eventShowMapLink], [eventShowMap], [eventPostStatus]
 		 * [eventVenueId], [eventOrganizerId]
 		 *
-		 * @since 0.1
+		 * @since 2.1
 		 * @author PaulHughes01
 		 *
 		 * @param mixed $eventsData The raw data representing a list of events.
@@ -180,7 +187,7 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		/**
 		 * Create the import submenu page.
 		 *
-		 * @since 0.1
+		 * @since 2.1
 		 * @author PaulHughes01
 		 *
 		 * @return void
@@ -188,9 +195,17 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		abstract public function doImportPage();
 		
 		/**
+		 * Abstract function for writing the import page instructions.
+		 *
+		 * @since 2.1
+		 * @return void
+		 */
+		abstract public function importTabInstructions();
+		
+		/**
 		 * The class constructor function.
 		 *
-		 * @since 0.1
+		 * @since 2.1
 		 * @author PaulHughes01
 		 *
 		 * @return void
@@ -208,7 +223,7 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		/**
 		 * The method used to add the actions necessary for the class to work.
 		 *
-		 * @since 0.1
+		 * @since 2.1
 		 * @author PaulHughes01
 		 *
 		 * @return void
@@ -218,6 +233,8 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 			add_action( 'admin_notices', array( $this, 'displayErrors' ) );
 			
 			add_action( 'wp_ajax_' . static::$pluginSlug . '_get_possible_events', array( $this, 'ajaxGetPossibleEvents' ) );
+			add_action( 'tribe_importexport_content_tab_' . static::$pluginSlug, array( $this, 'generateImportTab' ) );
+			add_action( 'tribe_importexport_import_instructions_tab_' . static::$pluginSlug, array( $this, 'importTabInstructions' ) );
 		}
 		
 		/**
@@ -225,19 +242,20 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		 * This can be overridden by a child class, but it is highly recommended that it incorporate
 		 * parent::addFilters() so that these essential ones are included. :-p
 		 *
-		 * @since 0.1
+		 * @since 2.1
 		 * @author PaulHughes01
 		 *
 		 * @return void
 		 */
 		protected function _addFilters() {
 			add_filter( 'tribe-post-origin', array( $this, 'addEventOrigin' ) );
+			add_filter( 'tribe-events-importer-importers', array( $this, 'addEventImporter' ) );
 		}
 		
 		/**
 		 * The function used to compare versions and initialize the addon.
 		 *
-		 * @since 0.1
+		 * @since 2.1
 		 * @author PaulHughes01
 		 *
 		 * @return void
@@ -257,10 +275,23 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		}
 		
 		/**
+		 * Add Event Importer
+		 *
+		 * @return array An array representing this specific event importer.
+		 */
+		public static function addEventImporter( $importers ) {
+			$importers[] = array(
+				'slug' => static::$pluginSlug,
+				'name' => static::$pluginShortName,
+			);
+			return $importers;
+		}
+		
+		/**
 		 * Add import submenu page and set the callback function to the abstract.
 		 * method doImportPage().
 		 *
-		 * @since 0.1
+		 * @since 2.1
 		 * @author PaulHughes01
 		 *
 		 * @return void
@@ -272,7 +303,7 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		/**
 		 * Display errors messages.
 		 *
-		 * @since 0.1
+		 * @since 2.1
 		 * @author PaulHughes01
 		 *
 		 * @return void
@@ -290,7 +321,7 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		/**
 		 * Displays a checkbox list of possible events to import.
 		 *
-		 * @since 0.1
+		 * @since 2.1
 		 * @author PaulHughes01
 		 *
 		 * @param array $eventsData An array of event titles, dates, and unique ids (specific to the importer).
@@ -336,7 +367,7 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		/**
 		 * Gets events using AJAX.
 		 *
-		 * @since 0.1
+		 * @since 2.1
 		 * @author PaulHughes01
 		 *
 		 * @uses self::getEvents()
@@ -354,7 +385,7 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		/**
 		 * Class method that is used to save a standardized events array (see the setEventsData() method).
 		 *
-		 * @since 0.1
+		 * @since 2.1
 		 * @author PaulHughes01
 		 *
 		 * @uses self::saveEvent()
@@ -368,7 +399,7 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		/**
 		 * Save individual event from a standardized Event Array (see setEventsData() method).
 		 *
-		 * @since 0.1
+		 * @since 2.1
 		 * @author PaulHughes01
 		 *
 		 * @param array $eventArray The standardized event array containing meta information about the event to be saved.
@@ -376,6 +407,19 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		 */
 		protected function saveEvent( $eventArray ) {
 		
+		}
+		
+		/**
+		 * Generate this importer's import tab.
+		 *
+		 * @since 2.1
+		 * @author PaulHughes01
+		 *
+		 * @return null
+		 */
+		public function generateImportTab() {
+			$tec = TribeEvents::instance();
+			require_once( $tec->pluginPath . 'admin-views/tribe-import.php' );
 		}
 		
 	}
