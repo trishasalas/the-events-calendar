@@ -233,8 +233,8 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 			add_action( 'admin_notices', array( $this, 'displayErrors' ) );
 			
 			add_action( 'wp_ajax_' . static::$pluginSlug . '_get_possible_events', array( $this, 'ajaxGetPossibleEvents' ) );
-			add_action( 'tribe_importexport_content_tab_' . static::$pluginSlug, array( $this, 'generateImportTab' ) );
-			add_action( 'tribe_importexport_import_instructions_tab_' . static::$pluginSlug, array( $this, 'importTabInstructions' ) );
+			add_action( 'tribe_events_importexport_content_tab_' . static::$pluginSlug, array( $this, 'generateImportTab' ) );
+			add_action( 'tribe_events_importexport_import_instructions_tab_' . static::$pluginSlug, array( $this, 'importTabInstructions' ) );
 		}
 		
 		/**
@@ -249,7 +249,8 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		 */
 		protected function _addFilters() {
 			add_filter( 'tribe-post-origin', array( $this, 'addEventOrigin' ) );
-			add_filter( 'tribe-events-importer-importers', array( $this, 'addEventImporter' ) );
+			add_filter( 'tribe-events-importexport-import-apis', array( $this, 'addEventImporter' ) );
+			add_filter( 'tribe-events-importexport-export-apis', array( $this, 'addEventExporter' ) );
 		}
 		
 		/**
@@ -279,12 +280,25 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		 *
 		 * @return array An array representing this specific event importer.
 		 */
-		public static function addEventImporter( $importers ) {
-			$importers[] = array(
+		public static function addEventImporter( $import_apis ) {
+			$import_apis[] = array(
 				'slug' => static::$pluginSlug,
 				'name' => static::$pluginShortName,
 			);
-			return $importers;
+			return $import_apis;
+		}
+		
+		/**
+		 * Add Event Importer
+		 *
+		 * @return array An array representing this specific event importer.
+		 */
+		public static function addEventExporter( $export_apis ) {
+			$export_apis[] = array(
+				'slug' => static::$pluginSlug,
+				'name' => static::$pluginShortName,
+			);
+			return $export_apis;
 		}
 		
 		/**
