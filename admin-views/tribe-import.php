@@ -62,6 +62,10 @@ jQuery( function($) {
 	});
 });
 </script>
+<?php
+do_action( 'tribe_events_importexport_before_import_table' );
+do_action( 'tribe_events_importexport_before_import_table_tab_' . self::$pluginSlug );
+?>
 <table id="tribe-events-possible-import-events-list" class="wp-list-table widefat">
 <thead>
 <tr>
@@ -76,5 +80,9 @@ jQuery( function($) {
 <tbody>
 </tbody>
 </table>
-<div class="tribe-after-table-link"><a href="" id="tribe-events-importexport-load-more">Load another 25...</a></div><div class="tribe-after-table-button"><input type="button" class="button-primary" value="Import Checked" /></div>
+<?php
+do_action( 'tribe_events_importexport_after_import_table' );
+do_action( 'tribe_events_importexport_after_import_table_tab_' . self::$pluginSlug );
+?>
+<div class="tribe-after-table-button"><input type="button" class="button-primary" value="Import Checked" /></div>
 </div>

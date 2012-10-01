@@ -185,6 +185,14 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		abstract protected function setEventsData( $eventsData );
 		
 		/**
+		 * Abstract function for generating the API Key form.
+		 *
+		 * @since 2.1
+		 * @return void
+		 */
+		abstract public function doApiKeyForm();
+		
+		/**
 		 * Create the import submenu page.
 		 *
 		 * @since 2.1
@@ -244,6 +252,7 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 			add_action( 'tribe_events_importexport_content_tab_' . static::$pluginSlug, array( $this, 'generateImportTab' ) );
 			add_action( 'tribe_events_importexport_import_instructions_tab_' . static::$pluginSlug, array( $this, 'importTabInstructions' ) );
 			add_action( 'tribe_events_importexport_import_form_tab_' . static::$pluginSlug, array( $this, 'doImportForm' ) );
+			add_action( 'tribe_events_importexport_apikey_tab_' . static::$pluginSlug, array( $this, 'doApiKeyForm' ) );
 		}
 		
 		/**
