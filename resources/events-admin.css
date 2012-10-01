@@ -188,3 +188,5 @@ td.tribe_message {padding-bottom: 10px !important;}
 .tribe-greyed td { color: #BBB; }
 .tribe-after-table-link { float: left; }
 .tribe-after-table-button{ float: right; }
+.tribe-float-right { float: right; margin-left: 4px; }
+.tribe-spinner { display: none; }
