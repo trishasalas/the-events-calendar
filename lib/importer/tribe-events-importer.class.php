@@ -195,6 +195,14 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		abstract public function doImportPage();
 		
 		/**
+		 * Create the import tab's import form.
+		 *
+		 * @since 2.1
+		 * @return void
+		 */
+		abstract public function doImportForm();
+		
+		/**
 		 * Abstract function for writing the import page instructions.
 		 *
 		 * @since 2.1
@@ -235,6 +243,7 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 			add_action( 'wp_ajax_' . static::$pluginSlug . '_get_possible_events', array( $this, 'ajaxGetPossibleEvents' ) );
 			add_action( 'tribe_events_importexport_content_tab_' . static::$pluginSlug, array( $this, 'generateImportTab' ) );
 			add_action( 'tribe_events_importexport_import_instructions_tab_' . static::$pluginSlug, array( $this, 'importTabInstructions' ) );
+			add_action( 'tribe_events_importexport_import_form_tab_' . static::$pluginSlug, array( $this, 'doImportForm' ) );
 		}
 		
 		/**
@@ -369,11 +378,11 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		protected function buildPossibleEventsListItems( $eventsData ) {
 			foreach ( $eventsData as $event ) {
 				$sep = ' - ';
-				if ( $event['startDate'] == $event['endDate'] || $event['endDate'] == '' ) {
-					$event['endDate'] = '';
+				if ( $event['endDate'] == '' )
 					$sep = '';
-				}
-				echo '<li><input type="checkbox" name="tribe_events_events_to_import[]" value="' . $event['uid'] . '" /> <strong>' . $event['startDate'] . $sep . $event['endDate'] . '</strong> ' . $event['title'] . '</li>';
+				echo '<tr>';
+				echo '<th scope="row" class="check-column"><input type="checkbox" name="tribe_events_events_to_import[]" value="' . $event['uid'] . '" /></th><td>' . $event['startDate'] . $sep . $event['endDate'] . '</td><td><strong>' . $event['title'] . '</strong><div>' . $event['venue'] . '</div></td><td />';
+				echo '</tr>';
 			}
 		}
 		 

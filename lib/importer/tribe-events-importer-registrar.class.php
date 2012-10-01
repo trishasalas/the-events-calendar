@@ -55,7 +55,7 @@ if (!class_exists('Tribe_Events_Importer_Registrar')) {
 		 * @since 2.1
 		 * @return Tribe_Events_Importer_Registrar The instance.
 		 */
-		protected static function instance() {
+		public static function instance() {
 			if ( !is_a( self::$instance, __CLASS__ ) ) {
 				self::$instance = new self();
 			}
@@ -71,6 +71,7 @@ if (!class_exists('Tribe_Events_Importer_Registrar')) {
 		protected function __construct() {
 			self::$menuPageTitle = apply_filters( 'tribe-events-importer-registrar-menu-page-title', __( 'Import / Export', 'tribe-events-calendar' ) );
 			self::$slug = apply_filters( 'tribe-events-importer-registrar-slug', 'tribe-events-importer-registrar' );
+			$this->currentTab = apply_filters( 'tribe_events_importexport_current_tab', ( isset( $_GET['tab'] ) && $_GET['tab'] ) ? esc_attr( $_GET['tab'] ) : 'export' );
 			
 			$this->addActions();
 			$this->addFilters();
@@ -117,7 +118,6 @@ if (!class_exists('Tribe_Events_Importer_Registrar')) {
 		public function doImportExportPage() {
 			$this->export_apis = apply_filters( 'tribe-events-importexport-export-apis', array() );
 			$this->import_apis = apply_filters( 'tribe-events-importexport-import-apis', array() );
-			$this->currentTab = apply_filters( 'tribe_events_importexport_current_tab', ( isset( $_GET['tab'] ) && $_GET['tab'] ) ? esc_attr( $_GET['tab'] ) : $this->import_apis[0]['slug'] );
 			
 			do_action( 'tribe_events_importexport_top' );
 			echo '<div class="tribe_events_importexport wrap">';
