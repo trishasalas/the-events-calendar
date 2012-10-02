@@ -6,9 +6,12 @@ if ( !defined('ABSPATH') ) { die('-1'); }
 <?php do_action( 'tribe_events_importexport_before_import_info_box_tab_' . self::$pluginSlug ); ?>
 <div id="modern-tribe-info" style="max-width: 800px; padding-top: 15px;">
 	<h2><?php printf( __( 'How to Import Events from %s', 'tribe-events-calendar' ), self::$pluginShortName ); ?></h2>
-	<h4><?php _e( 'Instructions', 'tribe-events-calendar' ); ?></h4>
-	<?php do_action( 'tribe_events_importexport_import_instructions_tab_' . self::$pluginSlug ); ?>
+	<h3><?php _e( 'Instructions', 'tribe-events-calendar' ); ?></h3>
 	<?php do_action( 'tribe_events_importexport_import_instructions' ); ?>
+	<?php do_action( 'tribe_events_importexport_import_instructions_tab_' . self::$pluginSlug ); ?>
+	
+	<?php do_action( 'tribe_events_importexport_apikey' ); ?>
+	<?php do_action( 'tribe_events_importexport_apikey_tab_' . self::$pluginSlug ); ?>
 </div>
 <?php do_action( 'tribe_events_importexport_after_import_info_box' ); ?>
 <?php do_action( 'tribe_events_importexport_after_import_info_box_tab_' . self::$pluginSlug ); ?>
@@ -44,7 +47,7 @@ if ( !defined('ABSPATH') ) { die('-1'); }
 do_action( 'tribe_events_importexport_before_import_form' );
 do_action( 'tribe_events_importexport_before_import_form_tab_' . self::$pluginSlug );
 ?>
-<div style="margin: 20px;">
+<div id="tribe-events-importexport-import-form">
 <?php
 do_action( 'tribe_events_importexport_import_form' );
 do_action( 'tribe_events_importexport_import_form_tab_' . self::$pluginSlug );
@@ -84,5 +87,8 @@ do_action( 'tribe_events_importexport_before_import_table_tab_' . self::$pluginS
 do_action( 'tribe_events_importexport_after_import_table' );
 do_action( 'tribe_events_importexport_after_import_table_tab_' . self::$pluginSlug );
 ?>
-<div class="tribe-after-table-button"><input type="button" class="button-primary" value="Import Checked" /></div>
+<div class="tribe-after-table-button"><input type="submit" class="button-primary" value="Import Checked" /></div>
 </div>
+<?php
+do_action( 'tribe_events_importexport_after_import_page' );
+do_action( 'tribe_events_importexport_after_import_page_tab_' . self::$pluginSlug );

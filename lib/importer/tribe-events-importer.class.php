@@ -248,7 +248,7 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 			add_action( 'admin_menu', array( $this, 'addImportPage' ) );
 			add_action( 'admin_notices', array( $this, 'displayErrors' ) );
 			
-			add_action( 'wp_ajax_' . static::$pluginSlug . '_get_possible_events', array( $this, 'ajaxGetPossibleEvents' ) );
+			add_action( 'wp_ajax_tribe_events_' . static::$pluginSlug . '_get_possible_events', array( $this, 'ajaxGetPossibleEvents' ) );
 			add_action( 'tribe_events_importexport_content_tab_' . static::$pluginSlug, array( $this, 'generateImportTab' ) );
 			add_action( 'tribe_events_importexport_import_instructions_tab_' . static::$pluginSlug, array( $this, 'importTabInstructions' ) );
 			add_action( 'tribe_events_importexport_import_form_tab_' . static::$pluginSlug, array( $this, 'doImportForm' ) );
@@ -407,6 +407,14 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		 */
 		public function ajaxGetPossibleEvents() {
 			$possible_events = $this->getEventsData();
+			
+			if ( !$possible_events ) {
+				$errors = array(
+					'error' => $this->errors,
+				);
+				echo json_encode( $errors );
+				die();
+			}
 			
 			$possible_events_list = $this->parseIntoEventsList( $possible_events );
 			

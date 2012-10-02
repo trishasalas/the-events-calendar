@@ -24,7 +24,7 @@ if (!class_exists('Tribe_Events_Importer_Registrar')) {
 		 * @static
 		 * @var The import registrar slug.
 		 */
-		protected static $slug;
+		public static $slug;
 		
 		/**
 		 * @var The importers.

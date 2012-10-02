@@ -110,7 +110,6 @@ td.tribe_message {padding-bottom: 10px !important;}
 
 /* Modern Tribe box */
 #modern-tribe-info {margin: 20px 0; background-color: #f9f9f9; padding: 25px 20px 15px; border: 1px solid #ccc; border-rarius: 4px; -moz-border-radius: 4px; -webkit-border-radius: 4px; -khtml-border-radius: 4px; -o-border-radius: 4px;}
-#modern-tribe-info img {margin: 10px 0; }
 
 /* sizes */
 .tribe-field-textarea.tribe-size-small textarea {width: 180px; height: 60px;}
@@ -189,4 +188,4 @@ td.tribe_message {padding-bottom: 10px !important;}
 .tribe-after-table-link { float: left; }
 .tribe-after-table-button{ float: right; }
 .tribe-float-right { float: right; margin-left: 4px; }
-.tribe-spinner { display: none; }
+.tribe-spinner { display: none; margin: 0px; }
