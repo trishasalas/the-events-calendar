@@ -6,8 +6,8 @@
 // Don't load directly
 if ( !defined('ABSPATH') ) { die('-1'); }
 
-if (!class_exists('Tribe_Events_Importer_Registrar')) {
-	class Tribe_Events_Importer_Registrar {
+if (!class_exists('Tribe_Events_ImportExport_Registrar')) {
+	class Tribe_Events_ImportExport_Registrar {
 		/**
 		 * @static
 		 * @var The instance of the class.
@@ -69,8 +69,8 @@ if (!class_exists('Tribe_Events_Importer_Registrar')) {
 		 * @return null
 		 */
 		protected function __construct() {
-			self::$menuPageTitle = apply_filters( 'tribe-events-importer-registrar-menu-page-title', __( 'Import / Export', 'tribe-events-calendar' ) );
-			self::$slug = apply_filters( 'tribe-events-importer-registrar-slug', 'tribe-events-importer-registrar' );
+			self::$menuPageTitle = apply_filters( 'tribe-events-importexport-registrar-menu-page-title', __( 'Import / Export', 'tribe-events-calendar' ) );
+			self::$slug = apply_filters( 'tribe-events-importexport-registrar-slug', 'tribe-events-importexport' );
 			$this->currentTab = apply_filters( 'tribe_events_importexport_current_tab', ( isset( $_GET['tab'] ) && $_GET['tab'] ) ? esc_attr( $_GET['tab'] ) : 'export' );
 			
 			$this->addActions();

@@ -86,8 +86,9 @@ do_action( 'tribe_events_importexport_before_import_table_tab_' . self::$pluginS
 <?php
 do_action( 'tribe_events_importexport_after_import_table' );
 do_action( 'tribe_events_importexport_after_import_table_tab_' . self::$pluginSlug );
+wp_nonce_field( 'submit-import', 'tribe-events-' . self::$pluginSlug . '-submit-import' );
 ?>
-<div class="tribe-after-table-button"><input type="submit" class="button-primary" value="Import Checked" /></div>
+<div class="tribe-after-table-button"><input type="submit" class="button-primary" id="tribe-events-importexport-import-submit" name="tribe-events-importexport-import-submit" value="Import Checked" /></div>
 </div>
 <?php
 do_action( 'tribe_events_importexport_after_import_page' );

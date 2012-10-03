@@ -103,6 +103,12 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		protected $errors;
 		
 		/**
+		 * Any alert messages that are not errors that may have come up during a function.
+		 * @var array $messages
+		 */
+		protected $messages;
+		
+		/**
 		 * A basic array of possible events to import.
 		 * @var $possibleEvents
 		 */
@@ -144,7 +150,7 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		 * @since 2.1
 		 * @author PaulHughes01
 		 */
-		abstract public function processImportForm();
+		abstract public function processImportSubmission();
 		
 		/**
 		 * Abstract method that is used to get event data from a source.
@@ -246,6 +252,7 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		 */
 		protected function _addActions() {
 			add_action( 'admin_menu', array( $this, 'addImportPage' ) );
+			add_action( 'admin_notices', array( $this, 'displayMessages' ) );
 			add_action( 'admin_notices', array( $this, 'displayErrors' ) );
 			
 			add_action( 'wp_ajax_tribe_events_' . static::$pluginSlug . '_get_possible_events', array( $this, 'ajaxGetPossibleEvents' ) );
@@ -253,6 +260,8 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 			add_action( 'tribe_events_importexport_import_instructions_tab_' . static::$pluginSlug, array( $this, 'importTabInstructions' ) );
 			add_action( 'tribe_events_importexport_import_form_tab_' . static::$pluginSlug, array( $this, 'doImportForm' ) );
 			add_action( 'tribe_events_importexport_apikey_tab_' . static::$pluginSlug, array( $this, 'doApiKeyForm' ) );
+		
+			add_action( 'admin_head', array( $this, '_processImportSubmission' ) );
 		}
 		
 		/**
@@ -351,6 +360,24 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		}
 		
 		/**
+		 * Display notification messages.
+		 *
+		 * @since 2.1
+		 * @author PaulHughes01
+		 *
+		 * @return void
+		 */
+		public function displayMessages() {
+			if ( isset( $this->messages ) && is_array( $this->messages ) ) {
+				foreach ( $this->messages as $message ) {
+					echo '<div class="updated">';
+					echo '<p>' . $message . '</p>';
+					echo '</div>';
+				}
+			}
+		}
+		
+		/**
 		 * Displays a checkbox list of possible events to import.
 		 *
 		 * @since 2.1
@@ -390,7 +417,7 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 				if ( $event['endDate'] == '' )
 					$sep = '';
 				echo '<tr>';
-				echo '<th scope="row" class="check-column"><input type="checkbox" name="tribe_events_events_to_import[]" value="' . $event['uid'] . '" /></th><td>' . $event['startDate'] . $sep . $event['endDate'] . '</td><td><strong>' . $event['title'] . '</strong><div>' . $event['venue'] . '</div></td><td />';
+				echo '<th scope="row" class="check-column"><input type="checkbox" name="tribe_events_importexport_events_to_import[]" value="' . $event['uid'] . '" /></th><td>' . $event['startDate'] . $sep . $event['endDate'] . '</td><td><strong>' . $event['title'] . '</strong><div>' . $event['venue'] . '</div></td><td />';
 				echo '</tr>';
 			}
 		}
@@ -408,7 +435,7 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		public function ajaxGetPossibleEvents() {
 			$possible_events = $this->getEventsData();
 			
-			if ( !$possible_events ) {
+			if ( $possible_events === false ) {
 				$errors = array(
 					'error' => $this->errors,
 				);
@@ -423,6 +450,27 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		}
 		
 		/**
+		 * Function that begins the process of processing the import submission.
+		 *
+		 * @since 2.1
+		 * @author PaulHughes01
+		 *
+		 * @uses self::processImportSubmission()
+		 * @return void
+		 */
+		public function _processImportSubmission() {
+			if ( isset( $_GET['page'] ) && $_GET['page'] == Tribe_Events_ImportExport_Registrar::$slug && isset( $_POST['tribe-events-importexport-import-submit'] ) && check_admin_referer( 'submit-import', 'tribe-events-' . static::$pluginSlug . '-submit-import' ) ) {
+				$num_imported_events = $this->processImportSubmission();
+				
+				if ( $num_imported_events > 0 ) {
+					$this->messages[] = sprintf( __( '%s events successfully imported.', 'tribe-events-calendar' ), $num_imported_events );
+				} else {
+					$this->errors[] = __( 'No events were imported.', 'tribe-events-calendar' );
+				}
+			}
+		}
+		
+		/**
 		 * Class method that is used to save a standardized events array (see the setEventsData() method).
 		 *
 		 * @since 2.1
@@ -430,10 +478,19 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		 *
 		 * @uses self::saveEvent()
 		 * @param array $eventsArray The standardized array of event arrays to be saved.
-		 * @return void
+		 * @return int The number of events that were imported.
 		 */
 		protected function saveEvents( $eventsArray ) {
-		
+			$i = 0;
+			if ( is_array( $eventsArray ) ) {
+				foreach ( $eventsArray as $event ) {
+					$success = $this->saveEvent( $event );
+					if ( $success ) {
+						$i++;
+					}
+				}			
+			}
+			return $i;
 		}
 		
 		/**
@@ -445,8 +502,99 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		 * @param array $eventArray The standardized event array containing meta information about the event to be saved.
 		 * @return int|null The id of the saved event or null if the save failed.
 		 */
-		protected function saveEvent( $eventArray ) {
-		
+		protected function saveEvent( $event_array ) {
+			$success = false;
+			if ( isset( $event_array['event']['startDate'] ) && ( isset( $event_array['event']['endDate'] ) || ( isset( $event_array['event']['allDay'] ) && $event_array['event']['allDay'] == true ) ) && isset( $event_array['event']['title'] ) ) {
+				$success = true;
+				$event_data = array();
+				$event_data['EventAllDay'] = ( isset( $event_array['event']['allDay'] ) && $event_array['event']['allDay'] == true ) ? 'yes' : '';
+				$start_date = new DateTime( $event_array['event']['startDate'] );
+				if ( !isset( $event_array['event']['endDate'] ) ) {
+					$end_date = new DateTime( $event_array['event']['startDate'] );
+				} else {
+					$end_date = new DateTime( $event_array['event']['endDate'] );
+				}
+				/*if ( $event_data['EventAllDay'] == 'yes' ) {
+					$start_date = $start_date->format( 'Y-m-d 00:00:00' );
+					$end_date = $end_date->format( 'Y-m-d 23:59:59' );
+				} else {
+					$start_date = $start_date->format( TribeDateUtils::DBDATETIMEFORMAT );
+					$end_date = $end_date->format( TribeDateUtils::DBDATETIMEFORMAT );
+				}*/
+				$event_data['EventAllDay'] = ( $event_array['event']['allDay'] == true ) ? 'yes' : '';
+				if ( $event_data['EventAllDay'] != 'yes' ) {
+					$event_data['EventStartDate'] = $start_date->format( TribeDateUtils::DBDATEFORMAT );
+					$event_data['EventStartHour'] = $start_date->format( 'H' );
+					$event_data['EventStartMinute'] = $start_date->format( 'i' );
+					$event_data['EventEndDate'] = $end_date->format( TribeDateUtils::DBDATEFORMAT );
+					$event_data['EventEndHour'] = $end_date->format( 'H' );
+					$event_data['EventEndMinute'] = $end_date->format( 'i' );
+				} else {
+					$event_data['EventStartDate'] = $start_date->format( TribeDateUtils::DBDATEFORMAT );
+					$event_data['EventStartHour'] = '00';
+					$event_data['EventStartMinute'] = '00';
+					$event_data['EventEndDate'] = $end_date->format( TribeDateUtils::DBDATEFORMAT );
+					$event_data['EventEndHour'] = '23';
+					$event_data['EventEndMinute'] = '59';
+				}
+				$event_data['EventHideFromUpcoming'] = isset( $event_array['event']['hideFromUpcoming'] ) ? $event_array['event']['hideFromUpcoming'] : null;
+				$event_data['post_title'] = $event_array['event']['title'];
+				$event_data['post_content'] = isset( $event_array['event']['description'] ) ? $event_array['event']['description'] : '';
+				$event_data['EventShowMap'] = isset( $event_array['event']['showMap'] ) ? $event_array['event']['showMap'] : null;
+				$event_data['EventShowMapLink'] = isset( $event_array['event']['showMapLink'] ) ? $event_array['event']['showMapLink'] : null;
+				
+				if ( isset( $event_array['venue']['id'] ) && $event_array['venue']['id'] != '' ) {
+					$event_data['Venue']['VenueID'] = $event_array['venue']['id'];
+				} else {
+					$created_venue = true;
+					if ( isset( $event_array['venue']['title'] ) ) $event_data['Venue']['Venue'] = $event_array['venue']['title'];
+					if ( isset( $event_array['venue']['address'] ) ) $event_data['Venue']['Address'] = $event_array['venue']['address'];
+					if ( isset( $event_array['venue']['city'] ) ) $event_data['Venue']['City'] = $event_array['venue']['city'];
+					if ( isset( $event_array['venue']['stateProvince'] ) ) $event_data['Venue']['StateProvince'] = $event_array['venue']['stateProvince'];
+					if ( isset( $event_array['venue']['country'] ) ) $event_data['Venue']['Country'] = $event_array['venue']['country'];
+					if ( isset( $event_array['venue']['zipCode'] ) ) $event_data['Venue']['Zip'] = $event_array['venue']['zipCode'];
+					if ( isset( $event_array['venue']['phone'] ) ) $event_data['Venue']['Phone'] = $event_array['venue']['phone'];
+					if ( isset( $event_array['venue_meta']['importId'] ) ) {
+						$event_data['Venue']['ImportApiID'] = $event_array['venue']['importId'];
+						unset( $event_array['venue_meta']['importId'] );
+					}
+				}
+				if ( isset( $event_array['organizer']['id'] ) && $event_array['organizer']['id'] != '' ) {
+					$event_data['Organizer']['OrganizerID'] = $event_array['organizer']['id'];
+				} else {
+					$created_organizer = true;
+					if ( isset( $event_array['organizer']['name'] ) ) $event_data['Organizer']['Organizer'] = $event_array['organizer']['name'];
+					if ( isset( $event_array['organizer']['phone'] ) ) $event_data['Organizer']['Phone'] = $event_array['organizer']['phone'];
+					if ( isset( $event_array['organizer']['url'] ) ) $event_data['Organizer']['Website'] = $event_array['organizer']['url'];
+					if ( isset( $event_array['organizer']['email'] ) ) $event_data['Organizer']['Email'] = $event_array['organizer']['email'];
+					if ( isset( $event_array['organizer_meta']['importId'] ) ) {
+						$event_data['Organizer']['ImportApiID'] = $event_array['venue']['importId'];
+						unset( $event_array['organizer_meta']['importId'] );	
+					}
+				}
+				
+				$id = tribe_create_event( $event_data );
+				if ( $id ) {
+					if ( count( $event_array['event_meta'] ) > 0 ) {
+						foreach ($event_array['event_meta'] as $key => $var) {
+							update_post_meta($id, '_Event'.$key, $var);
+						}	
+					}
+					if ( count( $event_array['venue_meta'] ) > 0 && isset( $event_data['Venue']['ImportApiID'] ) ) {
+						$venue_id = $this->getVenueByImportApiId( $event_data['Venue']['ImportApiID'] );
+						$event_array['venue_meta']['Venue'] = $event_array['venue']['title'];
+						tribe_update_venue( $venue_id, $event_array['venue_meta'] );
+					}
+					if ( count( $event_array['organizer_meta'] ) > 0 && isset( $event_data['Organizer']['ImportApiID'] ) ) {
+						$venue_id = $this->getOrganizerByImportApiId( $event_data['Organizer']['ImportApiID'] );
+						$event_array['organizer_meta']['Organizer'] = $event_array['organizer']['title'];
+						tribe_update_organizer( $venue_id, $event_array['organizer_meta'] );
+					}
+				} else {
+					$success = false;
+				}
+			}
+			return $success;
 		}
 		
 		/**
@@ -462,6 +610,64 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 			require_once( $tec->pluginPath . 'admin-views/tribe-import.php' );
 		}
 		
+		/**
+		 * Get a venue based on the Import API ID.
+		 *
+		 * @since 2.1
+		 * @author PaulHughes01
+		 *
+		 * @param string $venue_api_id The API ID of the venue.
+		 * @return int The venue id.
+		 */
+		protected function getVenueByImportApiId( $venue_api_id ) {
+			$args = array(
+				'post_type' => TribeEvents::VENUE_POST_TYPE,
+				'meta_query' => array( array (
+					'key' => '_VenueImportApiID',
+					'value' => $venue_api_id,
+				) ),
+				'posts_per_page' => 1,
+			);
+			
+			$query = new WP_Query( $args );
+			$venue_id = false;
+			
+			while( $query->have_posts() ) {
+				$query->next_post();
+				$venue_id = $query->post->ID;
+			}
+			
+			return $venue_id;
+		}
+		
+		/**
+		 * Get an organizer based on the Import API ID.
+		 *
+		 * @since 2.1
+		 * @author PaulHughes01
+		 *
+		 * @param string $organizer_api_id The API ID of the venue.
+		 * @return int The venue id.
+		 */
+		protected function getOrganizerByImportApiId( $organizer_api_id ) {
+			$args = array(
+				'post_type' => TribeEvents::ORGANIZER_POST_TYPE,
+				'meta_query' => array( array (
+					'key' => '_OrganizerImportApiID',
+					'value' => $organizer_api_id,
+				) ),
+				'posts_per_page' => 1,
+			);
+			
+			$query = new WP_Query( $args );
+			$organizer_id = false;
+			
+			while( $query->have_posts() ) {
+				$query->next_post();
+				$organizer_id = $query->post->ID;
+			}
+			
+			return $organizer_id;
+		}
 	}
-	
 }
