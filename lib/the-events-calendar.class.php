@@ -160,7 +160,14 @@ if ( !class_exists( 'TribeEvents' ) ) {
 			// Exceptions Helper
 			require_once( 'tribe-event-exception.class.php' );
 
+			// Tribe Common Libs Helper
+			// require_once( $this->pluginPath.'vendor/tribe-common-libraries/tribe-common-libraries.class.php' );
+
+			// WP Router
+			// TribeCommonLibraries::register( 'wp-router', '0.3.3', $this->pluginPath . 'vendor/wp-router/wp-router.php' );
+
 			// Load Template Tags
+			require_once( $this->pluginPath.'public/template-tags/query.php' );
 			require_once( $this->pluginPath.'public/template-tags/general.php' );
 			require_once( $this->pluginPath.'public/template-tags/calendar.php' );
 			require_once( $this->pluginPath.'public/template-tags/loop.php' );
@@ -223,7 +230,6 @@ if ( !class_exists( 'TribeEvents' ) ) {
 
 		protected function addActions() {
 			add_action( 'init', array( $this, 'init'), 10 );
-			add_action( 'template_redirect', array( $this, 'loadStyle' ) );
 			add_action( 'wp_enqueue_scripts', array( $this, 'loadStyle' ) );
 			add_action( 'admin_menu', array( $this, 'addEventBox' ) );	
 			add_action( 'wp_insert_post', array( $this, 'addPostOrigin' ), 10, 2 );		
@@ -1273,7 +1279,7 @@ if ( !class_exists( 'TribeEvents' ) ) {
 		public function loadStyle() {
 			$eventsURL = trailingslashit( $this->pluginUrl ) . 'resources/';
 			wp_enqueue_script('tribe-events-pjax', $eventsURL . 'jquery.pjax.js', array('jquery') );
-			wp_enqueue_script('tribe-events-calendar-script', $eventsURL.'events.js', array('query', 'tribe-events-pjax') );
+			wp_enqueue_script('tribe-events-calendar-script', $eventsURL . 'tribe-events.js', array('jquery', 'tribe-events-pjax') );
 			// is there an events.css file in the theme?
 			$event_file = 'tribe-events.css';
 			$styleUrl = locate_template( array( 'events/' . $event_file ) ) ?
@@ -1409,6 +1415,7 @@ if ( !class_exists( 'TribeEvents' ) ) {
 			$qvars[] = 'end_date';
 			return $qvars;
 		}
+
 		/**
 		 * Adds Event specific rewrite rules.
 		 *
