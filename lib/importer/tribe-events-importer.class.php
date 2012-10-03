@@ -14,13 +14,6 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 	abstract class Tribe_Events_Importer {
 		
 		/**
-		 * The origin that will be stored with the imported events as coming from the given importer.
-		 * @static
-		 * @var string $origin
-		 */
-		protected static $eventOrigin;
-		
-		/**
 		 * The singleton instance of the class.
 		 * @var object $instance
 		 */
@@ -275,7 +268,6 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		 * @return void
 		 */
 		protected function _addFilters() {
-			add_filter( 'tribe-post-origin', array( $this, 'addEventOrigin' ) );
 			add_filter( 'tribe-events-importexport-import-apis', array( $this, 'addEventImporter' ) );
 			add_filter( 'tribe-events-importexport-export-apis', array( $this, 'addEventExporter' ) );
 		}
@@ -299,7 +291,7 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		 * @return string The origin slug for a given importer.
 		 */
 		public static function addEventOrigin() {
-			return static::$eventOrigin;
+			return static::$pluginSlug;
 		}
 		
 		/**
@@ -482,6 +474,7 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		 */
 		protected function saveEvents( $eventsArray ) {
 			$i = 0;
+			add_filter( 'tribe-post-origin', array( $this, 'addEventOrigin' ) );
 			if ( is_array( $eventsArray ) ) {
 				foreach ( $eventsArray as $event ) {
 					$success = $this->saveEvent( $event );
@@ -576,7 +569,13 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 				
 				$id = tribe_create_event( $event_data );
 				if ( $id ) {
-					if ( count( $event_array['event_meta'] ) > 0 ) {
+					if ( isset( $event_array['event']['categories'] ) && count( $event_array['event']['categories'] ) > 0 ) {
+						wp_set_object_terms( $id, $event_array['event']['categories'], TribeEvents::TAXONOMY );
+					}
+					if ( isset( $event_array['event']['tags'] ) && count( $event_array['event']['tags'] ) > 0 ) {
+						wp_set_post_tags( $id, $event_array['event']['tags'] );
+					}
+					if ( isset( $event_array['event_meta'] ) && count( $event_array['event_meta'] ) > 0 ) {
 						foreach ($event_array['event_meta'] as $key => $var) {
 							update_post_meta($id, '_Event'.$key, $var);
 						}	
