@@ -416,8 +416,15 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 				$sep = ' - ';
 				if ( $event['endDate'] == '' )
 					$sep = '';
-				$html .= '<tr>';
-				$html .= '<th scope="row" class="check-column"><input type="checkbox" name="tribe_events_importexport_events_to_import[]" value="' . $event['uid'] . '" /></th><td>' . $event['startDate'] . $sep . $event['endDate'] . '</td><td><strong>' . $event['title'] . '</strong><div>' . $event['venue'] . '</div></td><td />';
+				
+				$event_id = $this->getEventByImportApiId( (string) $event['uid'] );
+				if ( !$event_id ) {
+					$html .= '<tr>';
+					$html .= '<th scope="row" class="check-column"><input type="checkbox" name="tribe_events_importexport_events_to_import[]" value="' . $event['uid'] . '" /></th><td>' . $event['startDate'] . $sep . $event['endDate'] . '</td><td><strong>' . $event['title'] . '</strong><div>' . $event['venue'] . '</div></td><td />';
+				} else {
+					$html .= '<tr class="tribe-greyed">';
+					$html .= '<th scope="row" class="check-column" /><td>' . $event['startDate'] . $sep . $event['endDate'] . '</td><td><strong>' . $event['title'] . '</strong><div>' . $event['venue'] . '</div></td><td><strong>Imported</strong></td>';
+				}
 				$html .= '</tr>';
 			}
 			return $html;
@@ -542,7 +549,7 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 				$event_data['EventShowMap'] = isset( $event_array['event']['showMap'] ) ? $event_array['event']['showMap'] : null;
 				$event_data['EventShowMapLink'] = isset( $event_array['event']['showMapLink'] ) ? $event_array['event']['showMapLink'] : null;
 				
-				$venue_id = $this->getVenueByImportApiId( $event_array['venue_meta']['importId'] );
+				$venue_id = isset( $event_array['venue_meta']['ImportApiID'] ) ? $this->getVenueByImportApiId( $event_array['venue_meta']['ImportApiID'] ) : false;
 				if ( $venue_id ) {
 					$event_data['Venue']['VenueID'] = $venue_id;
 				} else {
@@ -554,12 +561,12 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 					if ( isset( $event_array['venue']['country'] ) ) $event_data['Venue']['Country'] = $event_array['venue']['country'];
 					if ( isset( $event_array['venue']['zipCode'] ) ) $event_data['Venue']['Zip'] = $event_array['venue']['zipCode'];
 					if ( isset( $event_array['venue']['phone'] ) ) $event_data['Venue']['Phone'] = $event_array['venue']['phone'];
-					if ( isset( $event_array['venue_meta']['importId'] ) ) {
-						$event_data['Venue']['ImportApiID'] = $event_array['venue_meta']['importId'];
-						unset( $event_array['venue_meta']['importId'] );
+					if ( isset( $event_array['venue_meta']['ImportApiID'] ) ) {
+						$event_data['Venue']['ImportApiID'] = $event_array['venue_meta']['ImportApiID'];
+						unset( $event_array['venue_meta']['ImportApiID'] );
 					}
 				}
-				$organizer_id = $this->getOrganizerByImportApiId( $event_array['organizer_meta']['importId'] );
+				$organizer_id = isset( $event_array['organizer_meta']['ImportApiID'] ) ? $this->getOrganizerByImportApiId( $event_array['organizer_meta']['ImportApiID'] ) : false;
 				if ( $organizer_id ) {
 					$event_data['Organizer']['OrganizerID'] = $organizer_id;
 				} else {
@@ -568,9 +575,9 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 					if ( isset( $event_array['organizer']['phone'] ) ) $event_data['Organizer']['Phone'] = $event_array['organizer']['phone'];
 					if ( isset( $event_array['organizer']['url'] ) ) $event_data['Organizer']['Website'] = $event_array['organizer']['url'];
 					if ( isset( $event_array['organizer']['email'] ) ) $event_data['Organizer']['Email'] = $event_array['organizer']['email'];
-					if ( isset( $event_array['organizer_meta']['importId'] ) ) {
-						$event_data['Organizer']['ImportApiID'] = $event_array['organizer_meta']['importId'];
-						unset( $event_array['organizer_meta']['importId'] );	
+					if ( isset( $event_array['organizer_meta']['ImportApiID'] ) ) {
+						$event_data['Organizer']['ImportApiID'] = $event_array['organizer_meta']['ImportApiID'];
+						unset( $event_array['organizer_meta']['ImportApiID'] );	
 					}
 				}
 				
@@ -651,8 +658,8 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		 * @since 2.1
 		 * @author PaulHughes01
 		 *
-		 * @param string $organizer_api_id The API ID of the venue.
-		 * @return int The venue id.
+		 * @param string $organizer_api_id The API ID of the organizer.
+		 * @return int The organizer id.
 		 */
 		protected function getOrganizerByImportApiId( $organizer_api_id ) {
 			$args = array(
@@ -663,16 +670,42 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 				) ),
 				'posts_per_page' => 1,
 			);
-			
 			$query = new WP_Query( $args );
 			$organizer_id = false;
-			
 			while( $query->have_posts() ) {
 				$query->next_post();
 				$organizer_id = $query->post->ID;
 			}
 			
 			return $organizer_id;
+		}
+		
+		/**
+		 * Get an event based on the Import API ID.
+		 *
+		 * @since 2.1
+		 * @author PaulHughes01
+		 *
+		 * @param string $event_api_id The API ID of the event.
+		 * @return int The event id.
+		 */
+		protected function getEventByImportApiId( $event_api_id ) {
+			$args = array(
+				'post_type' => TribeEvents::POSTTYPE,
+				'meta_query' => array( array (
+					'key' => '_EventImportApiID',
+					'value' => $event_api_id,
+				) ),
+				'posts_per_page' => 1,
+			);
+			$query = new WP_Query( $args );
+			$event_id = false;			
+			while( $query->have_posts() ) {
+				$query->next_post();
+				$event_id = $query->post->ID;
+			}
+
+			return $event_id;
 		}
 		
 		/**
