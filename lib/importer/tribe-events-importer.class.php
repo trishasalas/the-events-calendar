@@ -102,6 +102,12 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		protected $messages;
 		
 		/**
+		 * The array that will be built into JSON to send to the user in response to AJAX requests.
+		 * @var array $response
+		 */
+		protected $response;
+		
+		/**
 		 * A basic array of possible events to import.
 		 * @var $possibleEvents
 		 */
@@ -253,6 +259,7 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 			add_action( 'tribe_events_importexport_import_instructions_tab_' . static::$pluginSlug, array( $this, 'importTabInstructions' ) );
 			add_action( 'tribe_events_importexport_import_form_tab_' . static::$pluginSlug, array( $this, 'doImportForm' ) );
 			add_action( 'tribe_events_importexport_apikey_tab_' . static::$pluginSlug, array( $this, 'doApiKeyForm' ) );
+			add_action( 'tribe_events_importexport_before_import_table_tab_' . static::$pluginSlug, array( $this, 'addTotalNumberCounter' ) );
 		
 			add_action( 'admin_head', array( $this, '_processImportSubmission' ) );
 		}
@@ -404,14 +411,16 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		 * @return null
 		 */
 		protected function buildPossibleEventsListItems( $eventsData ) {
+			$html = '';
 			foreach ( $eventsData as $event ) {
 				$sep = ' - ';
 				if ( $event['endDate'] == '' )
 					$sep = '';
-				echo '<tr>';
-				echo '<th scope="row" class="check-column"><input type="checkbox" name="tribe_events_importexport_events_to_import[]" value="' . $event['uid'] . '" /></th><td>' . $event['startDate'] . $sep . $event['endDate'] . '</td><td><strong>' . $event['title'] . '</strong><div>' . $event['venue'] . '</div></td><td />';
-				echo '</tr>';
+				$html .= '<tr>';
+				$html .= '<th scope="row" class="check-column"><input type="checkbox" name="tribe_events_importexport_events_to_import[]" value="' . $event['uid'] . '" /></th><td>' . $event['startDate'] . $sep . $event['endDate'] . '</td><td><strong>' . $event['title'] . '</strong><div>' . $event['venue'] . '</div></td><td />';
+				$html .= '</tr>';
 			}
+			return $html;
 		}
 		 
 		
@@ -436,8 +445,11 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 			}
 			
 			$possible_events_list = $this->parseIntoEventsList( $possible_events );
+						
+			$this->response['body'] = $this->buildPossibleEventsListItems( $possible_events_list );
+			$this->response['previous_request'] = $_POST;
 			
-			$this->buildPossibleEventsListItems( $possible_events_list );
+			echo json_encode( $this->response );
 			die();
 		}
 		
@@ -451,7 +463,7 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		 * @return void
 		 */
 		public function _processImportSubmission() {
-			if ( isset( $_GET['page'] ) && $_GET['page'] == Tribe_Events_ImportExport_Registrar::$slug && isset( $_POST['tribe-events-importexport-import-submit'] ) && check_admin_referer( 'submit-import', 'tribe-events-' . static::$pluginSlug . '-submit-import' ) ) {
+			if ( isset( $_GET['page'] ) && $_GET['page'] == Tribe_Events_ImportExport_Registrar::$slug && ( isset( $_POST['tribe-events-importexport-import-submit'] ) && check_admin_referer( 'submit-import', 'tribe-events-' . static::$pluginSlug . '-submit-import' ) ) || ( isset( $_POST['tribe-events-importexport-import-all'] ) && check_admin_referer( 'submit-import-all', 'tribe-events-' . static::$pluginSlug . '-submit-import-all' ) ) ) {
 				$num_imported_events = $this->processImportSubmission();
 				
 				if ( $num_imported_events > 0 ) {
@@ -507,13 +519,6 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 				} else {
 					$end_date = new DateTime( $event_array['event']['endDate'] );
 				}
-				/*if ( $event_data['EventAllDay'] == 'yes' ) {
-					$start_date = $start_date->format( 'Y-m-d 00:00:00' );
-					$end_date = $end_date->format( 'Y-m-d 23:59:59' );
-				} else {
-					$start_date = $start_date->format( TribeDateUtils::DBDATETIMEFORMAT );
-					$end_date = $end_date->format( TribeDateUtils::DBDATETIMEFORMAT );
-				}*/
 				$event_data['EventAllDay'] = ( $event_array['event']['allDay'] == true ) ? 'yes' : '';
 				if ( $event_data['EventAllDay'] != 'yes' ) {
 					$event_data['EventStartDate'] = $start_date->format( TribeDateUtils::DBDATEFORMAT );
@@ -624,19 +629,18 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 				'post_type' => TribeEvents::VENUE_POST_TYPE,
 				'meta_query' => array( array (
 					'key' => '_VenueImportApiID',
-					'value' => $venue_api_id,
+					'value' => 'V0-001-000557363-4',
 				) ),
 				'posts_per_page' => 1,
 			);
-			
 			$query = new WP_Query( $args );
 			$venue_id = false;
-			
 			while( $query->have_posts() ) {
 				$query->next_post();
 				$venue_id = $query->post->ID;
 			}
-			
+			var_dump( $query );
+			wp_reset_query();
 			return $venue_id;
 		}
 		
@@ -668,6 +672,22 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 			}
 			
 			return $organizer_id;
+		}
+		
+		/**
+		 * Add the total number counter above the import table.
+		 *
+		 * @since 2.1
+		 * @author PaulHughes01
+		 *
+		 * @return void
+		 */
+		public function addTotalNumberCounter() {
+			echo '<form method="POST" id="tribe-events-import-all-events-form">';
+			wp_nonce_field( 'submit-import-all', 'tribe-events-' . static::$pluginSlug . '-submit-import-all' );
+			echo '<span id="tribe-events-import-all-events-form-elements"></span>';
+			echo '<p><input type="submit" name="tribe-events-importexport-import-all" id="tribe-events-importexport-import-all" value="' . sprintf( __( 'Import All %s', 'tribe-events-calendar' ), '(0)' ) . '" class="button-secondary" /></p>';
+			echo '</form>';
 		}
 	}
 }

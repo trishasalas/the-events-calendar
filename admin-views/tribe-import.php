@@ -57,7 +57,7 @@ do_action( 'tribe_events_importexport_import_form_tab_' . self::$pluginSlug );
 do_action( 'tribe_events_importexport_after_import_form' );
 do_action( 'tribe_events_importexport_after_import_form_tab_' . self::$pluginSlug );
 ?>
-<div class="tribe-events-importer-table">
+<div class="tribe-events-importer-table" id="tribe-events-import-list-wrapper">
 <script type="text/javascript">
 jQuery( function($) {
 	$("#tribe-events-importexport-list-check-all").click(function() {
