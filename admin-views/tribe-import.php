@@ -69,6 +69,7 @@ jQuery( function($) {
 do_action( 'tribe_events_importexport_before_import_table' );
 do_action( 'tribe_events_importexport_before_import_table_tab_' . self::$pluginSlug );
 ?>
+<div class="tribe-before-table-button"><input type="submit" class="button-primary" id="tribe-events-importexport-import-submit" name="tribe-events-importexport-import-submit" value="Import Checked" /></div>
 <table id="tribe-events-possible-import-events-list" class="wp-list-table widefat">
 <thead>
 <tr>

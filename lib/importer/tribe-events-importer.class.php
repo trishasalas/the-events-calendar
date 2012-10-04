@@ -542,8 +542,9 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 				$event_data['EventShowMap'] = isset( $event_array['event']['showMap'] ) ? $event_array['event']['showMap'] : null;
 				$event_data['EventShowMapLink'] = isset( $event_array['event']['showMapLink'] ) ? $event_array['event']['showMapLink'] : null;
 				
-				if ( isset( $event_array['venue']['id'] ) && $event_array['venue']['id'] != '' ) {
-					$event_data['Venue']['VenueID'] = $event_array['venue']['id'];
+				$venue_id = $this->getVenueByImportApiId( $event_array['venue_meta']['importId'] );
+				if ( $venue_id ) {
+					$event_data['Venue']['VenueID'] = $venue_id;
 				} else {
 					$created_venue = true;
 					if ( isset( $event_array['venue']['title'] ) ) $event_data['Venue']['Venue'] = $event_array['venue']['title'];
@@ -558,8 +559,9 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 						unset( $event_array['venue_meta']['importId'] );
 					}
 				}
-				if ( isset( $event_array['organizer']['id'] ) && $event_array['organizer']['id'] != '' ) {
-					$event_data['Organizer']['OrganizerID'] = $event_array['organizer']['id'];
+				$organizer_id = $this->getOrganizerByImportApiId( $event_array['organizer_meta']['importId'] );
+				if ( $organizer_id ) {
+					$event_data['Organizer']['OrganizerID'] = $organizer_id;
 				} else {
 					$created_organizer = true;
 					if ( isset( $event_array['organizer']['name'] ) ) $event_data['Organizer']['Organizer'] = $event_array['organizer']['name'];
@@ -585,12 +587,12 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 							update_post_meta($id, '_Event'.$key, $var);
 						}	
 					}
-					if ( isset( $event_array['venue_meta'] ) && count( $event_array['venue_meta'] ) > 0 && isset( $event_data['Venue']['ImportApiID'] ) ) {
+					if ( isset( $event_array['venue_meta'] ) && count( $event_array['venue_meta'] ) > 0 && isset( $event_data['Venue']['ImportApiID'] ) && $created_venue == true ) {
 						$venue_id = $this->getVenueByImportApiId( $event_data['Venue']['ImportApiID'] );
 						$event_array['venue_meta']['Venue'] = $event_array['venue']['title'];
 						tribe_update_venue( $venue_id, $event_array['venue_meta'] );
 					}
-					if ( isset( $event_array['organizer_meta'] ) && count( $event_array['organizer_meta'] ) > 0 && isset( $event_data['Organizer']['ImportApiID'] ) ) {
+					if ( isset( $event_array['organizer_meta'] ) && count( $event_array['organizer_meta'] ) > 0 && isset( $event_data['Organizer']['ImportApiID'] ) && $created_organizer == true  ) {
 						$venue_id = $this->getOrganizerByImportApiId( $event_data['Organizer']['ImportApiID'] );
 						$event_array['organizer_meta']['Organizer'] = $event_array['organizer']['title'];
 						tribe_update_organizer( $venue_id, $event_array['organizer_meta'] );
@@ -629,7 +631,7 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 				'post_type' => TribeEvents::VENUE_POST_TYPE,
 				'meta_query' => array( array (
 					'key' => '_VenueImportApiID',
-					'value' => 'V0-001-000557363-4',
+					'value' => $venue_api_id,
 				) ),
 				'posts_per_page' => 1,
 			);
@@ -639,8 +641,7 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 				$query->next_post();
 				$venue_id = $query->post->ID;
 			}
-			var_dump( $query );
-			wp_reset_query();
+
 			return $venue_id;
 		}
 		
@@ -686,7 +687,7 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 			echo '<form method="POST" id="tribe-events-import-all-events-form">';
 			wp_nonce_field( 'submit-import-all', 'tribe-events-' . static::$pluginSlug . '-submit-import-all' );
 			echo '<span id="tribe-events-import-all-events-form-elements"></span>';
-			echo '<p><input type="submit" name="tribe-events-importexport-import-all" id="tribe-events-importexport-import-all" value="' . sprintf( __( 'Import All %s', 'tribe-events-calendar' ), '(0)' ) . '" class="button-secondary" /></p>';
+			echo '<p><input style="float:left" type="submit" name="tribe-events-importexport-import-all" id="tribe-events-importexport-import-all" value="' . sprintf( __( 'Import All %s', 'tribe-events-calendar' ), '(0)' ) . '" class="button-secondary" /></p>';
 			echo '</form>';
 		}
 	}
