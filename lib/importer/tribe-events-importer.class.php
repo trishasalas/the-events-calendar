@@ -253,12 +253,12 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 			add_action( 'admin_notices', array( $this, 'displayMessages' ) );
 			add_action( 'admin_notices', array( $this, 'displayErrors' ) );
 			
-			add_action( 'wp_ajax_tribe_events_' . static::$pluginSlug . '_get_possible_events', array( $this, 'ajaxGetPossibleEvents' ) );
-			add_action( 'tribe_events_importexport_content_tab_' . static::$pluginSlug, array( $this, 'generateImportTab' ) );
-			add_action( 'tribe_events_importexport_import_instructions_tab_' . static::$pluginSlug, array( $this, 'importTabInstructions' ) );
-			add_action( 'tribe_events_importexport_import_form_tab_' . static::$pluginSlug, array( $this, 'doImportForm' ) );
-			add_action( 'tribe_events_importexport_apikey_tab_' . static::$pluginSlug, array( $this, 'doApiKeyForm' ) );
-			add_action( 'tribe_events_importexport_before_import_table_tab_' . static::$pluginSlug, array( $this, 'addTotalNumberCounter' ) );
+			add_action( 'wp_ajax_tribe_events_' . self::$pluginSlug . '_get_possible_events', array( $this, 'ajaxGetPossibleEvents' ) );
+			add_action( 'tribe_events_importexport_content_tab_' . self::$pluginSlug, array( $this, 'generateImportTab' ) );
+			add_action( 'tribe_events_importexport_import_instructions_tab_' . self::$pluginSlug, array( $this, 'importTabInstructions' ) );
+			add_action( 'tribe_events_importexport_import_form_tab_' . self::$pluginSlug, array( $this, 'doImportForm' ) );
+			add_action( 'tribe_events_importexport_apikey_tab_' . self::$pluginSlug, array( $this, 'doApiKeyForm' ) );
+			add_action( 'tribe_events_importexport_before_import_table_tab_' . self::$pluginSlug, array( $this, 'addTotalNumberCounter' ) );
 			add_action( 'tribe_events_importexport_after_import_table_tab_' . self::$pluginSlug, array( $this, 'doLoadMoreLink' ) );
 			add_action( 'tribe_events_importexport_before_import_table_tab_' . self::$pluginSlug, array( $this, 'doOpeningFormTag' ) );
 			add_action( 'tribe_events_importexport_after_import_page_tab_' . self::$pluginSlug, array( $this, 'doClosingFormTag' ) );
