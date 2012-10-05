@@ -250,7 +250,6 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		 * @return void
 		 */
 		protected function _addActions() {
-			add_action( 'admin_menu', array( $this, 'addImportPage' ) );
 			add_action( 'admin_notices', array( $this, 'displayMessages' ) );
 			add_action( 'admin_notices', array( $this, 'displayErrors' ) );
 			
@@ -328,19 +327,6 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 				'name' => static::$pluginShortName,
 			);
 			return $export_apis;
-		}
-		
-		/**
-		 * Add import submenu page and set the callback function to the abstract.
-		 * method doImportPage().
-		 *
-		 * @since 2.1
-		 * @author PaulHughes01
-		 *
-		 * @return void
-		 */
-		public function addImportPage() {
-			add_submenu_page( '/edit.php?post_type=' . TribeEvents::POSTTYPE, static::$importPageName, static::$importPageName, 'edit_posts', static::$pluginSlug, array( $this, 'doImportPage' ) );
 		}
 		
 		/**
