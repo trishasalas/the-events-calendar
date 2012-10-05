@@ -118,10 +118,10 @@ if (!class_exists('TribeEventsQuery')) {
 				}
 
 				// setup default Event Start join/filter
-				/*$meta_query[] = array(
+				$meta_query[] = array(
 					'key' => '_EventStartDate',
 					'type' => 'DATETIME'
-					);*/
+					);
 
 				// eventCat becomes a standard taxonomy query - will need to deprecate and update views eventually
 				if ( ! in_array( $query->get('eventCat'), array( '', '-1' )) ) {
