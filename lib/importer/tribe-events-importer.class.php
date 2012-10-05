@@ -17,77 +17,77 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		 * The singleton instance of the class.
 		 * @var object $instance
 		 */
-		protected self $instance;
+		protected static $instance;
 		
 		/**
 		 * The child's classname.
-		 * @self
+		 * @static
 		 * @var string $className
 		 */
-		protected self $className;
+		protected static $className;
 		
 		/**
 		 * The child plugin name.
-		 * @self
+		 * @static
 		 * @var string $pluginName
 		 */
-		protected self $pluginName;
+		protected static $pluginName;
 		
 		/**
 		 * The child plugin short name.
-		 * @self
+		 * @static
 		 * @var string $pluginShortName
 		 */
-		protected self $pluginShortName;
+		protected static $pluginShortName;
 		
 		/**
 		 * The required TEC version.
-		 * @self
+		 * @static
 		 * @var string $requiredTecVersion
 		 */
-		protected self $requiredTecVersion;
+		protected static $requiredTecVersion;
 		
 		/**
 		 * The plugin's current version.
-		 * @self
+		 * @static
 		 * @var string $currentVersion
 		 */
-		protected self $currentVersion;
+		protected static $currentVersion;
 		
 		/**
 		 * The path to the plugin's main directory.
-		 * @self
+		 * @static
 		 * @var string $pluginPath
 		 */
-		protected self $pluginPath;
+		protected static $pluginPath;
 		
 		/**
 		 * The URL of the plugin's main directory.
-		 * @self
+		 * @static
 		 * @var string $pluginUrl
 		 */
-		protected self $pluginUrl;
+		protected static $pluginUrl;
 		
 		/**
 		 * The path to the plugin's main file.
-		 * @self
+		 * @static
 		 * @var string $pluginFilePath
 		 */
-		protected self $pluginFilePath;
+		protected static $pluginFilePath;
 		
 		/**
 		 * The name of the Import Page.
-		 * @self
+		 * @static
 		 * @var string $importPageName
 		 */
-		protected self $importPageName;
+		protected static $importPageName;
 		
 		/**
 		 * The plugin slug, used in various places.
-		 * @self
+		 * @static
 		 * @var string $pluginSlug
 		 */
-		protected self $pluginSlug;
+		protected static $pluginSlug;
 		
 		/**
 		 * Any errors that may have come up during a function.
