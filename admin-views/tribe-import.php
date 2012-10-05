@@ -43,6 +43,52 @@ if ( !defined('ABSPATH') ) { die('-1'); }
 </table>
 </div>
 <h3>New Import</h3>
+<script type="text/javascript">
+function ajaxLoadMoreEvents( pluginSlug, args ) {
+	args['action'] = 'tribe_events_' + pluginSlug + '_get_possible_events';
+	jQuery.ajax({
+		type: "POST",
+		url: "<?php echo admin_url( 'admin-ajax.php' ); ?>",
+		data: args,
+		beforeSend: function() {
+			jQuery('#tribe-events-importexport-search-spinner').show();
+		},
+		success: function(data) {
+			jQuery('#tribe-events-importexport-search-spinner').hide();
+			jQuery('.error').remove();
+			try {
+				var response = jQuery.parseJSON(data);
+			} catch(e) {}
+			if ( response != null && typeof response == 'object' && response.error ) {
+				var html = '';
+				for( i=0; i<response.error.length; i++ ) {
+					html = html + '<div class="error"><p>' + response.error[i] + '</p></div>';
+				}
+				jQuery('#tribe-events-importexport-import-form').append(html);
+			}
+			if ( response != null && typeof response == 'object' && response.body && response.body.length > 0 ) {
+				jQuery('#tribe-events-possible-import-events-list tbody').append(response.body);
+				jQuery('#tribe-events-importexport-' + pluginSlug + '-load-more').show();
+			}
+			if ( response != null && typeof response == 'object' && response.total_items ) {
+				jQuery('#tribe-events-importexport-import-all').val(jQuery('#tribe-events-importexport-import-all').val().replace( /\([^\)]*\)/, '(' + response.total_items + ')' ));
+			} else {
+				jQuery('#tribe-events-importexport-import-all').val(jQuery('#tribe-events-importexport-import-all').val().replace( /\([^\)]*\)/, '(?)' ));
+			}
+			if ( response != null && typeof response == 'object' && response.previous_request ) {
+				jQuery('#tribe-events-import-all-events-form-elements').empty();
+				for( i in response.previous_request ) {
+					var html = '<input type="hidden" name="' + i + '" value="' + response.previous_request[i] + '" />';
+					jQuery('#tribe-events-import-all-events-form-elements').append(html);
+				}
+			}
+			if ( response != null && typeof response == 'object' && response.page_count && args['page'] >= response.page_count ) {
+				jQuery('#tribe-events-importexport-' + pluginSlug + '-load-more').hide();
+			}
+		}
+	});
+}
+</script>
 <?php
 do_action( 'tribe_events_importexport_before_import_form' );
 do_action( 'tribe_events_importexport_before_import_form_tab_' . self::$pluginSlug );

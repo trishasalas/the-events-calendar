@@ -260,7 +260,10 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 			add_action( 'tribe_events_importexport_import_form_tab_' . static::$pluginSlug, array( $this, 'doImportForm' ) );
 			add_action( 'tribe_events_importexport_apikey_tab_' . static::$pluginSlug, array( $this, 'doApiKeyForm' ) );
 			add_action( 'tribe_events_importexport_before_import_table_tab_' . static::$pluginSlug, array( $this, 'addTotalNumberCounter' ) );
-		
+			add_action( 'tribe_events_importexport_after_import_table_tab_' . self::$pluginSlug, array( $this, 'doLoadMoreLink' ) );
+			add_action( 'tribe_events_importexport_before_import_table_tab_' . self::$pluginSlug, array( $this, 'doOpeningFormTag' ) );
+			add_action( 'tribe_events_importexport_after_import_page_tab_' . self::$pluginSlug, array( $this, 'doClosingFormTag' ) );
+			
 			add_action( 'admin_head', array( $this, '_processImportSubmission' ) );
 		}
 		
@@ -377,34 +380,6 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		}
 		
 		/**
-		 * Displays a checkbox list of possible events to import.
-		 *
-		 * @since 2.1
-		 * @author PaulHughes01
-		 *
-		 * @param array $eventsData An array of event titles, dates, and unique ids (specific to the importer).
-		 * @return void
-		 */
-		protected function displayPossibleEventsList( $eventsData ) {
-			if ( is_array( $eventsData ) ) {
-				do_action( 'tribe_events_before_possible_import_list' );
-				echo '<div id="tribe-events-possible-import-events-wrapper">';
-				echo apply_filters( 'tribe-events-possible-import-form', '<form method="post">' );
-				echo '<div id="tribe-events-possible-import-events-list-wrapper">';
-				echo '<ul id="tribe-events-possible-import-events-list">';
-				$this->buildPossibleEventsListItems( $eventsData );
-				echo '</ul>';
-				echo '</div>';
-				echo '<div style="clear:left;">';
-				echo '<input id="tribe-events-' . static::$pluginSlug . '-import-submit" name="tribe-events-' . static::$pluginSlug . '-import-submit" class="button-primary" type="submit" value="' . apply_filters( 'tribe_events_importer_import_events_button', __( 'Import Selected Events', self::$pluginSlug ) ) . '" />';
-				echo '</div>';
-				echo '</form>';
-				echo '</div>';
-				do_action( 'tribe_events_after_possible_import_list' );
-			}
-		}
-		
-		/**
 		 * Builds and echoes each list item in the possible events list.
 		 *
 		 * @param array $eventsData
@@ -474,7 +449,7 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 				$num_imported_events = $this->processImportSubmission();
 				
 				if ( $num_imported_events > 0 ) {
-					$this->messages[] = sprintf( __( '%s events successfully imported.', 'tribe-events-calendar' ), $num_imported_events );
+					$this->messages[] = sprintf( _n( '%s event successfully imported.', '%s events successfully imported.', $num_imported_events, 'tribe-events-calendar' ), $num_imported_events, $num_imported_events );
 				} else {
 					$this->errors[] = __( 'No events were imported.', 'tribe-events-calendar' );
 				}
@@ -721,6 +696,42 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 			wp_nonce_field( 'submit-import-all', 'tribe-events-' . static::$pluginSlug . '-submit-import-all' );
 			echo '<span id="tribe-events-import-all-events-form-elements"></span>';
 			echo '<p><input style="float:left" type="submit" name="tribe-events-importexport-import-all" id="tribe-events-importexport-import-all" value="' . sprintf( __( 'Import All %s', 'tribe-events-calendar' ), '(0)' ) . '" class="button-secondary" /></p>';
+			echo '</form>';
+		}
+		
+		/**
+		 * Generates the 'Load more...' link after the import table.
+		 *
+		 * @since 2.1
+		 * @author PaulHughes01
+		 *
+		 * @return void
+		 */
+		public function doLoadMoreLink() {
+			echo '<div class="tribe-after-table-link"><a href="" id="tribe-events-importexport-' . static::$pluginSlug . '-load-more" style="display:none;">' . apply_filters('tribe-events-importexport-' . static::$pluginSlug . '-load-more-link-text', __( 'Load more...', 'tribe-events-eventful-importer' ) ) . '</a></div>';
+		}
+		
+		/**
+		 * Open the import form tag.
+		 *
+		 * @since 0.1
+		 * @author PaulHughes01
+		 *
+		 * @return void
+		 */
+		public function doOpeningFormTag() {
+			echo '<form method="POST" action="">';
+		}
+		
+		/**
+		 * Close the import form tag.
+		 *
+		 * @since 0.1
+		 * @author PaulHughes01
+		 *
+		 * @return void
+		 */
+		public function doClosingFormTag() {
 			echo '</form>';
 		}
 	}
