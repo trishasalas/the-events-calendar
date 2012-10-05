@@ -17,77 +17,77 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		 * The singleton instance of the class.
 		 * @var object $instance
 		 */
-		protected static $instance;
+		protected self $instance;
 		
 		/**
 		 * The child's classname.
-		 * @static
+		 * @self
 		 * @var string $className
 		 */
-		protected static $className;
+		protected self $className;
 		
 		/**
 		 * The child plugin name.
-		 * @static
+		 * @self
 		 * @var string $pluginName
 		 */
-		protected static $pluginName;
+		protected self $pluginName;
 		
 		/**
 		 * The child plugin short name.
-		 * @static
+		 * @self
 		 * @var string $pluginShortName
 		 */
-		protected static $pluginShortName;
+		protected self $pluginShortName;
 		
 		/**
 		 * The required TEC version.
-		 * @static
+		 * @self
 		 * @var string $requiredTecVersion
 		 */
-		protected static $requiredTecVersion;
+		protected self $requiredTecVersion;
 		
 		/**
 		 * The plugin's current version.
-		 * @static
+		 * @self
 		 * @var string $currentVersion
 		 */
-		protected static $currentVersion;
+		protected self $currentVersion;
 		
 		/**
 		 * The path to the plugin's main directory.
-		 * @static
+		 * @self
 		 * @var string $pluginPath
 		 */
-		protected static $pluginPath;
+		protected self $pluginPath;
 		
 		/**
 		 * The URL of the plugin's main directory.
-		 * @static
+		 * @self
 		 * @var string $pluginUrl
 		 */
-		protected static $pluginUrl;
+		protected self $pluginUrl;
 		
 		/**
 		 * The path to the plugin's main file.
-		 * @static
+		 * @self
 		 * @var string $pluginFilePath
 		 */
-		protected static $pluginFilePath;
+		protected self $pluginFilePath;
 		
 		/**
 		 * The name of the Import Page.
-		 * @static
+		 * @self
 		 * @var string $importPageName
 		 */
-		protected static $importPageName;
+		protected self $importPageName;
 		
 		/**
 		 * The plugin slug, used in various places.
-		 * @static
+		 * @self
 		 * @var string $pluginSlug
 		 */
-		protected static $pluginSlug;
+		protected self $pluginSlug;
 		
 		/**
 		 * Any errors that may have come up during a function.
@@ -118,10 +118,10 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		/**
 		 * Must be defined as a singleton method by the child class.
 		 *
-		 * @static
+		 * @self
 		 * @return self
 		 */
-		abstract static function instance();
+		abstract self function instance();
 		
 		/**
 		 * The method used by the child class to add WordPress actions.
@@ -290,17 +290,17 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		 * @return void
 		 */
 		public function initAddon() {
-			$plugins[] = array( 'plugin_name' => static::$pluginName, 'required_version' => static::$requiredTecVersion, 'current_version' => static::$currentVersion, 'plugin_dir_file' => static::$pluginFilePath );
+			$plugins[] = array( 'plugin_name' => self::$pluginName, 'required_version' => self::$requiredTecVersion, 'current_version' => self::$currentVersion, 'plugin_dir_file' => self::$pluginFilePath );
 			return $plugins;
 		}
-		
+			
 		/**
 		 * The method is used to add the event origin slug to the event's audit trail.
 		 *
 		 * @return string The origin slug for a given importer.
 		 */
-		public static function addEventOrigin() {
-			return static::$pluginSlug;
+		public self function addEventOrigin() {
+			return self::$pluginSlug;
 		}
 		
 		/**
@@ -308,10 +308,10 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		 *
 		 * @return array An array representing this specific event importer.
 		 */
-		public static function addEventImporter( $import_apis ) {
+		public self function addEventImporter( $import_apis ) {
 			$import_apis[] = array(
-				'slug' => static::$pluginSlug,
-				'name' => static::$pluginShortName,
+				'slug' => self::$pluginSlug,
+				'name' => self::$pluginShortName,
 			);
 			return $import_apis;
 		}
@@ -321,10 +321,10 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		 *
 		 * @return array An array representing this specific event importer.
 		 */
-		public static function addEventExporter( $export_apis ) {
+		public self function addEventExporter( $export_apis ) {
 			$export_apis[] = array(
-				'slug' => static::$pluginSlug,
-				'name' => static::$pluginShortName,
+				'slug' => self::$pluginSlug,
+				'name' => self::$pluginShortName,
 			);
 			return $export_apis;
 		}
@@ -431,7 +431,7 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		 * @return void
 		 */
 		public function _processImportSubmission() {
-			if ( isset( $_GET['page'] ) && $_GET['page'] == Tribe_Events_ImportExport_Registrar::$slug && ( isset( $_POST['tribe-events-importexport-import-submit'] ) && check_admin_referer( 'submit-import', 'tribe-events-' . static::$pluginSlug . '-submit-import' ) ) || ( isset( $_POST['tribe-events-importexport-import-all'] ) && check_admin_referer( 'submit-import-all', 'tribe-events-' . static::$pluginSlug . '-submit-import-all' ) ) ) {
+			if ( isset( $_GET['page'] ) && $_GET['page'] == Tribe_Events_ImportExport_Registrar::$slug && ( isset( $_POST['tribe-events-importexport-import-submit'] ) && check_admin_referer( 'submit-import', 'tribe-events-' . self::$pluginSlug . '-submit-import' ) ) || ( isset( $_POST['tribe-events-importexport-import-all'] ) && check_admin_referer( 'submit-import-all', 'tribe-events-' . self::$pluginSlug . '-submit-import-all' ) ) ) {
 				$num_imported_events = $this->processImportSubmission();
 				
 				if ( $num_imported_events > 0 ) {
@@ -679,7 +679,7 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		 */
 		public function addTotalNumberCounter() {
 			echo '<form method="POST" id="tribe-events-import-all-events-form">';
-			wp_nonce_field( 'submit-import-all', 'tribe-events-' . static::$pluginSlug . '-submit-import-all' );
+			wp_nonce_field( 'submit-import-all', 'tribe-events-' . self::$pluginSlug . '-submit-import-all' );
 			echo '<span id="tribe-events-import-all-events-form-elements"></span>';
 			echo '<p><input style="float:left" type="submit" name="tribe-events-importexport-import-all" id="tribe-events-importexport-import-all" value="' . sprintf( __( 'Import All %s', 'tribe-events-calendar' ), '(0)' ) . '" class="button-secondary" /></p>';
 			echo '</form>';
@@ -694,7 +694,7 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		 * @return void
 		 */
 		public function doLoadMoreLink() {
-			echo '<div class="tribe-after-table-link"><a href="" id="tribe-events-importexport-' . static::$pluginSlug . '-load-more" style="display:none;">' . apply_filters('tribe-events-importexport-' . static::$pluginSlug . '-load-more-link-text', __( 'Load more...', 'tribe-events-eventful-importer' ) ) . '</a></div>';
+			echo '<div class="tribe-after-table-link"><a href="" id="tribe-events-importexport-' . self::$pluginSlug . '-load-more" style="display:none;">' . apply_filters('tribe-events-importexport-' . self::$pluginSlug . '-load-more-link-text', __( 'Load more...', 'tribe-events-eventful-importer' ) ) . '</a></div>';
 		}
 		
 		/**
