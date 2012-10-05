@@ -121,7 +121,7 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		 * @self
 		 * @return self
 		 */
-		abstract self function instance();
+		abstract static function instance();
 		
 		/**
 		 * The method used by the child class to add WordPress actions.
@@ -299,7 +299,7 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		 *
 		 * @return string The origin slug for a given importer.
 		 */
-		public self function addEventOrigin() {
+		public static function addEventOrigin() {
 			return self::$pluginSlug;
 		}
 		
@@ -308,7 +308,7 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		 *
 		 * @return array An array representing this specific event importer.
 		 */
-		public self function addEventImporter( $import_apis ) {
+		public static function addEventImporter( $import_apis ) {
 			$import_apis[] = array(
 				'slug' => self::$pluginSlug,
 				'name' => self::$pluginShortName,
@@ -321,7 +321,7 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		 *
 		 * @return array An array representing this specific event importer.
 		 */
-		public self function addEventExporter( $export_apis ) {
+		public static function addEventExporter( $export_apis ) {
 			$export_apis[] = array(
 				'slug' => self::$pluginSlug,
 				'name' => self::$pluginShortName,
