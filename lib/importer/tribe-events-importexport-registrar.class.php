@@ -105,7 +105,7 @@ if (!class_exists('Tribe_Events_ImportExport_Registrar')) {
 		 * @return null
 		 */
 		public function createMenuPage() {
-			add_submenu_page( '/edit.php?post_type=' . TribeEvents::POSTTYPE, self::$menuPageTitle, self::$menuPageTitle, 'edit_posts', static::$slug, array( $this, 'doImportExportPage' ) );
+			add_submenu_page( '/edit.php?post_type=' . TribeEvents::POSTTYPE, self::$menuPageTitle, self::$menuPageTitle, 'edit_posts', self::$slug, array( $this, 'doImportExportPage' ) );
 		}
 		
 		/**
@@ -156,7 +156,7 @@ if (!class_exists('Tribe_Events_ImportExport_Registrar')) {
 				$tab = 'export';
 				$name = apply_filters( 'tribe-events-importexport-export-tab-title', __( 'Export', 'tribe-events-calendar' )  );
 				$class = ( $tab == $this->currentTab ) ? ' nav-tab-active' : '';
-				echo '<a id="' . $tab . '" class="nav-tab' . $class . '" href="?post_type=' .TribeEvents::POSTTYPE . '&page=' . static::$slug . '&tab=' . urlencode( $tab ) . '">' . $name . '</a>';
+				echo '<a id="' . $tab . '" class="nav-tab' . $class . '" href="?post_type=' .TribeEvents::POSTTYPE . '&page=' . self::$slug . '&tab=' . urlencode( $tab ) . '">' . $name . '</a>';
 				echo ' ' . __( 'Import:', 'tribe-events-calendar' ) . ' ';
 			}
 			if ( is_array( $this->import_apis ) && !empty( $this->import_apis ) ) {
@@ -164,7 +164,7 @@ if (!class_exists('Tribe_Events_ImportExport_Registrar')) {
 						$tab = esc_attr( $importer['slug'] );
 						$name = esc_attr( $importer['name'] );
 						$class = ( $tab == $this->currentTab ) ? ' nav-tab-active' : '';
-						echo '<a id="' . $tab . '" class="nav-tab' . $class . '" href="?post_type=' .TribeEvents::POSTTYPE . '&page=' . static::$slug . '&tab=' . urlencode( $tab ) . '">' . $name . '</a>';
+						echo '<a id="' . $tab . '" class="nav-tab' . $class . '" href="?post_type=' .TribeEvents::POSTTYPE . '&page=' . self::$slug . '&tab=' . urlencode( $tab ) . '">' . $name . '</a>';
 					}
 					do_action( 'tribe_events_importexport_after_tabs' );
 				echo '</h2>';
