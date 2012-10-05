@@ -105,7 +105,7 @@ if (!class_exists('Tribe_Events_ImportExport_Registrar')) {
 		 * @return null
 		 */
 		public function createMenuPage() {
-			add_submenu_page( '/edit.php?post_type=' . TribeEvents::POSTTYPE, self::$menuPageTitle, self::$menuPageTitle, 'edit_posts', static::$slug, array( $this, 'doImportExportPage' ) );
+			add_submenu_page( '/edit.php?post_type=' . TribeEvents::POSTTYPE, self::$menuPageTitle, self::$menuPageTitle, 'edit_posts', self::$slug, array( $this, 'doImportExportPage' ) );
 		}
 		
 		/**
