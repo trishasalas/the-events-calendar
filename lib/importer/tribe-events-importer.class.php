@@ -404,7 +404,10 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		public function ajaxGetPossibleEvents() {
 			$possible_events = $this->getEventsData();
 			
-			if ( $possible_events === false ) {
+			if ( $possible_events == false ) {
+				if ( !$this->errors ) {
+					$this->errors[] = 'No events found.';
+				}
 				$errors = array(
 					'error' => $this->errors,
 				);
@@ -681,7 +684,7 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 			echo '<form method="POST" id="tribe-events-import-all-events-form">';
 			wp_nonce_field( 'submit-import-all', 'tribe-events-' . self::$pluginSlug . '-submit-import-all' );
 			echo '<span id="tribe-events-import-all-events-form-elements"></span>';
-			echo '<p><input style="float:left" type="submit" name="tribe-events-importexport-import-all" id="tribe-events-importexport-import-all" value="' . sprintf( __( 'Import All %s', 'tribe-events-calendar' ), '(0)' ) . '" class="button-secondary" /></p>';
+			echo '<p><input type="submit" style="float:left;" name="tribe-events-importexport-import-all" id="tribe-events-importexport-import-all" value="' . sprintf( __( 'Import All %s', 'tribe-events-calendar' ), '(0)' ) . '" class="button-secondary tribe-before-table-button" /></p>';
 			echo '</form>';
 		}
 		
