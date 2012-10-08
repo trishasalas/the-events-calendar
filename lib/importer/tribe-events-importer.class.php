@@ -162,12 +162,34 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		abstract protected function getEventsData();
 		
 		/**
+		 * Abstract method for saving an import query.
+		 *
+		 * @since 2.1
+		 */
+		abstract protected function saveImportQuery();
+		
+		/**
 		 * Parse into events list.
 		 *
 		 * @param mixed $eventsData
 		 * @return array For the events list.
 		 */
 		abstract protected function parseIntoEventsList( $eventsData );
+		
+		/**
+		 * Build and echo the Saved Imports table.
+		 * 
+		 * @return void
+		 */
+		abstract public function doSavedImportsTable();
+		
+		/**
+		 * Abstract method for constructing rows of the saved imports table.
+		 *
+		 * @param array $saved_import An array containing the information regarding the saved import.
+		 * @return string The new table row.
+		 */
+		abstract protected function buildSavedImportRow( $saved_import );
 		
 		/**
 		 * Abstract method that is used to set a given event's data to a standardized 
@@ -254,6 +276,7 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 			add_action( 'admin_notices', array( $this, 'displayErrors' ) );
 			
 			add_action( 'wp_ajax_tribe_events_' . self::$pluginSlug . '_get_possible_events', array( $this, 'ajaxGetPossibleEvents' ) );
+			add_action( 'wp_ajax_tribe_events_' . self::$pluginSlug . '_save_import_query', array( $this, 'ajaxSaveImportQuery' ) );
 			add_action( 'tribe_events_importexport_content_tab_' . self::$pluginSlug, array( $this, 'generateImportTab' ) );
 			add_action( 'tribe_events_importexport_import_instructions_tab_' . self::$pluginSlug, array( $this, 'importTabInstructions' ) );
 			add_action( 'tribe_events_importexport_import_form_tab_' . self::$pluginSlug, array( $this, 'doImportForm' ) );
@@ -262,6 +285,8 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 			add_action( 'tribe_events_importexport_after_import_table_tab_' . self::$pluginSlug, array( $this, 'doLoadMoreLink' ) );
 			add_action( 'tribe_events_importexport_before_import_table_tab_' . self::$pluginSlug, array( $this, 'doOpeningFormTag' ) );
 			add_action( 'tribe_events_importexport_after_import_page_tab_' . self::$pluginSlug, array( $this, 'doClosingFormTag' ) );
+			add_action( 'tribe_events_importexport_before_import_table', array( $this, 'doSaveImportQueryForm' ) );
+			add_action( 'tribe_events_importexport_saved_imports_table_tab' . self::$pluginSlug, array( $this, 'doSavedImportsTable' ) );
 			
 			add_action( 'admin_head', array( $this, '_processImportSubmission' ) );
 		}
@@ -420,6 +445,28 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 			$this->response['body'] = $this->buildPossibleEventsListItems( $possible_events_list );
 			$this->response['previous_request'] = $_POST;
 			
+			echo json_encode( $this->response );
+			die();
+		}
+		
+		/**
+		 * Save the import query using AJAX.
+		 *
+		 * @since 2.1
+		 * @author PaulHughes01
+		 *
+		 * @return void
+		 */
+		public function ajaxSaveImportQuery() {
+			$saved = false;
+			if ( isset( $_POST['schedule'] ) && $_POST['schedule'] != '' ) {
+				$saved = $this->saveImportQuery();
+			}
+			if ( $saved ) {
+				$this->response['body'] = $this->buildSavedImportRow();
+			} else {
+				$this->response['error'][] = 'Could not save query.';
+			}
 			echo json_encode( $this->response );
 			die();
 		}
@@ -703,7 +750,7 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		/**
 		 * Open the import form tag.
 		 *
-		 * @since 0.1
+		 * @since 2.1
 		 * @author PaulHughes01
 		 *
 		 * @return void
@@ -715,13 +762,39 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		/**
 		 * Close the import form tag.
 		 *
-		 * @since 0.1
+		 * @since 2.1
 		 * @author PaulHughes01
 		 *
 		 * @return void
 		 */
 		public function doClosingFormTag() {
 			echo '</form>';
+		}
+		
+		/**
+		 * Add the form for saving a search query.
+		 *
+		 * @since 2.1
+		 * @author PaulHughes01
+		 *
+		 * @uses self::sortOnInterval()
+		 * @return void
+		 */
+		public function doSaveImportQueryForm() {
+			echo '<div>Auto-Import: ';
+			echo '<select name="tribe-events-importexport-import-schedule" id="tribe-events-importexport-import-schedule">';
+			$cron_schedules = wp_get_schedules();
+			uasort( $cron_schedules, array( $this, 'sortOnInterval' ) );
+			foreach ( $cron_schedules as $key => $value ) {
+				echo '<option value="' . $key . '">' . $value['display'] . '</option>';
+			}
+			echo '</select>';
+			echo '<input type="button" class="button-secondary" name="tribe-events-import-auto-import-save" id="tribe-events-import-auto-import-save" value="' . __( 'Save Import', 'tribe-events-calendar' ) . '" />';
+			echo '<img class="tribe-spinner" id="tribe-events-importexport-save-import-spinner" src="' . admin_url( 'images/wpspin_light.gif' ) . '" />';
+			echo '</div>';
+		}
+		public function sortOnInterval( $a, $b ) {
+			return $a['interval'] - $b['interval'];
 		}
 	}
 }

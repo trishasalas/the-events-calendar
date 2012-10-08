@@ -95,7 +95,7 @@ if (!class_exists('Tribe_Events_ImportExport_Registrar')) {
 		 * @return null
 		 */
 		protected function addFilters() {
-		
+			add_filter( 'cron_schedules', array( $this, 'addCronIntervals' ) );
 		}
 		
 		/**
@@ -181,6 +181,26 @@ if (!class_exists('Tribe_Events_ImportExport_Registrar')) {
 		 */
 		public function addExportTab() {
 			
+		}
+		
+		/**
+		 * Add weekly and monthly cron schedules.
+		 *
+		 * @author PaulHughes01
+		 * @since 2.1
+		 *
+		 * @return null
+		 */
+		public function addCronIntervals() {
+			$schedules['weekly'] = array(
+				'interval' => 604800,
+				'display' => __( 'Once Weekly', 'tribe-events-calendar' )
+			);
+			$schedules['monthly'] = array(
+				'interval' => 2635200,
+				'display' => __( 'Once Monthly', 'tribe-events-calendar' )
+			);
+			return $schedules;
 		}
 	}	
 }

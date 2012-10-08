@@ -19,28 +19,16 @@ if ( !defined('ABSPATH') ) { die('-1'); }
 ?>
 <h3>Saved Imports</h3>
 <div class="tribe-events-importer-table">
-<table class="wp-list-table widefat">
-<thead>
-<tr>
-<th>Location</th>
-<th>Radius</th>
-<th>Category</th>
-<th>Initiated</th>
-<th>Last Updates</th>
-<th>Frequency</th>
-<th># Imported</th>
-<th />
-</tr>
-</thead>
-<tbody>
-<tr class="alternate">
-<td>Boston, MA</td><td>25 Mi</td><td>Concert</td><td>10/12/2012</td><td>10/19/2012 18:00</td><td>Hourly</td><td>1,235</td><td class="tribe-admin-action"><span class="delete row-actions"><a href="">Delete</a></span></td>
-</tr>
-<tr>
-<td>95060</td><td>5 Mi</td><td>All</td><td>10/12/2012</td><td>10/19/2012 0:00</td><td>Daily</td><td>546</td><td class="tribe-admin-action"><span class="delete row-actions"><a href="">Delete</a></span></td>
-</tr>
-</tbody>
-</table>
+<?php
+do_action( 'tribe_events_importexport_before_saved_imports_table' );
+do_action( 'tribe_events_importexport_before_saved_imports_table_tab' . self::$pluginSlug );
+
+do_action( 'tribe_events_importexport_saved_imports_table' );
+do_action( 'tribe_events_importexport_saved_imports_table_tab' . self::$pluginSlug );
+
+do_action( 'tribe_events_importexport_after_saved_imports_table' );
+do_action( 'tribe_events_importexport_after_saved_imports_table_tab' . self::$pluginSlug );
+?>
 </div>
 <h3>New Import</h3>
 <script type="text/javascript">
@@ -86,6 +74,35 @@ function ajaxLoadMoreEvents( pluginSlug, args ) {
 				jQuery('#tribe-events-importexport-' + pluginSlug + '-load-more').hide();
 			}
 		}
+	});
+}
+function ajaxSaveImportQuery( pluginSlug, args ) { 
+	jQuery( function($) {
+		args['action'] = 'tribe_events_<?php echo self::$pluginSlug; ?>_save_import_query';
+		$.ajax({
+			type: "POST",
+			url: "<?php echo admin_url( 'admin-ajax.php' ); ?>",
+			data: args,
+			beforeSend: function() {
+				$('#tribe-events-importexport-save-import-spinner').show();
+			},
+			success: function(data) {
+				$('#tribe-events-importexport-save-import-spinner').hide();
+				try {
+					var response = jQuery.parseJSON(data);
+				} catch(e) {}
+				if ( response != null && typeof response == 'object' && response.error ) {
+					var html = '';
+					for( i=0; i<response.error.length; i++ ) {
+						html = html + '<div class="error"><p>' + response.error[i] + '</p></div>';
+					}
+					jQuery('#tribe-events-importexport-import-form').append(html);
+				}
+				if ( response != null && typeof response == 'object' && response.body && response.body.length > 0 ) {
+					jQuery('#tribe-events-importexport-saved-imports-table tbody').append(response.body);
+				}
+			}
+		});
 	});
 }
 </script>
