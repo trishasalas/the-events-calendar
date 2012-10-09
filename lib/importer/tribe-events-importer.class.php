@@ -280,15 +280,23 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 			add_action( 'tribe_events_importexport_content_tab_' . self::$pluginSlug, array( $this, 'generateImportTab' ) );
 			add_action( 'tribe_events_importexport_import_instructions_tab_' . self::$pluginSlug, array( $this, 'importTabInstructions' ) );
 			add_action( 'tribe_events_importexport_import_form_tab_' . self::$pluginSlug, array( $this, 'doImportForm' ) );
+			add_action( 'tribe_events_importexport_import_form_tab_' . self::$pluginSlug, array( $this, 'doImportWrap' ), 1 );
+			add_action( 'tribe_events_importexport_import_form_tab_' . self::$pluginSlug, array( $this, 'closeDiv' ), 50 );
 			add_action( 'tribe_events_importexport_apikey_tab_' . self::$pluginSlug, array( $this, 'doApiKeyForm' ) );
 			add_action( 'tribe_events_importexport_before_import_table_tab_' . self::$pluginSlug, array( $this, 'addTotalNumberCounter' ) );
-			add_action( 'tribe_events_importexport_after_import_table_tab_' . self::$pluginSlug, array( $this, 'doLoadMoreLink' ) );
+			add_action( 'tribe_events_importexport_after_import_table_tab_' . self::$pluginSlug, array( $this, 'doAfterEventsImportTable' ) );
 			add_action( 'tribe_events_importexport_before_import_table_tab_' . self::$pluginSlug, array( $this, 'doOpeningFormTag' ) );
 			add_action( 'tribe_events_importexport_after_import_page_tab_' . self::$pluginSlug, array( $this, 'doClosingFormTag' ) );
-			add_action( 'tribe_events_importexport_before_import_table', array( $this, 'doSaveImportQueryForm' ) );
+			add_action( 'tribe_events_importexport_before_import_table_tab_' . self::$pluginSlug, array( $this, 'doSaveImportQueryForm' ), 9 );
 			add_action( 'tribe_events_importexport_saved_imports_table_tab' . self::$pluginSlug, array( $this, 'doSavedImportsTable' ) );
+			add_action( 'tribe_events_importexport_before_saved_imports_table_tab' . self::$pluginSlug, array( $this, 'doSavedImportsHeader' ) );
+			add_action( 'tribe_events_importexport_import_info_box_top_tab_' . self::$pluginSlug, array( $this, 'doBeforeImportInfoBox' ) );
+			add_action( 'tribe_events_importexport_after_saved_imports_table_tab' . self::$pluginSlug, array( $this, 'closeDiv' ) );
+			add_action( 'tribe_events_importexport_before_import_table_tab_' . self::$pluginSlug, array( $this, 'doBeforeEventsTable' ) );
+			add_action( 'tribe_events_importexport_import_table_tab_' . self::$pluginSlug, array( $this, 'doEventsTable' ) );
 			
 			add_action( 'admin_head', array( $this, '_processImportSubmission' ) );
+			add_action( 'admin_enqueue_scripts', array( $this, '_enqueueScriptsAndStyles' ) );
 		}
 		
 		/**
@@ -304,6 +312,21 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		protected function _addFilters() {
 			add_filter( 'tribe-events-importexport-import-apis', array( $this, 'addEventImporter' ) );
 			add_filter( 'tribe-events-importexport-export-apis', array( $this, 'addEventExporter' ) );
+		}
+		
+		/**
+		 * Enqueue the scripts and styles.
+		 * 
+		 * @since 2.1
+		 * @author PaulHughes01
+		 *
+		 * @return void
+		 */
+		public function _enqueueScriptsAndStyles() {
+			$importer_registrar = Tribe_Events_ImportExport_Registrar::instance();
+			if ( $importer_registrar->currentTab == self::$pluginSlug ) {
+				Tribe_Template_Factory::asset_package('tribe-events-import');			
+			}
 		}
 		
 		/**
@@ -743,8 +766,11 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		 *
 		 * @return void
 		 */
-		public function doLoadMoreLink() {
+		public function doAfterEventsImportTable() {
 			echo '<div class="tribe-after-table-link"><a href="" id="tribe-events-importexport-' . self::$pluginSlug . '-load-more" style="display:none;">' . apply_filters('tribe-events-importexport-' . self::$pluginSlug . '-load-more-link-text', __( 'Load more...', 'tribe-events-eventful-importer' ) ) . '</a></div>';
+			wp_nonce_field( 'submit-import', 'tribe-events-' . self::$pluginSlug . '-submit-import' );
+			echo '<div class="tribe-after-table-button"><input type="submit" class="button-primary" id="tribe-events-importexport-import-submit" name="tribe-events-importexport-import-submit" value="Import Checked" /></div>';
+			echo '</div>';
 		}
 		
 		/**
@@ -795,6 +821,88 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		}
 		public function sortOnInterval( $a, $b ) {
 			return $a['interval'] - $b['interval'];
+		}
+		
+		/**
+		 * Generate the saved imports header.
+		 *
+		 * @since 2.1
+		 * @author PaulHughes01
+		 *
+		 * @return void
+		 */
+		public function doSavedImportsHeader() {
+			echo '<h3>' . __( 'Saved Imports', 'tribe-events-calendar' ) . '</h3>';
+			echo '<div class="tribe-events-importer-table">';
+		}
+		
+		/**
+		 * Generate the header/beginning of the info box.
+		 *
+		 * @since 2.1
+		 * @author PaulHughes01
+		 *
+		 * @return void
+		 */
+		public function doBeforeImportInfoBox() {
+			echo '<h2>' . sprintf( __( 'How to Import Events from %s', 'tribe-events-calendar' ), self::$pluginShortName ) . '</h2>';
+			echo '<h3>' . __( 'Instructions', 'tribe-events-calendar' ) . '</h3>';
+		}
+		
+		/**
+		 * After the saved imports table.
+		 *
+		 * @since 2.1
+		 *
+		 * @return void
+		 */
+		public function closeDiv() { 
+			echo '</div>';
+		}
+		
+		/**
+		 * Do the import form wrapper.
+		 *
+		 * @since 2.1
+		 * @return void
+		 */
+		public function doImportWrap() {
+			echo '<h3>' . __( 'New Import', 'tribe-events-calendar' ) . '</h3>';
+			echo '<div id="tribe-events-importexport-import-form">';
+		}
+		
+		/**
+		 * Before the events table, add the button and wrapper.
+		 *
+		 * @since 2.1
+		 * @return void
+		 */
+		public function doBeforeEventsTable() {
+			echo '<div class="tribe-events-importer-table" id="tribe-events-import-list-wrapper">';
+			echo '<div class="tribe-before-table-button"><input type="submit" class="button-primary" id="tribe-events-importexport-import-submit" name="tribe-events-importexport-import-submit" value="Import Checked" /></div>';
+		}
+		
+		/**
+		 * Do the events table.
+		 *
+		 * @since 2.1
+		 * @return void
+		 */
+		public function doEventsTable() {
+			echo '<table id="tribe-events-possible-import-events-list" class="wp-list-table widefat">';
+			echo '<thead>';
+			echo '<tr>';
+			echo '<th class="manage-column column-cb check-column">';
+			echo '<input id="tribe-events-importexport-list-check-all" type="checkbox" />';
+			echo '</th>';
+			echo '<th style="width: 20%">Date(s)</th>';
+			echo '<th>Event</th>';
+			echo '<th />';
+			echo '</tr>';
+			echo '</thead>';
+			echo '<tbody>';
+			echo '</tbody>';
+			echo '</table>';
 		}
 	}
 }
