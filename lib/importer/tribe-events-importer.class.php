@@ -189,7 +189,7 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		 * @param array $saved_import An array containing the information regarding the saved import.
 		 * @return string The new table row.
 		 */
-		abstract protected function buildSavedImportRow( $saved_import );
+		abstract protected function buildSavedImportRow( $saved_import = null );
 		
 		/**
 		 * Abstract method that is used to set a given event's data to a standardized 
