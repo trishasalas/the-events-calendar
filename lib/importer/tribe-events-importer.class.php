@@ -429,10 +429,18 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 				$event_id = $this->getEventByImportApiId( (string) $event['uid'] );
 				if ( !$event_id ) {
 					$html .= '<tr>';
-					$html .= '<th scope="row" class="check-column"><input type="checkbox" name="tribe_events_importexport_events_to_import[]" value="' . $event['uid'] . '" /></th><td>' . $event['startDate'] . $sep . $event['endDate'] . '</td><td><strong>' . $event['title'] . '</strong><div>' . $event['venue'] . '</div></td><td />';
+					if ( $event['url'] ) {
+						$html .= '<th scope="row" class="check-column"><input type="checkbox" name="tribe_events_importexport_events_to_import[]" value="' . $event['uid'] . '" /></th><td>' . $event['startDate'] . $sep . $event['endDate'] . '</td><td><a target="_blank" href="' . $event['url'] . '"><strong>' . $event['title'] . '</strong></a><div>' . $event['venue'] . '</div></td><td />';
+					} else {
+						$html .= '<th scope="row" class="check-column"><input type="checkbox" name="tribe_events_importexport_events_to_import[]" value="' . $event['uid'] . '" /></th><td>' . $event['startDate'] . $sep . $event['endDate'] . '</td><td><strong>' . $event['title'] . '</strong><div>' . $event['venue'] . '</div></td><td />';
+					}
 				} else {
 					$html .= '<tr class="tribe-greyed">';
-					$html .= '<th scope="row" class="check-column" /><td>' . $event['startDate'] . $sep . $event['endDate'] . '</td><td><strong>' . $event['title'] . '</strong><div>' . $event['venue'] . '</div></td><td><strong>Imported</strong></td>';
+					if ( $event['url'] ) {
+						$html .= '<th scope="row" class="check-column" /><td>' . $event['startDate'] . $sep . $event['endDate'] . '</td><td><a target="_blank" href="' . $event['url'] . '"><strong>' . $event['title'] . '</strong></a><div>' . $event['venue'] . '</div></td><td><strong>Imported</strong></td>';
+					} else {
+						$html .= '<th scope="row" class="check-column" /><td>' . $event['startDate'] . $sep . $event['endDate'] . '</td><td><strong>' . $event['title'] . '</strong><div>' . $event['venue'] . '</div></td><td><strong>Imported</strong></td>';
+					}
 				}
 				$html .= '</tr>';
 			}
