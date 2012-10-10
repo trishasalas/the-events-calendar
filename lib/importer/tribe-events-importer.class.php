@@ -277,6 +277,7 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 			
 			add_action( 'wp_ajax_tribe_events_' . self::$pluginSlug . '_get_possible_events', array( $this, 'ajaxGetPossibleEvents' ) );
 			add_action( 'wp_ajax_tribe_events_' . self::$pluginSlug . '_save_import_query', array( $this, 'ajaxSaveImportQuery' ) );
+			add_action( 'wp_ajax_tribe_events_' . self::$pluginSlug . '_delete_saved_import_query', array( $this, 'ajaxDeleteSavedImportQuery' ) );
 			add_action( 'tribe_events_importexport_content_tab_' . self::$pluginSlug, array( $this, 'generateImportTab' ) );
 			add_action( 'tribe_events_importexport_import_instructions_tab_' . self::$pluginSlug, array( $this, 'importTabInstructions' ) );
 			add_action( 'tribe_events_importexport_import_form_tab_' . self::$pluginSlug, array( $this, 'doImportForm' ) );
@@ -501,6 +502,49 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 			echo json_encode( $this->response );
 			die();
 		}
+		
+		/**
+		 * Delete the saved import query using AJAX.
+		 *
+		 * @since 2.1
+		 * @author PaulHughes01
+		 *
+		 * @return void
+		 */
+		public function ajaxDeleteSavedImportQuery() {
+			$deleted = false;
+			if ( isset( $_POST['index'] ) && $_POST['index'] != '' ) {
+				$deleted = $this->deleteSavedImportQuery( $_POST['index'] );
+			}
+			if ( $deleted ) {
+				$this->response['success'] = true;
+			} else {
+				$this->response['error'][] = 'Could not delete the query.';
+			}
+			echo json_encode( $this->response );
+			die();
+		}
+		
+		/**
+		 * Delete the saved import query.
+		 *
+		 * @since 2.1
+		 * @author PaulHughes01
+		 *
+		 * @param int $index the array index of the saved query.
+		 * @return bool Whether the deletion was successful.
+		 */
+		public function deleteSavedImportQuery( $index ) {
+			$success = false;
+			if ( isset( $index ) ) {
+				$saved_imports = get_option( 'tribe-events-importexport-' . self::$pluginSlug . '-saved-imports', array() );
+				unset( $saved_imports[$index] );
+				$saved_imports = array_values( $saved_imports );
+				
+				$success = update_option( 'tribe-events-importexport-' . self::$pluginSlug . '-saved-imports', $saved_imports );
+			}
+			return $success;
+		} 
 		
 		/**
 		 * Function that begins the process of processing the import submission.
