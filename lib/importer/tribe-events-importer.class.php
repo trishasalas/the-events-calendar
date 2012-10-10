@@ -591,7 +591,7 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 					if ( isset( $event_array['venue']['title'] ) ) $event_data['Venue']['Venue'] = $event_array['venue']['title'];
 					if ( isset( $event_array['venue']['address'] ) ) $event_data['Venue']['Address'] = $event_array['venue']['address'];
 					if ( isset( $event_array['venue']['city'] ) ) $event_data['Venue']['City'] = $event_array['venue']['city'];
-					if ( isset( $event_array['venue']['stateProvince'] ) ) $event_data['Venue']['StateProvince'] = $event_array['venue']['stateProvince'];
+					if ( isset( $event_array['venue']['stateProvince'] ) ) $event_data['Venue']['State'] = $event_array['venue']['stateProvince'];
 					if ( isset( $event_array['venue']['country'] ) ) $event_data['Venue']['Country'] = $event_array['venue']['country'];
 					if ( isset( $event_array['venue']['zipCode'] ) ) $event_data['Venue']['Zip'] = $event_array['venue']['zipCode'];
 					if ( isset( $event_array['venue']['phone'] ) ) $event_data['Venue']['Phone'] = $event_array['venue']['phone'];
