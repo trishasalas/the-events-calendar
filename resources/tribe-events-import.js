@@ -71,6 +71,39 @@ function ajaxSaveImportQuery( ajaxUrl, pluginSlug, args ) {
 		});
 	});
 }
+function ajaxDeleteSavedImportQuery( ajaxUrl, pluginSlug, clicked ) {
+	jQuery( function($) {
+		var args = {
+			action: 'tribe_events_' + pluginSlug + '_delete_saved_import_query',
+			index: $(clicked).closest("tr")[0].rowIndex - 1
+		};
+		$.ajax({
+			type: "POST",
+			url: ajaxUrl,
+			data: args,
+			beforeSend: function() {
+				$(clicked).hide();
+			},
+			success: function(data) {
+				try { 
+					var response = jQuery.parseJSON(data);
+				} catch(e) {}
+				if ( response != null && typeof response == 'object' && response.error ) {
+					var html = '';
+					for( i=0; i<response.error.length; i++ ) {
+						html = html + '<div class="error"><p>' + response.error[i] + '</p></div>';
+					}
+					jQuery('#tribe-events-importexport-import-form').append(html);
+				}
+				if ( response != null && typeof response == 'object' && response.success ) {
+					$($(clicked).closest("tr")[0]).hide('slow', function() {
+							$(this).remove();
+					});
+				}
+			}
+		});
+	});
+}
 jQuery( function($) {
 	$("#tribe-events-importexport-list-check-all").click(function() {
 		$("[name='tribe_events_events_to_import']").attr("checked", this.checked);

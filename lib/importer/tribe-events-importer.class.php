@@ -149,7 +149,7 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		 * @since 2.1
 		 * @author PaulHughes01
 		 */
-		abstract public function processImportSubmission();
+		abstract public function processImportSubmission( $args = null );
 		
 		/**
 		 * Abstract method that is used to get event data from a source.
@@ -277,6 +277,7 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 			
 			add_action( 'wp_ajax_tribe_events_' . self::$pluginSlug . '_get_possible_events', array( $this, 'ajaxGetPossibleEvents' ) );
 			add_action( 'wp_ajax_tribe_events_' . self::$pluginSlug . '_save_import_query', array( $this, 'ajaxSaveImportQuery' ) );
+			add_action( 'wp_ajax_tribe_events_' . self::$pluginSlug . '_delete_saved_import_query', array( $this, 'ajaxDeleteSavedImportQuery' ) );
 			add_action( 'tribe_events_importexport_content_tab_' . self::$pluginSlug, array( $this, 'generateImportTab' ) );
 			add_action( 'tribe_events_importexport_import_instructions_tab_' . self::$pluginSlug, array( $this, 'importTabInstructions' ) );
 			add_action( 'tribe_events_importexport_import_form_tab_' . self::$pluginSlug, array( $this, 'doImportForm' ) );
@@ -294,6 +295,8 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 			add_action( 'tribe_events_importexport_after_saved_imports_table_tab' . self::$pluginSlug, array( $this, 'closeDiv' ) );
 			add_action( 'tribe_events_importexport_before_import_table_tab_' . self::$pluginSlug, array( $this, 'doBeforeEventsTable' ) );
 			add_action( 'tribe_events_importexport_import_table_tab_' . self::$pluginSlug, array( $this, 'doEventsTable' ) );
+			
+			add_action( 'tribe_events_' . self::$pluginSlug . '_do_scheduled_import', array( $this, 'processImportSubmission' ), 10, 1 );
 			
 			add_action( 'admin_head', array( $this, '_processImportSubmission' ) );
 			add_action( 'admin_enqueue_scripts', array( $this, '_enqueueScriptsAndStyles' ) );
@@ -396,6 +399,37 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		}
 		
 		/**
+		 * Clears all the cron jobs.
+		 *
+		 * @since 2.1
+		 * @author PaulHughes01
+		 *
+		 * @return void
+		 */
+		public function clearCronJobs() {
+			wp_clear_scheduled_hook( 'tribe_events_' . self::$pluginSlug . '_do_scheduled_import' );
+		}
+		
+		/**
+		 * Reset cron jobs.
+		 *
+		 * @since 2.1
+		 * @author PaulHughes01
+		 *
+		 * @return void
+		 */
+		public function resetCronJobs() {
+			self::wp_clear_scheduled_hook();
+			
+			$saved_imports = get_option( 'tribe-events-importexport-' . self::$pluginSlug . '-saved-imports', array() );
+			
+			foreach ( $saved_imports as $saved_import ) {
+				$args = array( $saved_import );
+				wp_schedule_event( time(), $args[0]['schedule'], 'tribe_events_' . self::$pluginSlug . '_do_scheduled_import', $args );
+			}
+		}
+		
+		/**
 		 * Display notification messages.
 		 *
 		 * @since 2.1
@@ -429,10 +463,18 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 				$event_id = $this->getEventByImportApiId( (string) $event['uid'] );
 				if ( !$event_id ) {
 					$html .= '<tr>';
-					$html .= '<th scope="row" class="check-column"><input type="checkbox" name="tribe_events_importexport_events_to_import[]" value="' . $event['uid'] . '" /></th><td>' . $event['startDate'] . $sep . $event['endDate'] . '</td><td><strong>' . $event['title'] . '</strong><div>' . $event['venue'] . '</div></td><td />';
+					if ( $event['url'] ) {
+						$html .= '<th scope="row" class="check-column"><input type="checkbox" name="tribe_events_importexport_events_to_import[]" value="' . $event['uid'] . '" /></th><td>' . $event['startDate'] . $sep . $event['endDate'] . '</td><td><a target="_blank" href="' . $event['url'] . '"><strong>' . $event['title'] . '</strong></a><div>' . $event['venue'] . '</div></td><td />';
+					} else {
+						$html .= '<th scope="row" class="check-column"><input type="checkbox" name="tribe_events_importexport_events_to_import[]" value="' . $event['uid'] . '" /></th><td>' . $event['startDate'] . $sep . $event['endDate'] . '</td><td><strong>' . $event['title'] . '</strong><div>' . $event['venue'] . '</div></td><td />';
+					}
 				} else {
 					$html .= '<tr class="tribe-greyed">';
-					$html .= '<th scope="row" class="check-column" /><td>' . $event['startDate'] . $sep . $event['endDate'] . '</td><td><strong>' . $event['title'] . '</strong><div>' . $event['venue'] . '</div></td><td><strong>Imported</strong></td>';
+					if ( $event['url'] ) {
+						$html .= '<th scope="row" class="check-column" /><td>' . $event['startDate'] . $sep . $event['endDate'] . '</td><td><a target="_blank" href="' . $event['url'] . '"><strong>' . $event['title'] . '</strong></a><div>' . $event['venue'] . '</div></td><td><strong>Imported</strong></td>';
+					} else {
+						$html .= '<th scope="row" class="check-column" /><td>' . $event['startDate'] . $sep . $event['endDate'] . '</td><td><strong>' . $event['title'] . '</strong><div>' . $event['venue'] . '</div></td><td><strong>Imported</strong></td>';
+					}
 				}
 				$html .= '</tr>';
 			}
@@ -485,13 +527,84 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 			if ( isset( $_POST['schedule'] ) && $_POST['schedule'] != '' ) {
 				$saved = $this->saveImportQuery();
 			}
+			$scheduled = false;
 			if ( $saved ) {
+				$saved_imports = get_option( 'tribe-events-importexport-' . self::$pluginSlug . '-saved-imports', array() );
+				$last_import = end( $saved_imports );
+				$scheduled = $this->scheduleImportQuery( $last_import );
+			}
+			if ( $scheduled ) {
 				$this->response['body'] = $this->buildSavedImportRow();
 			} else {
 				$this->response['error'][] = 'Could not save query.';
 			}
 			echo json_encode( $this->response );
 			die();
+		}
+		
+		/**
+		 * Delete the saved import query using AJAX.
+		 *
+		 * @since 2.1
+		 * @author PaulHughes01
+		 *
+		 * @return void
+		 */
+		public function ajaxDeleteSavedImportQuery() {
+			$deleted = false;
+			if ( isset( $_POST['index'] ) && $_POST['index'] != '' ) {
+				$deleted = $this->deleteSavedImportQuery( $_POST['index'] );
+			}
+			if ( $deleted ) {
+				$this->response['success'] = true;
+			} else {
+				$this->response['error'][] = 'Could not delete the query.';
+			}
+			echo json_encode( $this->response );
+			die();
+		}
+		
+		/**
+		 * Delete the saved import query.
+		 *
+		 * @since 2.1
+		 * @author PaulHughes01
+		 *
+		 * @param int $index the array index of the saved query.
+		 * @return bool Whether the deletion was successful.
+		 */
+		public function deleteSavedImportQuery( $index ) {
+			$success = false;
+			if ( isset( $index ) ) {
+				$saved_imports = get_option( 'tribe-events-importexport-' . self::$pluginSlug . '-saved-imports', array() );
+				$timestamp = wp_next_scheduled( 'tribe_events_' . self::$pluginSlug . '_do_scheduled_import', $saved_imports[$index] );
+				wp_unschedule_event( $timestamp, 'tribe_events_' . self::$pluginSlug . '_do_scheduled_import', $saved_imports[$index] );
+
+				unset( $saved_imports[$index] );
+				$saved_imports = array_values( $saved_imports );
+				
+				$success = update_option( 'tribe-events-importexport-' . self::$pluginSlug . '-saved-imports', $saved_imports );
+			}
+			return $success;
+		}
+		
+		/**
+		 * Schedule the import query.
+		 *
+		 * @since 2.1
+		 * @author PaulHughes01
+		 *
+		 * @param array $args The args to pass into the action hook. Should be the same as the saved array for the scheduled import.
+		 * @return bool Whether the scheduling was successful.
+		 */
+		protected function scheduleImportQuery( $args ) {
+			$success = false;
+			$args = array( $args );
+			$scheduled = wp_schedule_event( time(), $args[0]['schedule'], 'tribe_events_' . self::$pluginSlug . '_do_scheduled_import', $args );
+			
+			if ( $scheduled !== false )
+				$success = true;
+			return $success;
 		}
 		
 		/**
