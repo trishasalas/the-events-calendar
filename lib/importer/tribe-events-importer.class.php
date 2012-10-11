@@ -695,6 +695,7 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 				$event_data['post_content'] = isset( $event_array['event']['description'] ) ? $event_array['event']['description'] : '';
 				$event_data['EventShowMap'] = isset( $event_array['event']['showMap'] ) ? $event_array['event']['showMap'] : null;
 				$event_data['EventShowMapLink'] = isset( $event_array['event']['showMapLink'] ) ? $event_array['event']['showMapLink'] : null;
+				$event_data['EventCost'] = isset( $event_array['event']['cost'] ) ? $event_array['event']['cost'] : null;
 				
 				$venue_id = isset( $event_array['venue_meta']['ImportApiID'] ) ? $this->getVenueByImportApiId( $event_array['venue_meta']['ImportApiID'] ) : false;
 				if ( $venue_id ) {
