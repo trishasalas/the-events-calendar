@@ -407,7 +407,15 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		 * @return void
 		 */
 		public function clearCronJobs() {
-			wp_clear_scheduled_hook( 'tribe_events_' . self::$pluginSlug . '_do_scheduled_import' );
+			$saved_imports = get_option( 'tribe-events-importexport-' . self::$pluginSlug . '-saved-imports', array() );
+			
+			foreach( $saved_imports as $saved_import ) {
+				unset( $saved_import['last_update'] );
+				unset( $saved_import['number_imported'] );
+				wp_clear_scheduled_hook( 'tribe_events_' . self::$pluginSlug . '_do_scheduled_import', array( $saved_import ) );
+			}
+			
+			update_option( 'tribe-events-importexport-' . self::$pluginSlug . '-saved-imports', array() );
 		}
 		
 		/**
@@ -444,6 +452,12 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 					echo '<p>' . $message . '</p>';
 					echo '</div>';
 				}
+			}
+			$saved_imports = get_option( 'tribe-events-importexport-' . self::$pluginSlug . '-saved-imports', array() );
+			foreach( $saved_imports as $saved_import ) {
+				unset( $saved_import['last_update'] );
+				unset( $saved_import['number_imported'] );
+				$args = array( $saved_import );
 			}
 		}
 		
@@ -531,6 +545,8 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 			if ( $saved ) {
 				$saved_imports = get_option( 'tribe-events-importexport-' . self::$pluginSlug . '-saved-imports', array() );
 				$last_import = end( $saved_imports );
+				unset( $last_import['last_update'] );
+				unset( $last_import['number_imported'] );
 				$scheduled = $this->scheduleImportQuery( $last_import );
 			}
 			if ( $scheduled ) {
@@ -577,6 +593,8 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 			$success = false;
 			if ( isset( $index ) ) {
 				$saved_imports = get_option( 'tribe-events-importexport-' . self::$pluginSlug . '-saved-imports', array() );
+				unset( $saved_imports[$index]['last_update'] );
+				unset( $saved_imports[$index]['number_imported'] );
 				$timestamp = wp_next_scheduled( 'tribe_events_' . self::$pluginSlug . '_do_scheduled_import', $saved_imports[$index] );
 				wp_unschedule_event( $timestamp, 'tribe_events_' . self::$pluginSlug . '_do_scheduled_import', $saved_imports[$index] );
 
@@ -695,7 +713,7 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 				$event_data['post_content'] = isset( $event_array['event']['description'] ) ? $event_array['event']['description'] : '';
 				$event_data['EventShowMap'] = isset( $event_array['event']['showMap'] ) ? $event_array['event']['showMap'] : null;
 				$event_data['EventShowMapLink'] = isset( $event_array['event']['showMapLink'] ) ? $event_array['event']['showMapLink'] : null;
-				$event_data['EventCost'] = isset( $event_array['event']['cost'] ) ? $event_array['event']['cost'] : null;
+				$event_data['EventCost'] = isset( $event_array['event']['cost'] ) ? $event_array['event']['cost'] : '';
 				
 				$venue_id = isset( $event_array['venue_meta']['ImportApiID'] ) ? $this->getVenueByImportApiId( $event_array['venue_meta']['ImportApiID'] ) : false;
 				if ( $venue_id ) {
