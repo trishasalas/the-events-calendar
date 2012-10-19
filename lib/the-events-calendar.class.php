@@ -25,7 +25,7 @@ if ( !class_exists( 'TribeEvents' ) ) {
 			'public' => true,
 			'rewrite' => array('slug' => 'event', 'with_front' => false),
 			'menu_position' => 6,
-			'supports' => array('title','editor','excerpt','author','thumbnail', 'custom-fields'),
+			'supports' => array('title','editor','excerpt','author','thumbnail', 'custom-fields', 'comments'),
 			'taxonomies' => array('post_tag'),
 			'capability_type' => array('tribe_event', 'tribe_events'),
 			'map_meta_cap' => true
@@ -184,7 +184,9 @@ if ( !class_exists( 'TribeEvents' ) ) {
 			require_once( $this->pluginPath.'public/advanced-functions/organizer.php' );
 
 			// Load Deprecated Template Tags
-			require_once( 'template-tags-deprecated.php' );
+			if ( ! defined( 'TRIBE_DISABLE_DEPRECATED_TAGS' ) ) {
+				require_once( $this->pluginPath.'public/template-tags/deprecated.php' );
+			}
 
 			// Load Classes
 			require_once( 'widget-list.class.php' );
@@ -3061,7 +3063,7 @@ if ( !class_exists( 'TribeEvents' ) ) {
 
 			$filters[] = array( 'name'    => 'tribe-bar-date',
 			                    'caption' => 'Date',
-			                    'html'    => '<input type="text" name="tribe-bar-date" id="tribe-bar-date" value="' . esc_attr( $value ) . '" placeholder="Date">' );
+			                    'html'    => '<input type="text" name="tribe-bar-date" style="position: relative; z-index: 100000;" id="tribe-bar-date" value="' . esc_attr( $value ) . '" placeholder="Date">' );
 
 			return $filters;
 		}
