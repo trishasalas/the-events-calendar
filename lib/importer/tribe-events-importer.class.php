@@ -283,7 +283,7 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 			add_action( 'tribe_events_importexport_import_form_tab_' . self::$pluginSlug, array( $this, 'doImportForm' ) );
 			add_action( 'tribe_events_importexport_import_form_tab_' . self::$pluginSlug, array( $this, 'doImportWrap' ), 1 );
 			add_action( 'tribe_events_importexport_import_form_tab_' . self::$pluginSlug, array( $this, 'closeDiv' ), 50 );
-			add_action( 'tribe_events_importexport_apikey_tab_' . self::$pluginSlug, array( $this, 'doApiKeyForm' ) );
+			add_action( 'tribe_events_importexport_apikeys', array( $this, 'doApiKeyForm' ) );
 			add_action( 'tribe_events_importexport_before_import_table_tab_' . self::$pluginSlug, array( $this, 'addTotalNumberCounter' ) );
 			add_action( 'tribe_events_importexport_after_import_table_tab_' . self::$pluginSlug, array( $this, 'doAfterEventsImportTable' ) );
 			add_action( 'tribe_events_importexport_before_import_table_tab_' . self::$pluginSlug, array( $this, 'doOpeningFormTag' ) );
