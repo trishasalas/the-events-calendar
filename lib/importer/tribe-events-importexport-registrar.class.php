@@ -71,7 +71,7 @@ if (!class_exists('Tribe_Events_ImportExport_Registrar')) {
 		protected function __construct() {
 			self::$menuPageTitle = apply_filters( 'tribe-events-importexport-registrar-menu-page-title', __( 'Import / Export', 'tribe-events-calendar' ) );
 			self::$slug = apply_filters( 'tribe-events-importexport-registrar-slug', 'tribe-events-importexport' );
-			$this->currentTab = apply_filters( 'tribe_events_importexport_current_tab', ( isset( $_GET['tab'] ) && $_GET['tab'] ) ? esc_attr( $_GET['tab'] ) : 'export' );
+			$this->currentTab = apply_filters( 'tribe_events_importexport_current_tab', ( isset( $_GET['tab'] ) && $_GET['tab'] ) ? esc_attr( $_GET['tab'] ) : 'general' );
 			
 			$this->addActions();
 			$this->addFilters();
@@ -130,14 +130,14 @@ if (!class_exists('Tribe_Events_ImportExport_Registrar')) {
 				do_action( 'tribe_events_importexport_below_tabs' );
 				do_action( 'tribe_events_importexport_below_tabs_tab_'.$this->currentTab );
 				echo '<div class="tribe-events_importexport-content">';
-						do_action( 'tribe_events_importexport_before_content' );
-						do_action( 'tribe_events_importexport_before_content_tab_'.$this->currentTab );
-						do_action( 'tribe_events_importexport_content_tab_'.$this->currentTab );
-						if ( !has_action( 'tribe_events_importexport_content_tab_'.$this->currentTab ) ) {
-							echo '<p>' . __( "You've requested a non-existent tab.", 'tribe-events-calendar' ) . '</p>';
-						}
-						do_action( 'tribe_events_importexport_after_content_tab_'.$this->currentTab );
-			 			do_action( 'tribe_events_importexport_after_content' );
+				do_action( 'tribe_events_importexport_before_content' );
+				do_action( 'tribe_events_importexport_before_content_tab_'.$this->currentTab );
+				do_action( 'tribe_events_importexport_content_tab_'.$this->currentTab );
+				if ( !has_action( 'tribe_events_importexport_content_tab_'.$this->currentTab ) ) {
+					echo '<p>' . __( "You've requested a non-existent tab.", 'tribe-events-calendar' ) . '</p>';
+				}
+				do_action( 'tribe_events_importexport_after_content_tab_'.$this->currentTab );
+				do_action( 'tribe_events_importexport_after_content' );
 				echo '</div>';
 				do_action( 'tribe_events_importexport_after_form_div' );
 			echo '</div>';
@@ -152,14 +152,18 @@ if (!class_exists('Tribe_Events_ImportExport_Registrar')) {
 		 */
 		protected function generateTabs() {
 			echo '<h2 id="tribe-events-importexport-tabs" class="nav-tab-wrapper">';
+			$tab = 'general';
+			$name = apply_filters( 'tribe-events-importexport-general-tab-title', __( 'General', 'tribe-events-calendar' ) );
+			$class = ( $tab == $this->currentTab ) ? ' nav-tab-active' : '';
+			echo '<a id="' . $tab . '" class="nav-tab' . $class . '" href="?post_type=' .TribeEvents::POSTTYPE . '&page=' . self::$slug . '&tab=' . urlencode( $tab ) . '">' . $name . '</a>';
 			if ( is_array( $this->export_apis ) && !empty( $this->export_apis ) ) {
 				$tab = 'export';
-				$name = apply_filters( 'tribe-events-importexport-export-tab-title', __( 'Export', 'tribe-events-calendar' )  );
+				$name = apply_filters( 'tribe-events-importexport-export-tab-title', __( 'Export', 'tribe-events-calendar' ) );
 				$class = ( $tab == $this->currentTab ) ? ' nav-tab-active' : '';
 				echo '<a id="' . $tab . '" class="nav-tab' . $class . '" href="?post_type=' .TribeEvents::POSTTYPE . '&page=' . self::$slug . '&tab=' . urlencode( $tab ) . '">' . $name . '</a>';
-				echo ' ' . __( 'Import:', 'tribe-events-calendar' ) . ' ';
 			}
 			if ( is_array( $this->import_apis ) && !empty( $this->import_apis ) ) {
+			echo ' ' . __( 'Import:', 'tribe-events-calendar' ) . ' ';
 				foreach ( $this->import_apis as $importer ) {
 						$tab = esc_attr( $importer['slug'] );
 						$name = esc_attr( $importer['name'] );

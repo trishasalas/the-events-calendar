@@ -314,7 +314,6 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		 */
 		protected function _addFilters() {
 			add_filter( 'tribe-events-importexport-import-apis', array( $this, 'addEventImporter' ) );
-			add_filter( 'tribe-events-importexport-export-apis', array( $this, 'addEventExporter' ) );
 		}
 		
 		/**
@@ -365,19 +364,6 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 				'name' => self::$pluginShortName,
 			);
 			return $import_apis;
-		}
-		
-		/**
-		 * Add Event Importer
-		 *
-		 * @return array An array representing this specific event importer.
-		 */
-		public static function addEventExporter( $export_apis ) {
-			$export_apis[] = array(
-				'slug' => self::$pluginSlug,
-				'name' => self::$pluginShortName,
-			);
-			return $export_apis;
 		}
 		
 		/**
