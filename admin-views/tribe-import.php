@@ -11,8 +11,6 @@ if ( !defined('ABSPATH') ) { die('-1'); }
 	<?php do_action( 'tribe_events_importexport_import_instructions_tab_' . self::$pluginSlug ); ?>
 	<?php do_action( 'tribe_events_importexport_import_info_box_bottom' ); ?>
 	<?php do_action( 'tribe_events_importexport_import_info_box_bottom_tab_' . self::$pluginSlug ); ?>
-	<?php do_action( 'tribe_events_importexport_apikey' ); ?>
-	<?php do_action( 'tribe_events_importexport_apikey_tab_' . self::$pluginSlug ); ?>
 </div>
 <?php do_action( 'tribe_events_importexport_after_import_info_box' ); ?>
 <?php do_action( 'tribe_events_importexport_after_import_info_box_tab_' . self::$pluginSlug ); ?>

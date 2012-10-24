@@ -283,7 +283,7 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 			add_action( 'tribe_events_importexport_import_form_tab_' . self::$pluginSlug, array( $this, 'doImportForm' ) );
 			add_action( 'tribe_events_importexport_import_form_tab_' . self::$pluginSlug, array( $this, 'doImportWrap' ), 1 );
 			add_action( 'tribe_events_importexport_import_form_tab_' . self::$pluginSlug, array( $this, 'closeDiv' ), 50 );
-			add_action( 'tribe_events_importexport_apikey_tab_' . self::$pluginSlug, array( $this, 'doApiKeyForm' ) );
+			add_action( 'tribe_events_importexport_apikeys', array( $this, 'doApiKeyForm' ) );
 			add_action( 'tribe_events_importexport_before_import_table_tab_' . self::$pluginSlug, array( $this, 'addTotalNumberCounter' ) );
 			add_action( 'tribe_events_importexport_after_import_table_tab_' . self::$pluginSlug, array( $this, 'doAfterEventsImportTable' ) );
 			add_action( 'tribe_events_importexport_before_import_table_tab_' . self::$pluginSlug, array( $this, 'doOpeningFormTag' ) );
@@ -314,7 +314,6 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		 */
 		protected function _addFilters() {
 			add_filter( 'tribe-events-importexport-import-apis', array( $this, 'addEventImporter' ) );
-			add_filter( 'tribe-events-importexport-export-apis', array( $this, 'addEventExporter' ) );
 		}
 		
 		/**
@@ -365,19 +364,6 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 				'name' => self::$pluginShortName,
 			);
 			return $import_apis;
-		}
-		
-		/**
-		 * Add Event Importer
-		 *
-		 * @return array An array representing this specific event importer.
-		 */
-		public static function addEventExporter( $export_apis ) {
-			$export_apis[] = array(
-				'slug' => self::$pluginSlug,
-				'name' => self::$pluginShortName,
-			);
-			return $export_apis;
 		}
 		
 		/**
