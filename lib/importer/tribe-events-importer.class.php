@@ -668,6 +668,7 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		protected function saveEvent( $event_array ) {
 			$success = false;
 			if ( isset( $event_array['event']['startDate'] ) && ( isset( $event_array['event']['endDate'] ) || ( isset( $event_array['event']['allDay'] ) && $event_array['event']['allDay'] == true ) ) && isset( $event_array['event']['title'] ) ) {
+				$import_registrar = Tribe_Events_ImportExport_Registrar::instance();
 				$success = true;
 				$event_data = array();
 				$event_data['EventAllDay'] = ( isset( $event_array['event']['allDay'] ) && $event_array['event']['allDay'] == true ) ? 'yes' : '';
@@ -693,7 +694,7 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 					$event_data['EventEndHour'] = '23';
 					$event_data['EventEndMinute'] = '59';
 				}
-				$event_data['post_status'] = isset( $event_array['event']['post_status'] ) ? $event_array['event']['post_status'] : 'draft';
+				$event_data['post_status'] = isset( $event_array['event']['post_status'] ) ? $event_array['event']['post_status'] : $import_registrar->getOption('imported_post_status');;
 				$event_data['EventHideFromUpcoming'] = isset( $event_array['event']['hideFromUpcoming'] ) ? $event_array['event']['hideFromUpcoming'] : null;
 				$event_data['post_title'] = $event_array['event']['title'];
 				$event_data['post_content'] = isset( $event_array['event']['description'] ) ? $event_array['event']['description'] : '';
