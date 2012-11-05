@@ -26,7 +26,7 @@ if (!class_exists('TribeEventsTemplates')) {
          do_action('tribe_tec_template_chooser', $template);
   
 			// no non-events need apply
-			if ( get_query_var( 'post_type' ) != TribeEvents::POSTTYPE && ! is_tax( TribeEvents::TAXONOMY ) && get_query_var( 'post_type' ) != TribeEvents::VENUE_POST_TYPE ) {
+			if ( ! in_array( get_query_var( 'post_type' ), array( TribeEvents::POSTTYPE, TribeEvents::VENUE_POST_TYPE, TribeEvents::ORGANIZER_POST_TYPE ) ) && ! is_tax( TribeEvents::TAXONOMY ) ) {
 				return $template;
 			}
 			
@@ -96,18 +96,23 @@ if (!class_exists('TribeEventsTemplates')) {
          $template = '';
 
 			if ( is_tax( TribeEvents::TAXONOMY) ) {
-				if ( tribe_is_upcoming() || tribe_is_past() )
-					$template = TribeEventsTemplates::getTemplateHierarchy('list');
-				else
+				if ( tribe_is_upcoming() || tribe_is_past() ){
+					Tribe_Template_Factory::asset_package( 'ajax-list' );
+					$template = TribeEventsTemplates::getTemplateHierarchy('list-view');
+				}else{
+					Tribe_Template_Factory::asset_package( 'ajax-calendar' );
 					$template = TribeEventsTemplates::getTemplateHierarchy('calendar');
+				}
 			} if ( is_single() && !tribe_is_showing_all() ) {
 				// single event
 				$template = TribeEventsTemplates::getTemplateHierarchy('single-event');
 			} elseif ( tribe_is_upcoming() || tribe_is_past() || (is_single() && tribe_is_showing_all()) ) {
 				// list view
-				$template = TribeEventsTemplates::getTemplateHierarchy('list');
+				Tribe_Template_Factory::asset_package( 'ajax-list' );
+				$template = TribeEventsTemplates::getTemplateHierarchy('list-view');
 			} else {
 				// calendar view
+				Tribe_Template_Factory::asset_package( 'ajax-calendar' );
 				$template = TribeEventsTemplates::getTemplateHierarchy('calendar');
 			}
 
@@ -231,6 +236,9 @@ if (!class_exists('TribeEventsTemplates')) {
 				$template .= '.php';
 			}
 
+			// setup the meta definitions
+			require_once( TribeEvents::instance()->pluginPath . 'public/advanced-functions/meta.php' );
+
 			// allow pluginPath to be set outside of this method
 			$pluginPath = empty($pluginPath) ? TribeEvents::instance()->pluginPath : $pluginPath;
 
@@ -285,17 +293,17 @@ if (!class_exists('TribeEventsTemplates')) {
 				                       "post_name"             => 'post',
 				                       "to_ping"               => '',
 				                       "pinged"                => '',
-				                       "post_modified"         => '1900-10-02 00:00:00',
-				                       "post_modified_gmt"     => '1900-10-02 00:00:00',
+				                       "post_modified"         => '1000-01-01 00:00:00',
+				                       "post_modified_gmt"     => '1000-01-01 00:00:00',
 				                       "post_content_filtered" => '',
 				                       "post_parent"           => 0,
-				                       "guid"                  => '',
+				                       "guid"                  => '_tribe_empty_event',
 				                       "menu_order"            => 0,
 				                       "post_type"             => 'tribe_events',
 				                       "post_mime_type"        => '',
 				                       "comment_count"         => 0,
-				                       "EventStartDate"        => '1900-10-02 00:00:00',
-				                       "EventEndDate"          => '1900-10-02 00:00:00',
+				                       "EventStartDate"        => '1000-01-01 00:00:00',
+				                       "EventEndDate"          => '1000-01-01 00:00:00',
 				                       "filter"                => 'raw' );
 
 				$post = (object)$spoofed_post;

@@ -15,6 +15,7 @@ if( !class_exists('Tribe_Events_List_Template')){
 	class Tribe_Events_List_Template extends Tribe_Template_Factory {
 
 		private $first = true;
+		static $loop_increment = 0;
 
 		public static function init(){
 			// Start list template
@@ -72,7 +73,7 @@ if( !class_exists('Tribe_Events_List_Template')){
 			return apply_filters('tribe_template_factory_debug', $html, 'tribe_events_list_before_loop');
 		}
 		public function inside_before_loop( $post_id ){
-			
+			global $wp_query;
 			// Get our wrapper classes (for event categories, organizer, venue, and defaults)
 			$tribe_string_classes = '';
 			$tribe_cat_ids = tribe_get_event_cat_ids( $post_id ); 
@@ -89,6 +90,11 @@ if( !class_exists('Tribe_Events_List_Template')){
 			$tribe_classes_organizer = tribe_get_organizer_id() ? 'tribe-events-organizer-'. tribe_get_organizer_id() : '';
 			$tribe_classes_categories = $tribe_string_classes;
 			$class_string = $tribe_classes_default .' '. $tribe_classes_venue .' '. $tribe_classes_organizer .' '. $tribe_classes_categories;
+
+			// added last class for css
+			if( self::$loop_increment == count($wp_query->posts)-1 ){
+				$class_string .= ' tribe-last';
+			}
 			
 			$html = '<div id="post-'. get_the_ID() .'" class="'. $class_string .' clearfix">';
 			return apply_filters('tribe_template_factory_debug', $html, 'tribe_events_list_inside_before_loop');
@@ -98,7 +104,7 @@ if( !class_exists('Tribe_Events_List_Template')){
 		public function the_event_image( $post_id ){
 			$html ='';
 			if ( tribe_event_featured_image() ) {
-				$html .= tribe_event_featured_image();
+				$html .= tribe_event_featured_image(null, 'large');
 			}
 			return apply_filters('tribe_template_factory_debug', $html, 'tribe_events_list_the_event_image');
 
@@ -106,6 +112,9 @@ if( !class_exists('Tribe_Events_List_Template')){
 		// Event Details Begin
 		public function before_the_event_details ( $post_id ){
 			$html = '<div class="tribe-events-event-details">';
+			if ( tribe_get_cost() ) { // Get our event cost 
+				$html .=	'<div class="tribe-events-event-cost"><span>'. tribe_get_cost() .'</span></div>';
+			 } 				
 			return apply_filters('tribe_template_factory_debug', $html, 'tribe_events_list_before_the_event_details'); 
 		}							
 		// Event Title
@@ -116,9 +125,6 @@ if( !class_exists('Tribe_Events_List_Template')){
 		// Event Meta
 		public function before_the_meta( $post_id ){
 			$html = '';
-			if ( tribe_get_cost() ) { // Get our event cost 
-				$html .=	'<div class="tribe-events-event-cost"><span>'. tribe_get_cost() .'</span></div>';
-			 } 		
 			return apply_filters('tribe_template_factory_debug', $html, 'tribe_events_list_before_the_meta');
 		}
 		public function the_meta( $post_id ){
@@ -126,8 +132,13 @@ if( !class_exists('Tribe_Events_List_Template')){
 		?>
 			<div class="tribe-events-event-meta">
 				<h3 class="updated published time-details">
-						<?php echo tribe_event_schedule_details(), tribe_event_recurring_info_tooltip(); ?>
-				</h3>	
+					<?php
+					global $post;
+					if ( !empty( $post->distance ) ) { ?>
+						<strong>[<?php echo tribe_get_distance_with_unit( $post->distance ); ?>]</strong>
+					<?php } ?>
+					<?php echo tribe_events_event_schedule_details(), tribe_events_event_recurring_info_tooltip(); ?>
+				</h3>
 				<?php if ( tribe_get_venue() || tribe_address_exists( $post_id ) ) { // Get venue or location ?>
 					<h3 class="vcard fn org">
 						<?php if ( tribe_get_venue() ) { // Get our venue ?>
@@ -179,6 +190,10 @@ if( !class_exists('Tribe_Events_List_Template')){
 
 		// End List Loop
 		public function inside_after_loop( $post_id ){
+
+			// internal increment to keep track of position within the loop
+			self::$loop_increment++;
+
 			$html = '</div><!-- .hentry .vevent -->';
 			return apply_filters('tribe_template_factory_debug', $html, 'tribe_events_list_inside_after_loop');
 		}

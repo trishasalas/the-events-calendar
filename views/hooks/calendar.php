@@ -53,9 +53,8 @@ if( !class_exists('Tribe_Events_Calendar_Template')){
 			$html = '';
 			return apply_filters('tribe_template_factory_debug', $html, 'tribe_events_single_event_before_the_title');
 		}
-		public function the_title( $title, $post_id ){
-			// This title is here for ajax loading – do not remove if you want ajax switching between month views
-			$html = '<title>' . wp_title( '&raquo;', false ) . '</title>';
+		public function the_title( $title, $post_id ){			
+			$html = '';
 			return apply_filters('tribe_template_factory_debug', $html, 'tribe_events_single_event_the_title');
 		}
 		public function after_the_title( $post_id ){
@@ -71,7 +70,7 @@ if( !class_exists('Tribe_Events_Calendar_Template')){
 		}
 		// Calendar Header
 		public function before_header( $post_id ){
-			$html = '<div id="tribe-events-header" data-title="' . wp_title( '&raquo;', false ) . '">';
+			$html = '<div id="tribe-events-header" data-title="' . wp_title( '&raquo;', false ) . '" data-date="'. date( 'Y-m', strtotime( tribe_get_month_view_date() ) ) .'">';
 			return apply_filters('tribe_template_factory_debug', $html, 'tribe_events_calendar_before_header');
 		}
 		// Calendar Navigation
@@ -130,9 +129,6 @@ if( !class_exists('Tribe_Events_Calendar_Template')){
 				$eventPosts = $wp_query->posts;
 			}
 
-			if(empty($eventPosts))
-				return 'NO EVENTS';
-
 			$daysInMonth = isset( $date ) ? date( 't', $date ) : date( 't' );
 			$startOfWeek = get_option( 'start_of_week', 0 );
 			list( $year, $month ) = split( '-', $tribe_ecp->date );
@@ -164,14 +160,14 @@ if( !class_exists('Tribe_Events_Calendar_Template')){
          				$days_in_month = date( 't', intval($date) );
 						for( $day = 1; $day <= $days_in_month; $day++ ) {
 
-							$column = $day - ( 7 * ( $rows - 1 ) );
+							$column = $day + $offset - 1 - ( 7 * ( $rows - 1 ) ) ;
 
 							if( ( $day + $offset - 1 ) % 7 == 0 && $day != 1 ) {
 			        			echo "</tr>\n\t<tr>";
 			        			$rows++;
 			    			}
 
-														// Var'ng up days, months and years
+							// Var'ng up days, months and years
 							$current_day = date_i18n( 'd' );
 							$current_month = date_i18n( 'm' );
 							$current_year = date_i18n( 'Y' );
@@ -194,18 +190,17 @@ if( !class_exists('Tribe_Events_Calendar_Template')){
 								$ppf = ' tribe-events-future';
 							}
 
-							if ( ( $column % 5 == 0 ) || ( $column % 6 == 0 ) || ( $column % 7 == 0 ) ) {
+							if ( ( $column % 4 == 0 ) || ( $column % 5 == 0 ) || ( $column % 6 == 0 ) ) {
 								$ppf .= ' tribe-events-right';
 							}
-
-
 							
-						// You can find tribe_the_display_day() & tribe_get_display_day_title() in
-						// /public/template-tags/calendar.php
-						// This controls the markup for the days and events on the frontend
+							// You can find tribe_the_display_day() & tribe_get_display_day_title() in
+							// /public/template-tags/calendar.php
+							// This controls the markup for the days and events on the frontend
 				
 			    			echo "<td class=\"tribe-events-thismonth". $ppf ."\">". tribe_get_display_day_title( $day, $monthView, $date ) ."\n";
-								tribe_the_display_day( $day, $monthView );
+
+							tribe_the_display_day( $day, $monthView );
 							echo '</td>';
 						}
 						// Skip next month
