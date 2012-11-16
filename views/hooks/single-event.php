@@ -173,7 +173,6 @@ if( !class_exists('Tribe_Events_Single_Event_Template')){
 
 		<?php // Location ?>
 		<dl class="tribe-events-meta-column location">
-
 		<?php // SECOND COLUMN
 			if ( $tribe_event_custom_fields && tribe_embed_google_map( get_the_ID() )) {  // if no map AND no custom fields, display nothing here 
 				// display nothing
@@ -207,9 +206,15 @@ if( !class_exists('Tribe_Events_Single_Event_Template')){
 					<?php echo tribe_get_full_address( get_the_ID() ); ?>
 				</dd>
 			<?php endif; ?>
+			<?php if ( tribe_get_venue_website_link() ) : // Venue website ?>
+				<dt><?php _e( 'Website:', 'tribe-events-calendar' ) ?></dt>
+				<dd class="vcard url">
+					<?php echo tribe_get_venue_website_link(); ?>
+				</dd>	
+			<?php endif; ?>			
 	<?php } ?>
 		<?php if ( tribe_embed_google_map( get_the_ID() ) || $tribe_event_custom_fields ) : ?>
-				<?php if ( tribe_get_organizer_link( get_the_ID(), false, false ) ) : // Organizer URL ?>
+				<?php if ( tribe_get_organizer_link( get_the_ID(), false, false ) && tribe_get_organizer() ) : // Organizer URL ?>
 				<h3 class="tribe-event-single-section-title"><?php _e( 'Organizer:', 'tribe-events-calendar' ); ?></h3>
 				<dd class="vcard author fn org"><?php echo tribe_get_organizer_link(); ?></dd>
 	      	<?php elseif ( tribe_get_organizer() ): // Organizer name ?>
@@ -227,8 +232,15 @@ if( !class_exists('Tribe_Events_Single_Event_Template')){
 				<dd class="vcard email"><a href="mailto:<?php echo tribe_get_organizer_email(); ?>"><?php echo tribe_get_organizer_email(); ?></a></dd>
 			<?php endif; ?>
 		<?php endif; ?>
+		<?php if ( class_exists( 'TribeEventsPro' ) ): // If pro, check for organizer website ?>
+			<?php if ( tribe_get_organizer_website_link() ) : // Organizer website ?>
+				<dt><?php _e( 'Website:', 'tribe-events-calendar' ) ?></dt>
+				<dd class="vcard url">
+					<?php echo tribe_get_organizer_website_link(); ?>
+				</dd>	
+			<?php endif; ?>	
+		<?php endif; ?>				
 		</dl><!-- .tribe-events-meta-column -->
-
 	   	<?php // THIRD COLUMN
 
 				if ( $tribe_event_custom_fields ) { // If there are custom event fields ?>
@@ -244,7 +256,7 @@ if( !class_exists('Tribe_Events_Single_Event_Template')){
 					</dl>
 		<?php } else { ?>
 					<dl class="tribe-events-meta-column">
-						<?php if ( tribe_get_organizer_link( get_the_ID(), false, false ) ) : // Organizer URL ?>
+						<?php if ( tribe_get_organizer_link( get_the_ID(), false, false ) && tribe_get_organizer() ) : // Organizer URL ?>
 							<h3 class="tribe-event-single-section-title"><?php _e( 'Organizer:', 'tribe-events-calendar' ); ?></h3>
 							<dd class="vcard author fn org"><?php echo tribe_get_organizer_link(); ?></dd>
 				      <?php elseif ( tribe_get_organizer() ): // Organizer name ?>
@@ -261,6 +273,14 @@ if( !class_exists('Tribe_Events_Single_Event_Template')){
 							<dt><?php _e( 'Email:', 'tribe-events-calendar' ); ?></dt>
 							<dd class="vcard email"><a href="mailto:<?php echo tribe_get_organizer_email(); ?>"><?php echo tribe_get_organizer_email(); ?></a></dd>
 						<?php endif; ?>
+						<?php if ( class_exists( 'TribeEventsPro' ) ): // If pro, check for organizer website ?>
+							<?php if ( tribe_get_organizer_website_link() ) : // Organizer email ?>
+								<dt><?php _e( 'Website:', 'tribe-events-calendar' ) ?></dt>
+								<dd class="vcard url">
+									<?php echo tribe_get_organizer_website_link(); ?>
+								</dd>	
+							<?php endif; ?>	
+						<?php endif; ?>							
 				</dl><!-- .tribe-events-meta-column -->
 		<?php } ?>
 		</div><!-- .tribe-events-event-meta -->
@@ -293,6 +313,12 @@ if( !class_exists('Tribe_Events_Single_Event_Template')){
 								<?php echo tribe_get_full_address( get_the_ID() ); ?>
 							</dd>
 						<?php endif; ?>
+						<?php if ( tribe_get_venue_website_link() ) : // Venue website ?>
+							<dt><?php _e( 'Website:', 'tribe-events-calendar' ) ?></dt>
+							<dd class="vcard url">
+								<?php echo tribe_get_venue_website_link(); ?>
+							</dd>	
+						<?php endif; ?>						
 					</dl>
 					<div class="tribe-event-venue-map">
 						<?php echo tribe_get_embedded_map(); ?>
@@ -310,7 +336,9 @@ if( !class_exists('Tribe_Events_Single_Event_Template')){
 				$html .= tribe_get_ticket_form();
 			}
 			if ( class_exists( 'TribeEventsPro' ) ): // If pro, show venue w/ link 
-					$html .= tribe_single_related_events();
+				ob_start();
+					tribe_single_related_events();
+				$html .= ob_get_clean();
 			endif; 			
 			return apply_filters('tribe_template_factory_debug', $html, 'tribe_events_single_event_after_the_meta');
 		}	

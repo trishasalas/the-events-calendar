@@ -308,6 +308,7 @@ if ( !class_exists( 'TribeEvents' ) ) {
 			add_action( 'wp_ajax_tribe_calendar', array( $this, 'calendar_ajax_call' ) );
 			add_action( 'wp_ajax_nopriv_tribe_calendar', array( $this, 'calendar_ajax_call' ) );
 			add_action( 'wp_ajax_tribe_list', array( $this, 'list_ajax_call' ) );
+			add_action( 'tribe_events_pre_get_posts', array( $this, 'set_tribe_paged' ) );
 			add_action( 'wp_ajax_nopriv_tribe_list', array( $this, 'list_ajax_call' ) );
 
 		}
@@ -1020,7 +1021,7 @@ if ( !class_exists( 'TribeEvents' ) ) {
 				'add_new_item' => __('Add New Organizer', 'tribe-events-calendar'),
 				'edit_item' => __('Edit Organizer', 'tribe-events-calendar'),
 				'new_item' => __('New Organizer', 'tribe-events-calendar'),
-				'view_item' => __('View Venue', 'tribe-events-calendar'),
+				'view_item' => __('View Organizer', 'tribe-events-calendar'),
 				'search_items' => __('Search Organizers', 'tribe-events-calendar'),
 				'not_found' => __('No organizer found', 'tribe-events-calendar'),
 				'not_found_in_trash' => __('No organizers found in Trash', 'tribe-events-calendar')
@@ -3091,8 +3092,8 @@ if ( !class_exists( 'TribeEvents' ) ) {
 		public function setup_keyword_search_in_bar( $filters ) {
 
 			$value = "";
-			if ( !empty( $_POST['tribe-bar-search'] ) ) {
-				$value = $_POST['tribe-bar-search'];
+			if ( !empty( $_REQUEST['tribe-bar-search'] ) ) {
+				$value = $_REQUEST['tribe-bar-search'];
 			}
 
 
@@ -3108,8 +3109,8 @@ if ( !class_exists( 'TribeEvents' ) ) {
 
 			$value = apply_filters( 'tribe-events-bar-date-search-default-value', '' );
 
-			if ( !empty( $_POST['tribe-bar-date'] ) ) {
-				$value = $_POST['tribe-bar-date'];
+			if ( !empty( $_REQUEST['tribe-bar-date'] ) ) {
+				$value = $_REQUEST['tribe-bar-date'];
 			}
 
 			$filters[] = array( 'name'    => 'tribe-bar-date',
@@ -3121,8 +3122,8 @@ if ( !class_exists( 'TribeEvents' ) ) {
 
 		public function setup_keyword_search_in_query( $query ) {
 
-			if ( !empty( $_POST['tribe-bar-search'] ) ) {
-				$query->query_vars['s'] = $_POST['tribe-bar-search'];
+			if ( !empty( $_REQUEST['tribe-bar-search'] ) && in_array( TribeEvents::POSTTYPE, (array)$query->query_vars['post_type'] ) ) {
+				$query->query_vars['s'] = $_REQUEST['tribe-bar-search'];
 			}
 
 			return $query;
@@ -3130,18 +3131,27 @@ if ( !class_exists( 'TribeEvents' ) ) {
 
 		public function setup_date_search_in_query( $query ) {
 
-			if ( !empty( $_POST['tribe-bar-date'] ) ) {
+			if ( !empty( $_REQUEST['tribe-bar-date'] ) ) {
 				$meta_query = array( 'key'     => '_EventStartDate',
-				                            'value'   => array( TribeDateUtils::beginningOfDay( $_POST['tribe-bar-date'] ),
-				                                                TribeDateUtils::endOfDay( $_POST['tribe-bar-date'] ) ),
-				                            'compare' => 'BETWEEN',
-				                            'type'    => 'DATETIME' );
+				                     'value'   => array( TribeDateUtils::beginningOfDay( $_REQUEST['tribe-bar-date'] ),
+				                                         TribeDateUtils::endOfDay( $_REQUEST['tribe-bar-date'] ) ),
+				                     'compare' => 'BETWEEN',
+				                     'type'    => 'DATETIME' );
 
 				if ( empty( $query->query_vars['meta_query'] ) ) {
-					$query->set( 'meta_query', array($meta_query) );
+					$query->set( 'meta_query', array( $meta_query ) );
 				} else {
 					$query->query_vars['meta_query'][] = $meta_query;
 				}
+			}
+
+			return $query;
+		}
+
+		function set_tribe_paged( $query ) {
+			if ( !empty( $_REQUEST['tribe_paged'] ) ) {
+				add_filter( 'redirect_canonical', '__return_false' );
+				$query->query_vars['paged'] = $_REQUEST['tribe_paged'];
 			}
 
 			return $query;
@@ -3160,12 +3170,12 @@ if ( !class_exists( 'TribeEvents' ) ) {
 
 			TribeEventsQuery::init();
 
-			$paged = ( !empty( $_POST['paged'] ) ) ? intval( $_POST['paged'] ) : 1;
+			$tribe_paged = ( !empty( $_POST['tribe_paged'] ) ) ? intval( $_POST['tribe_paged'] ) : 1;
 
-			$args = array( 'eventDisplay' => 'list',
-			               'post_type'    => TribeEvents::POSTTYPE,
-			               'post_status'  => 'publish',
-			               'paged'        => $paged );
+			$args = array( 'eventDisplay'       => 'list',
+			               'post_type'          => TribeEvents::POSTTYPE,
+			               'post_status'        => 'publish',
+			               'paged'              => $tribe_paged );
 
 			$query = TribeEventsQuery::getEvents( $args, true );
 			$hash = $query->query_vars;
@@ -3175,17 +3185,17 @@ if ( !class_exists( 'TribeEvents' ) ) {
 			$hash_str           = md5( maybe_serialize( $hash ) );
 
 			if ( !empty( $_POST['hash'] ) && $hash_str !== $_POST['hash'] ) {
-				$paged         = 1;
+				$tribe_paged   = 1;
 				$args['paged'] = 1;
 				$query         = TribeEventsQuery::getEvents( $args, true );
 			}
 
 
-			$response = array( 'html'      => '',
-			                   'success'   => true,
-			                   'max_pages' => $query->max_num_pages,
-			                   'hash'      => $hash_str,
-			                   'paged'     => $paged );
+			$response = array( 'html'            => '',
+			                   'success'         => true,
+			                   'max_pages'       => $query->max_num_pages,
+			                   'hash'            => $hash_str,
+			                   'tribe_paged'     => $tribe_paged );
 
 
 			remove_action( 'pre_get_posts', array( $this, 'list_ajax_call_set_date' ), -10 );
@@ -3212,8 +3222,8 @@ if ( !class_exists( 'TribeEvents' ) ) {
 		}
 
 		public static function clear_module_pagination( $html ) {
-			$html = '<a href="#" id="tribe_paged_prev" class="tribe_paged">' . __( '<< Previous Events' ) . '</a>';
-			$html .= '<a href="#" id="tribe_paged_next" class="tribe_paged">' . __( 'Next Events >>' ) . '</a>';
+			$html = '<li class="tribe-nav-previous"><a href="#" id="tribe_paged_prev" class="tribe_paged">' . __( '<< Previous Events' ) . '</a></li>';
+			$html .= '<li class="tribe-nav-next"><a href="#" id="tribe_paged_next" class="tribe_paged">' . __( 'Next Events >>' ) . '</a></li>';
 			return $html;
 
 		}

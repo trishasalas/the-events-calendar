@@ -1,15 +1,12 @@
-//alert( TribeCalendar.ajaxurl );
-
-
 jQuery( document ).ready( function ( $ ) {
 
-	// we'll determine if the browser supports pushstate and drop those that say they do but do it badly ;)
+	// our vars
+	
+	var tribe_base_url = $('#tribe-events-events-picker').attr('action');	
 
-	var hasPushstate = window.history && window.history.pushState && !navigator.userAgent.match(/((iPod|iPhone|iPad).+\bOS\s+[1-4]|WebApps\/.+CFNetwork)/);
+	if( tribe_has_pushstate && !GeoLoc.map_view ) {
 
-	if( hasPushstate ) {
-
-		// let's fix any browser that fires popstate on first load incorrectly
+		// fix any browser that fires popstate on first load incorrectly
 
 		var popped = ('state' in window.history), initialURL = location.href;
 
@@ -18,184 +15,170 @@ jQuery( document ).ready( function ( $ ) {
 			var initialPop = !popped && location.href == initialURL;
 			popped = true;
 
-			// if it was an inital load, let's get out of here
+			// if it was an inital load, get out of here
 
 			if ( initialPop ) return;
 
-			// this really is popstate, let's fire the ajax but not overwrite our history
+			// this really is popstate: fire the ajax, send the stored params from the browser, don't overwrite the history
 
-			if( event.state ) {
-				var tribe_nopop = false;
-				var pop_date = event.state.date;
-				tribe_events_calendar_ajax_post( pop_date, null, tribe_nopop );
+			if( event.state ) {			
+				tribe_do_string = false;
+				tribe_pushstate = false;	
+				tribe_popping = true;
+				tribe_params = event.state.tribe_params;
+				tribe_events_calendar_ajax_post( '', '', tribe_pushstate, tribe_do_string, tribe_popping, tribe_params );
 			}
 		} );
+	}
 
-		$( '.tribe-events-calendar .tribe-events-nav a' ).live( 'click', function ( e ) {
+	$( '.tribe-events-calendar .tribe-events-sub-nav a' ).live( 'click', function ( e ) {
+		e.preventDefault();		
+		tribe_date = $( this ).attr( "data-month" );
+		tribe_href_target = $( this ).attr( "href" );
+		tribe_pushstate = true;
+		tribe_do_string = false;		
+		tribe_events_calendar_ajax_post( tribe_date, tribe_href_target, tribe_pushstate, tribe_do_string );			
+	} );
 
-			e.preventDefault();
-			var tribe_nopop = true;
-			var month_target = $( this ).attr( "data-month" );
-			var href_target = $( this ).attr( "href" );
-			tribe_events_calendar_ajax_post( month_target, href_target, tribe_nopop );
-		} );
+	$( '.tribe-events-calendar select.tribe-events-events-dropdown' ).live( 'change', function ( e ) {
+		e.preventDefault();			
+		tribe_date = $( '#tribe-events-events-year' ).val() + '-' + $( '#tribe-events-events-month' ).val();
+		tribe_href_target = tribe_base_url + tribe_date + '/';		
+		tribe_pushstate = true;
+		tribe_do_string = false;
+		tribe_events_calendar_ajax_post( tribe_date, tribe_href_target, tribe_pushstate, tribe_do_string );			
+	} );
 
-		$( '.tribe-events-calendar select.tribe-events-events-dropdown' ).live( 'change', function ( e ) {
+	// event bar datepicker monitoring 
 
-			var tribe_nopop = true;
-			var baseUrl = $('#tribe-events-events-picker').attr('action');
-			var date = $( '#tribe-events-events-year' ).val() + '-' + $( '#tribe-events-events-month' ).val();
-			var href_target = baseUrl + date + '/';
-			tribe_events_calendar_ajax_post( date, href_target, tribe_nopop );
-		} );
+	$('#tribe-bar-date').bind( 'change', function (e) {		
 
-		// event bar datepicker monitoring 
+		// they changed the datepicker in event bar, trigger ajax
 
-		$('#tribe-bar-date').bind( 'change', function (e) {
+		tribe_daypicker_date = $(this).val();
+		tribe_year_month = tribe_daypicker_date.slice(0, -3);
+		tribe_date = $('#tribe-events-header').attr('data-date');
+		tribe_href_target = tribe_get_path( jQuery( location ).attr( 'href' ) );					
 
-			// they changed the datepicker in event bar, lets trigger ajax
+		if ( tribe_year_month !=  tribe_date) {
 
-			var daypicker_date = $(this).val();
-			var year_month = daypicker_date.slice(0, -3);
-			var date = $('#tribe-events-header').attr('data-date');
-			var href_target = $(location).attr('href');
-			var tribe_nopop = false;
+			// it's a different month, overwrite the vars and initiate pushstate
 
-			if ( year_month !=  date) {
-
-				// it's a different month, let's overwrite the vars and initiate pushstate
-
-				date = year_month;
-				var base_url = $('#tribe-events-events-picker').attr('action');
-				href_target = base_url + date + '/';
-				tribe_nopop = true;
-			}
-
-			tribe_events_calendar_ajax_post( date, href_target, tribe_nopop );
-
-		} );
-
-		// events bar intercept submit
-
-		$( 'form#tribe-events-bar-form' ).bind( 'submit', function (e) {
-
-			if(tribe_events_bar_action != 'change_view' ) {
-
-				e.preventDefault();
-
-				// in calendar view we have to test if they are switching month and extract month for call for eventDate param plus create url for pushstate
-
-				var date = $('#tribe-events-header').attr('data-date');
-				var href_target = $(location).attr('href');
-				var tribe_nopop = false;
-
-				if($('#tribe-bar-date').val().length) {
-
-					// they picked a date in event bar daypicker, let's process and test
-
-					var daypicker_date = $('#tribe-bar-date').val().slice(0, -3);
-
-					if ( daypicker_date !=  date) {
-
-						// it's a different month, let's overwrite the vars and initiate pushstate
-
-						var base_url = $('#tribe-events-events-picker').attr('action');
-						date = daypicker_date;
-						href_target = base_url + date + '/';
-						tribe_nopop = true;
-					}
-
-				}
-
-				tribe_events_calendar_ajax_post( date, href_target, tribe_nopop );
-
-			}
-		} );
-
-		// if advanced filters active intercept submit
-
-		if( $('#tribe_events_filters_form').length ) {
-			$( 'form#tribe_events_filters_form' ).bind( 'submit', function ( e ) {
-				if ( tribe_events_bar_action != 'change_view' ) {
-					e.preventDefault();
-					var same_date = $( '#tribe-events-header' ).attr( 'data-date' );
-					var same_page = $( location ).attr( 'href' );
-					var tribe_nopop = false;
-					tribe_events_calendar_ajax_post( same_date, same_page, tribe_nopop );
-				}
-			} );
+			tribe_date = tribe_year_month;				
+			tribe_href_target = tribe_base_url + tribe_date + '/';				
 		}
 
+		tribe_pushstate = false;
+		tribe_do_string = true;
 
-		function tribe_events_calendar_ajax_post( date, href_target, tribe_nopop ) {
+		tribe_events_calendar_ajax_post( tribe_date, tribe_href_target, tribe_pushstate, tribe_do_string );
 
-			$( '.ajax-loading' ).show();
+	} );
 
-			var params = {
-				action:'tribe_calendar',
-				eventDate:date
-			};
+	// events bar intercept submit
 
-			// add any set values from event bar to params
+	$( 'form#tribe-events-bar-form' ).bind( 'submit', function (e) {
 
-			$( 'form#tribe-events-bar-form :input' ).each( function () {
-				var $this = $( this );
-				if( $this.val().length ) {
-					params[$this.attr('name')] = $this.val();
+		if(tribe_events_bar_action != 'change_view' ) {
+
+			e.preventDefault();				
+
+			// in calendar view we have to test if they are switching month and extract month for call for eventDate param plus create url for pushstate
+
+			tribe_date = $('#tribe-events-header').attr('data-date');
+			tribe_href_target = tribe_get_path( jQuery( location ).attr( 'href' ) );
+
+
+			if($('#tribe-bar-date').val().length) {
+
+				// they picked a date in event bar daypicker, let's process and test
+
+				tribe_daypicker_date = $('#tribe-bar-date').val().slice(0, -3);
+
+				if ( tribe_daypicker_date !=  tribe_date) {
+
+					// it's a different month, let's overwrite the vars and initiate pushstate
+
+					tribe_date = tribe_daypicker_date;
+					tribe_href_target = tribe_base_url + tribe_date + '/';						
 				}
+
+			}
+			
+			tribe_pushstate = false;
+			tribe_do_string = true;
+
+			tribe_events_calendar_ajax_post( tribe_date, tribe_href_target, tribe_pushstate, tribe_do_string );
+
+		}
+	} );
+
+	// if advanced filters active intercept submit
+
+	if( $('#tribe_events_filters_form').length ) {
+		$( 'form#tribe_events_filters_form' ).bind( 'submit', function ( e ) {
+			if ( tribe_events_bar_action != 'change_view' ) {
+				e.preventDefault();
+				tribe_date = $( '#tribe-events-header' ).attr( 'data-date' );					
+				tribe_href_target = tribe_get_path( jQuery( location ).attr( 'href' ) );	
+				tribe_pushstate = false;
+				tribe_do_string = true;
+				tribe_events_calendar_ajax_post( tribe_date, tribe_href_target, tribe_pushstate, tribe_do_string );
+			}
+		} );
+	}	
+
+
+	function tribe_events_calendar_ajax_post( tribe_date, tribe_href_target, tribe_pushstate, tribe_do_string, tribe_popping, tribe_params ) {
+
+		$( '.ajax-loading' ).show();
+		
+		if( !tribe_popping ) {
+			
+			
+
+			tribe_params = {
+				action:'tribe_calendar',
+				eventDate:tribe_date
+			};	
+
+			// add any set values from event bar to params. want to use serialize but due to ie bug we are stuck with second	
+
+			$( 'form#tribe-events-bar-form :input[value!=""]' ).each( function () {
+				var $this = $( this );
+				if( $this.val().length && $this.attr('name') != 'submit-bar' ) {
+					tribe_params[$this.attr('name')] = $this.val();
+					tribe_push_counter++;
+				}			
 			} );
+
+			tribe_params = $.param(tribe_params);
 
 			// check if advanced filters plugin is active
 
 			if( $('#tribe_events_filters_form').length ) {
 
-				// get selected form fields and create array
+				// serialize any set values and add to params
 
-				var filter_array = $('form#tribe_events_filters_form').serializeArray();
-
-				var fixed_array = [];
-				var counts = {};
-				var multiple_filters = {};
-
-				// test for multiples of same name
-
-				$.each(filter_array, function(index, value) {
-					if (counts[value.name]){
-						counts[value.name] += 1;
-					} else {
-						counts[value.name] = 1;
-					}
-				});
-
-				// modify array
-
-				$.each(filter_array, function(index, value) {
-					if (multiple_filters[value.name] || counts[value.name] > 1){
-						if (!multiple_filters[value.name]) {
-							multiple_filters[value.name] = 0;
-						}
-						multiple_filters[value.name] += 1;
-						fixed_array.push({
-							name: value.name + "_" + multiple_filters[value.name],
-							value: value.value
-							});
-					} else {
-						fixed_array.push({
-							name: value.name,
-							value: value.value
-							});
-					}
-				});
-
-				// merge filter params with existing params
-
-				params = $.param(fixed_array) + '&' + $.param(params);
-
+				tribe_filter_params = $('form#tribe_events_filters_form :input[value!=""]').serialize();				
+				if( tribe_filter_params.length ) {
+					tribe_params = tribe_params + '&' + tribe_filter_params;
+				}
+			}			
+			
+			if ( tribe_push_counter > 0 || tribe_filter_params.length ) {
+				tribe_pushstate = false;
+				tribe_do_string = true;				
 			}
+			
+			
+		} 
+
+		if( tribe_has_pushstate ) {
 
 			$.post(
 				TribeCalendar.ajaxurl,
-				params,
+				tribe_params,
 				function ( response ) {
 					$( "#ajax-loading" ).hide();
 					if ( response !== '' ) {
@@ -205,28 +188,33 @@ jQuery( document ).ready( function ( $ ) {
 						var page_title = $the_content.filter("#tribe-events-header").attr('data-title');
 
 						$(document).attr('title', page_title);
-
-						// let's write our history for this ajax request and save the date for popstate requests to use only if not a popstate request itself
-
-						if( tribe_nopop ) {
+						
+						if( tribe_do_string ) {							
+							tribe_href_target = tribe_href_target + '?' + tribe_params;								
 							history.pushState({
-								"date": date
-							}, page_title, href_target);
+								"tribe_date": tribe_date,
+								"tribe_params": tribe_params
+							}, page_title, tribe_href_target);															
+						}						
+
+						if( tribe_pushstate ) {								
+							history.pushState({
+								"tribe_date": tribe_date,
+								"tribe_params": tribe_params
+							}, page_title, tribe_href_target);
 						}
 					}
 				}
 			);
+				
+		} else {
+			
+			if( tribe_do_string ) {
+				tribe_href_target = tribe_href_target + '?' + tribe_params;													
+			}			
+			
+			window.location = tribe_href_target;			
 		}
-	} else {
-		// here we can write all our code for non pushstate browsers
-
-		$( '.tribe-events-calendar select.tribe-events-events-dropdown' ).live( 'change', function ( e ) {
-
-			var baseUrl = $(this).parent().attr('action');
-			var date = $( '#tribe-events-events-year' ).val() + '-' + $( '#tribe-events-events-month' ).val();
-			var href_target = baseUrl + date + '/';
-			window.location = href_target;
-		} );
 	}
-
+	
 } );

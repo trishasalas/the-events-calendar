@@ -14,6 +14,9 @@ if ( !defined('ABSPATH') ) { die('-1'); }
 if( !class_exists('Tribe_Events_Calendar_Template')){
 	class Tribe_Events_Calendar_Template extends Tribe_Template_Factory {
 		public static function init(){
+
+			Tribe_Template_Factory::asset_package( 'ajax-calendar' );
+
 			// Start calendar template
 			add_filter( 'tribe_events_calendar_before_template', array( __CLASS__, 'before_template' ), 1, 1 );
 
@@ -84,7 +87,7 @@ if( !class_exists('Tribe_Events_Calendar_Template')){
 		public static function navigation( $post_id ){
 			$tribe_ecp = TribeEvents::instance();
 
-			$html = '<li class="tribe-events-nav">';
+			$html = '<li class="tribe-events-nav-prev">';
 			$html .= '<a data-month="'. $tribe_ecp->previousMonth( tribe_get_month_view_date() )  .'" href="' . tribe_get_previous_month_link() . '" rel="prev">&#x2190; '. tribe_get_previous_month_text() .' </a>';
 			$html .= '</li><!-- .tribe-events-prev-next -->';
 			
@@ -94,7 +97,7 @@ if( !class_exists('Tribe_Events_Calendar_Template')){
 			$html .= ob_get_clean();
 			$html .= '</li>';
 	
-			$html .= '<li class="tribe-events-nav">';
+			$html .= '<li class="tribe-events-nav-next">';
 			$html .= '<a data-month="'. $tribe_ecp->nextMonth( tribe_get_month_view_date() )  .'" href="' . tribe_get_next_month_link() . '" rel="next"> '. tribe_get_next_month_text() .' &#x2192;</a>';
 			$html .= '<img src="' . esc_url( admin_url( 'images/wpspin_light.gif' ) ) . '" class="ajax-loading" id="ajax-loading" alt="Loading events" />';
 			$html .= '</li><!-- .tribe-events-nav-next -->';
