@@ -7,7 +7,9 @@ jQuery( document ).ready( function ( $ ) {
 	if( tribe_is_paged ) {
 		tribe_list_paged = tribe_is_paged;
 	}
-	
+
+	if( typeof GeoLoc === 'undefined' ) 
+		var GeoLoc = {"map_view":""};	
 
 	if( tribe_has_pushstate && !GeoLoc.map_view ) {
 
@@ -42,14 +44,18 @@ jQuery( document ).ready( function ( $ ) {
 
 		$( '#tribe-events-list-view' ).on( 'click', 'a#tribe_paged_next', function ( e ) {
 			e.preventDefault();
-			tribe_list_paged++;						
-			tribe_events_list_ajax_post( tribe_cur_url );
+			tribe_list_paged++;	
+			tribe_pre_ajax_tests( function() { 
+				tribe_events_list_ajax_post( tribe_cur_url );
+			});
 		} );
 
 		$( '#tribe-events-list-view' ).on( 'click', 'a#tribe_paged_prev', function ( e ) {
 			e.preventDefault();
 			tribe_list_paged--;
-			tribe_events_list_ajax_post( tribe_cur_url );
+			tribe_pre_ajax_tests( function() {
+				tribe_events_list_ajax_post( tribe_cur_url );
+			});
 		} );
 
 		// if advanced filters active intercept submit
@@ -57,8 +63,10 @@ jQuery( document ).ready( function ( $ ) {
 		if ( $( '#tribe_events_filters_form' ).length ) {
 			$( 'form#tribe_events_filters_form' ).bind( 'submit', function ( e ) {
 				if ( tribe_events_bar_action != 'change_view' ) {
-					e.preventDefault();					
-					tribe_events_list_ajax_post( tribe_cur_url );
+					e.preventDefault();	
+					tribe_pre_ajax_tests( function() {
+						tribe_events_list_ajax_post( tribe_cur_url );
+					});
 				}
 			} );
 		}
@@ -67,8 +75,10 @@ jQuery( document ).ready( function ( $ ) {
 
 		$('#tribe-bar-date').bind( 'change', function (e) {		
 
-			e.preventDefault();					
-			tribe_events_list_ajax_post( tribe_cur_url );
+			e.preventDefault();
+			tribe_pre_ajax_tests( function() {
+				tribe_events_list_ajax_post( tribe_cur_url );
+			});
 
 		} );
 
@@ -76,8 +86,9 @@ jQuery( document ).ready( function ( $ ) {
 
 			if ( tribe_events_bar_action != 'change_view' ) {
 				e.preventDefault();
-				tribe_events_list_ajax_post( tribe_cur_url );
-
+				tribe_pre_ajax_tests( function() {
+					tribe_events_list_ajax_post( tribe_cur_url );
+				});
 			}
 		} );
 

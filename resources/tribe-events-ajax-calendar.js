@@ -3,6 +3,9 @@ jQuery( document ).ready( function ( $ ) {
 	// our vars
 	
 	var tribe_base_url = $('#tribe-events-events-picker').attr('action');	
+	
+	if( typeof GeoLoc === 'undefined' ) 
+		var GeoLoc = {"map_view":""};
 
 	if( tribe_has_pushstate && !GeoLoc.map_view ) {
 
@@ -36,8 +39,10 @@ jQuery( document ).ready( function ( $ ) {
 		tribe_date = $( this ).attr( "data-month" );
 		tribe_href_target = $( this ).attr( "href" );
 		tribe_pushstate = true;
-		tribe_do_string = false;		
-		tribe_events_calendar_ajax_post( tribe_date, tribe_href_target, tribe_pushstate, tribe_do_string );			
+		tribe_do_string = false;
+		tribe_pre_ajax_tests( function() { 		
+			tribe_events_calendar_ajax_post( tribe_date, tribe_href_target, tribe_pushstate, tribe_do_string );	
+		});
 	} );
 
 	$( '.tribe-events-calendar select.tribe-events-events-dropdown' ).live( 'change', function ( e ) {
@@ -46,7 +51,9 @@ jQuery( document ).ready( function ( $ ) {
 		tribe_href_target = tribe_base_url + tribe_date + '/';		
 		tribe_pushstate = true;
 		tribe_do_string = false;
-		tribe_events_calendar_ajax_post( tribe_date, tribe_href_target, tribe_pushstate, tribe_do_string );			
+		tribe_pre_ajax_tests( function() { 
+			tribe_events_calendar_ajax_post( tribe_date, tribe_href_target, tribe_pushstate, tribe_do_string );	
+		});
 	} );
 
 	// event bar datepicker monitoring 
@@ -60,9 +67,7 @@ jQuery( document ).ready( function ( $ ) {
 		tribe_date = $('#tribe-events-header').attr('data-date');
 		tribe_href_target = tribe_get_path( jQuery( location ).attr( 'href' ) );					
 
-		if ( tribe_year_month !=  tribe_date) {
-
-			// it's a different month, overwrite the vars and initiate pushstate
+		if ( tribe_year_month !=  tribe_date && tribe_daypicker_date != '' ) {			
 
 			tribe_date = tribe_year_month;				
 			tribe_href_target = tribe_base_url + tribe_date + '/';				
@@ -70,8 +75,9 @@ jQuery( document ).ready( function ( $ ) {
 
 		tribe_pushstate = false;
 		tribe_do_string = true;
-
-		tribe_events_calendar_ajax_post( tribe_date, tribe_href_target, tribe_pushstate, tribe_do_string );
+		tribe_pre_ajax_tests( function() { 
+			tribe_events_calendar_ajax_post( tribe_date, tribe_href_target, tribe_pushstate, tribe_do_string );
+		});
 
 	} );
 
@@ -79,15 +85,14 @@ jQuery( document ).ready( function ( $ ) {
 
 	$( 'form#tribe-events-bar-form' ).bind( 'submit', function (e) {
 
-		if(tribe_events_bar_action != 'change_view' ) {
+		if( tribe_events_bar_action != 'change_view' ) {
 
-			e.preventDefault();				
+			e.preventDefault();			
 
 			// in calendar view we have to test if they are switching month and extract month for call for eventDate param plus create url for pushstate
 
 			tribe_date = $('#tribe-events-header').attr('data-date');
 			tribe_href_target = tribe_get_path( jQuery( location ).attr( 'href' ) );
-
 
 			if($('#tribe-bar-date').val().length) {
 
@@ -104,12 +109,13 @@ jQuery( document ).ready( function ( $ ) {
 				}
 
 			}
-			
+
 			tribe_pushstate = false;
-			tribe_do_string = true;
-
-			tribe_events_calendar_ajax_post( tribe_date, tribe_href_target, tribe_pushstate, tribe_do_string );
-
+			tribe_do_string = true;			
+			
+			tribe_pre_ajax_tests( function() { 
+				tribe_events_calendar_ajax_post( tribe_date, tribe_href_target, tribe_pushstate, tribe_do_string );
+			});		
 		}
 	} );
 
@@ -123,7 +129,9 @@ jQuery( document ).ready( function ( $ ) {
 				tribe_href_target = tribe_get_path( jQuery( location ).attr( 'href' ) );	
 				tribe_pushstate = false;
 				tribe_do_string = true;
-				tribe_events_calendar_ajax_post( tribe_date, tribe_href_target, tribe_pushstate, tribe_do_string );
+				tribe_pre_ajax_tests( function() { 
+					tribe_events_calendar_ajax_post( tribe_date, tribe_href_target, tribe_pushstate, tribe_do_string );
+				});
 			}
 		} );
 	}	
@@ -166,7 +174,7 @@ jQuery( document ).ready( function ( $ ) {
 				}
 			}			
 			
-			if ( tribe_push_counter > 0 || tribe_filter_params.length ) {
+			if ( tribe_push_counter > 0 || tribe_filter_params != '' ) {
 				tribe_pushstate = false;
 				tribe_do_string = true;				
 			}
