@@ -311,6 +311,8 @@ if ( !class_exists( 'TribeEvents' ) ) {
 			add_action( 'tribe_events_pre_get_posts', array( $this, 'set_tribe_paged' ) );
 			add_action( 'wp_ajax_nopriv_tribe_list', array( $this, 'list_ajax_call' ) );
 
+			add_action( 'init', array( $this, 'maybe_show_beta_feedback_button' ) );
+
 		}
 
 		public static function ecpActive( $version = '2.0.7' ) {
@@ -3436,6 +3438,40 @@ if ( !class_exists( 'TribeEvents' ) ) {
 				$query->set( 'eventDate', $_POST["eventDate"] . '-01' );
 			}
 			return $query;
+		}
+
+		/***** BETA BUTTON *****/
+
+		public function maybe_show_beta_feedback_button() {
+			if ( $this->found_tribe_beta_addon() ) {
+				require_once( 'tribe-beta-test.class.php' );
+				TribeBetaTester::init( 'the-events-calendar' );
+			}
+		}
+
+		protected function found_tribe_beta_addon() {
+
+			if ( !function_exists( 'get_plugins' ) )
+				require_once( ABSPATH . 'wp-admin/includes/plugin.php' );
+
+			$plugins = get_plugins();
+
+			foreach ( $plugins as $path => $plugin ) {
+				if ( !is_plugin_active( $path ) )
+					continue;
+
+				$is_our_plugin = isset( $plugin['Author'] ) && $plugin["Author"] === 'Modern Tribe, Inc.';
+
+				if ( !$is_our_plugin )
+					continue;
+
+				$is_beta = strpos( $plugin['Version'], 'beta' ) !== false || strpos( $plugin['Version'], 'alpha' ) !== false;
+
+				if ( $is_beta )
+					return true;
+			}
+
+			return false;
 		}
 
 
