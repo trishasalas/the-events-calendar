@@ -9,6 +9,10 @@ if ( !defined('ABSPATH') ) { die('-1'); }
 if (!class_exists('TribeEventsQuery')) {
 	class TribeEventsQuery {
 
+		function __construct(){
+			add_action('tribe_events_init_pre_get_posts', array(__CLASS__,'init'));
+		}
+
 		/**
 		 * Initialize The Events Calendar query filters and post processing.
 		 * @return null
@@ -29,22 +33,23 @@ if (!class_exists('TribeEventsQuery')) {
 		 * @return object $query (modified)
 		 */
 		public function pre_get_posts( $query ) {
+			$types = ( !empty( $query->query_vars['post_type'] ) ? (array)$query->query_vars['post_type'] : array() );
 
 			// check if any possiblity of this being an event query
-			$query->tribe_is_event = ( isset($query->query_vars['post_type']) && $query->query_vars['post_type'] == TribeEvents::POSTTYPE )
+			$query->tribe_is_event = ( in_array( TribeEvents::POSTTYPE, $types ) )
 				? true // it was an event query
 				: false;
 
 			// check if any possiblity of this being an event category
-			$query->tribe_is_event_category = ( isset($query->query_vars[TribeEvents::TAXONOMY]) && $query->query_vars[TribeEvents::TAXONOMY] != '' ) 
+			$query->tribe_is_event_category = ( isset($query->query_vars[TribeEvents::TAXONOMY]) && $query->query_vars[TribeEvents::TAXONOMY] != '' )
 				? true // it was an event category
 				: false;
 
-			$query->tribe_is_event_venue = ( isset($query->query_vars['post_type']) && $query->query_vars['post_type'] == TribeEvents::VENUE_POST_TYPE )
+			$query->tribe_is_event_venue = ( in_array( TribeEvents::VENUE_POST_TYPE, $types ) )
 				? true // it was an event venue
 				: false;
 
-			$query->tribe_is_event_organizer = ( isset($query->query_vars['post_type']) && $query->query_vars['post_type'] == TribeEvents::ORGANIZER_POST_TYPE )
+			$query->tribe_is_event_organizer = ( in_array( TribeEvents::ORGANIZER_POST_TYPE, $types ) )
 				? true // it was an event organizer
 				: false;
 
@@ -60,7 +65,6 @@ if (!class_exists('TribeEventsQuery')) {
 				add_filter( 'posts_join', array(__CLASS__, 'posts_join' ), 10, 2 );
 				add_filter( 'posts_where', array(__CLASS__, 'posts_where'), 10, 2);
 
-
 				if( !empty($query->query_vars['eventDisplay']) ) {
 	            	switch ( $query->query_vars['eventDisplay'] ) {
 	               		case 'past': // setup past event display query
@@ -68,16 +72,10 @@ if (!class_exists('TribeEventsQuery')) {
 							$query->set( 'orderby', 'event_date' );
 							$query->set( 'order', 'DESC' );
 	                  		break;
-	               		case 'day':
-							$query->set( 'start_date', $query->get('eventDate') );
-							$query->set( 'end_date', $query->get('start_date') );
-							$query->set( 'orderby', 'event_date' );
-							$query->set( 'order', 'ASC' );
-	                  		break;
 	               		case 'all':
 							$query->set( 'orderby', 'event_date' );
 							$query->set( 'order', 'ASC' );
-	                  		break;				
+	                  		break;
 	               		case 'month':
 							$start_date = substr_replace( date_i18n( TribeDateUtils::DBDATEFORMAT ), '01', -2 );
 							$start_date = ( $query->get('eventDate') != '' ) ? $query->get('eventDate') . '-01' : $start_date;
@@ -88,23 +86,13 @@ if (!class_exists('TribeEventsQuery')) {
 							$query->set( 'order', 'ASC' );
 							$query->set('posts_per_page', -1); // show ALL month posts
 	                  		break;
-	               		case 'week':
-							$start_date = substr_replace( date_i18n( TribeDateUtils::DBDATEFORMAT ), '01', -2 );
-							$start_date = ( $query->get('eventDate') != '' ) ? $query->get('eventDate') . '-01' : $start_date;
-							$query->set( 'start_date', $start_date );
-							$query->set( 'eventDate', $start_date );
-							$query->set( 'end_date', date( 'Y-m-d', strtotime( TribeEvents::instance()->nextWeek($start_date) ) -(24*3600) ));
-							$query->set( 'orderby', 'event_date' );
-							$query->set( 'order', 'ASC' );
-							$query->set('posts_per_page', -1); // show ALL month posts
-	                  		break;
 	               		case 'upcoming':
 	               		default: // default display query
 							$query->set( 'hide_upcoming', true );
 							$query->set( 'start_date', date_i18n( TribeDateUtils::DBDATETIMEFORMAT ) );
 							$query->set( 'orderby', 'event_date' );
 							$query->set( 'order', 'ASC' );
-	                  		break;	
+	                  		break;
 	            	}
 	         	} else if ( is_single() ) {
 	         		if( $query->get('eventDate') != '' ) {
@@ -118,27 +106,26 @@ if (!class_exists('TribeEventsQuery')) {
 					$query->set( 'order', 'ASC' );
 				}
 
-				// setup default Event Start join/filter
+				// eventCat becomes a standard taxonomy query - will need to deprecate and update views eventually
+				if ( ! in_array( $query->get('eventCat'), array( '', '-1' )) ) {
+					$tax_query[] = array(
+						'taxonomy' => TribeEvents::TAXONOMY,
+						'field' => is_numeric($query->get('eventCat')) ? 'id' : 'name',
+						'terms' => $query->get('eventCat')
+						);
+				}
+
 				$meta_query[] = array(
 					'key' => '_EventStartDate',
 					'type' => 'DATETIME'
 					);
-
-				// eventCat becomes a standard taxonomy query - will need to deprecate and update views eventually
-				if ( ! in_array( $query->get('eventCat'), array( '', '-1' )) ) {
-					$tax_query[] = array(
-						'taxonomy' => TribeEvents::TAXONOMY, 
-						'field' => is_numeric($query->get('eventCat')) ? 'id' : 'name', 
-						'terms' => $query->get('eventCat')
-						);
-				}
 
 			}
 
 			// filter by Venue ID
 			if( $query->tribe_is_event_query && $query->get('venue') != '' ) {
 				$meta_query[] = array(
-					'key' => '_EventVenueID', 
+					'key' => '_EventVenueID',
 					'value' => $query->get('venue')
 					);
 			}
@@ -146,7 +133,7 @@ if (!class_exists('TribeEventsQuery')) {
 			// proprietary metaKeys go to standard meta
 			if( $query->tribe_is_event_query && $query->get('metaKey') != '' ) {
 				$meta_query[] = array(
-					'key' => $query->get('metaKey'), 
+					'key' => $query->get('metaKey'),
 					'value' => $query->get('metaValue')
 					);
 			}
@@ -182,23 +169,34 @@ if (!class_exists('TribeEventsQuery')) {
 				add_filter( 'posts_orderby', array(__CLASS__, 'posts_orderby'), 10, 2);
 			}
 
-			// if is in the admin remove the event date & upcoming filters
-			if( is_admin() && $query->tribe_is_event_query ) {
-				remove_filter( 'posts_join', array(__CLASS__, 'posts_join' ), 10, 2 );
-				remove_filter( 'posts_where', array(__CLASS__, 'posts_where'), 10, 2);
-				$query->set( 'post__not_in', '' );
+			// if is in the admin remove the event date & upcoming filters, unless is an ajax call
+			if ( is_admin() && $query->tribe_is_event_query ) {
+				if ( ( !defined( 'DOING_AJAX' ) ) || ( defined( 'DOING_AJAX' ) && !( DOING_AJAX ) ) ) {
 
-				// set the default order for posts within admin lists
-				if( ! isset($query->query['order'])) {
-					$query->set( 'order', 'DESC' );
-				} else {
-					// making sure we preserve the order supplied by the query string even if it is overwritten above
-					$query->set( 'order', $query->query['order'] );
+
+					remove_filter( 'posts_join', array( __CLASS__, 'posts_join' ), 10, 2 );
+					remove_filter( 'posts_where', array( __CLASS__, 'posts_where' ), 10, 2 );
+					$query->set( 'post__not_in', '' );
+
+					// set the default order for posts within admin lists
+					if ( !isset( $query->query['order'] ) ) {
+						$query->set( 'order', 'DESC' );
+					} else {
+						// making sure we preserve the order supplied by the query string even if it is overwritten above
+						$query->set( 'order', $query->query['order'] );
+					}
 				}
 			}
 
 			// check if is_event_query === true and hook filter
-			return $query->tribe_is_event_query ? apply_filters( 'tribe_events_pre_get_posts', $query ) : $query;
+			$query->tribe_is_event_query ? apply_filters( 'tribe_events_pre_get_posts', $query ) : $query;
+
+			// setup default Event Start join/filter
+			if ( ( $query->tribe_is_event || $query->tribe_is_event_category ) && empty( $query->query_vars['meta_query'] ) ) {
+				$query->set( 'meta_query', array( array( 'key' => '_EventStartDate', 'type' => 'DATETIME' ) ) );
+			}
+
+			return $query;
 		}
 
 		/**
@@ -207,17 +205,20 @@ if (!class_exists('TribeEventsQuery')) {
 		 * @return array $posts (modified)
 		 */
 		public function the_posts( $posts ) {
-			if( !empty($posts) ) {
-				foreach( $posts as $id => $post ) {
-					$posts[$id]->tribe_is_event = false;
-
-					// is event add required fields
-					if( tribe_is_event( $post->ID) ) {
-						$posts[$id]->tribe_is_event = true;
-						$posts[$id]->EventStartDate = get_post_meta( $post->ID, '_EventStartDate', true);
-						$posts[$id]->EventDuration = get_post_meta( $post->ID, '_EventDuration', true);
-						// DO NOT USE THIS - end dates are deprecated due to recurrance
-						$posts[$id]->EventEndDate = get_post_meta( $post->ID, '_EventEndDate', true);
+			if ( ( defined( 'DOING_AJAX' ) && DOING_AJAX ) || !is_admin() ) {
+				if( !empty($posts) ) {
+					foreach( $posts as $id => $post ) {
+						$posts[$id]->tribe_is_event = false;
+	
+						// is event add required fields
+						if( tribe_is_event( $post->ID) ) {
+							$posts[$id]->tribe_is_event = true;
+							$posts[$id]->tribe_is_allday = tribe_get_event_meta( $post->ID, '_EventAllDay' ) ? true : false;
+							$posts[$id]->EventStartDate = get_post_meta( $post->ID, '_EventStartDate', true);
+							$posts[$id]->EventDuration = get_post_meta( $post->ID, '_EventDuration', true);
+							// DO NOT USE THIS - end dates are deprecated due to recurrance
+							$posts[$id]->EventEndDate = get_post_meta( $post->ID, '_EventEndDate', true);
+						}
 					}
 				}
 			}
@@ -228,7 +229,7 @@ if (!class_exists('TribeEventsQuery')) {
 
 		/**
 		 * Custom SQL join for event duration meta field
-		 * @param  string $join_sql 
+		 * @param  string $join_sql
 		 * @param  wp_query $query
 		 * @return string
 		 */
@@ -259,7 +260,7 @@ if (!class_exists('TribeEventsQuery')) {
 				$duration_filter = " DATE_ADD(CAST({$wpdb->postmeta}.meta_value AS DATETIME), INTERVAL tribe_event_duration.meta_value SECOND) ";
 
 				// build where conditionals for events if date range params are set
-				if( $query->get( 'start_date') != '' && $query->get( 'end_date') != '' ){ 
+				if( $query->get( 'start_date') != '' && $query->get( 'end_date') != '' ){
 					$start_clause = $wpdb->prepare("({$wpdb->postmeta}.meta_value >= %s AND {$wpdb->postmeta}.meta_value <= %s)", $query->get( 'start_date'), $query->get( 'end_date'));
 					$end_clause = $wpdb->prepare("($duration_filter >= %s AND {$wpdb->postmeta}.meta_value <= %s )", $query->get( 'start_date'), $query->get( 'end_date'));
 					$within_clause = $wpdb->prepare("({$wpdb->postmeta}.meta_value < %s AND $duration_filter >= %s )", $query->get( 'start_date'), $query->get( 'end_date'));
@@ -288,7 +289,7 @@ if (!class_exists('TribeEventsQuery')) {
 				$order_direction = $query->get( 'order' );
 				$order_sql = "DATE({$wpdb->postmeta}.meta_value) {$order_direction}, TIME({$wpdb->postmeta}.meta_value) {$order_direction}";
 			}
-		
+
 			return $order_sql;
 		}
 
@@ -309,24 +310,34 @@ if (!class_exists('TribeEventsQuery')) {
 		 * @param  array  $args
 		 * @return array
 		 */
-		public static function getEvents( $args = array() ) {
+		public static function getEvents( $args = array(), $full = false ) {
 			$defaults = array(
 				'post_type' => TribeEvents::POSTTYPE,
 				'orderby' => 'event_date',
 				'order' => 'ASC',
 				'posts_per_page' => tribe_get_option( 'postsPerPage', 10 )
-			);	
+			);
 			$args = wp_parse_args( $args, $defaults);
 
 			// print_r($args);
 
 			$wp_query = new WP_Query( $args );
 
+			// print_r($wp_query->request);
+
 			if( ! empty($wp_query->posts) ) {
-				$posts = $wp_query->posts;
-				return $posts;
+				if ( $full ) {
+					return $wp_query;
+				} else {
+					$posts = $wp_query->posts;
+					return $posts;
+				}
 			} else {
-				return NULL;
+				if ( $full ) {
+					return $wp_query;
+				} else {
+					return array();
+				}
 			}
 		}
 	}

@@ -11,7 +11,7 @@ class TribeEventsBar {
 	private $views = array();
 
 	public function __construct() {
-		add_filter( 'the_content', array( $this, 'show' ), 1 );
+		add_filter( 'tribe_events_before_html', array( $this, 'show' ), 5 );
 		add_filter( 'wp_enqueue_scripts', array( $this, 'load_script' ) );
 	}
 
@@ -37,8 +37,9 @@ class TribeEventsBar {
 
 			$tec = TribeEvents::instance();
 
+			ob_start();
 			include $tec->pluginPath . "views/modules/bar.php";
-
+			$content = ob_get_clean() . $content;
 		}
 
 		return $content;
@@ -46,27 +47,30 @@ class TribeEventsBar {
 
 	public function load_script() {
 		if ( $this->should_show() ) {
+
 			Tribe_Template_Factory::asset_package( 'tribe-events-bar' );
 			Tribe_Template_Factory::asset_package( 'chosen' );
 			Tribe_Template_Factory::asset_package( 'jquery-placeholder' );
 			Tribe_Template_Factory::asset_package( 'datepicker' );
+
+			do_action( 'tribe-events-bar-enqueue-scripts' );
 		}
 	}
 
 	public static function print_filters_helper( $filters ) {
 
-		echo '<form id="tribe-events-bar-form" name="tribe-events-bar-form" method="post" action="'. add_query_arg( array() ) .'">';
+		echo '<form id="tribe-events-bar-form" name="tribe-events-bar-form" method="post" action="' . add_query_arg( array() ) . '">';
 
-		echo '<div class="tribe-events-bar-toggle"><span class="tribe-triangle"></span><span class="tribe-events-visuallyhidden">More Filters</span></div>';
+		echo '<div class="tribe-events-bar-toggle"><span class="tribe-triangle"></span><span>Filters</span></div>';
 
 		foreach ( $filters as $filter ) {
-			echo '<div class="tribe-events-bar-filter-wrap '. esc_attr( $filter['name'] ) .'">';
+			echo '<div class="tribe-events-bar-filter-wrap ' . esc_attr( $filter['name'] ) . '">';
 			echo '<label class="tribe-events-visuallyhidden" for="' . esc_attr( $filter['name'] ) . '">' . $filter['caption'] . '</label>';
-			echo $filter['html']; 
+			echo $filter['html'];
 			echo '</div>';
 		}
 
-		echo '<div class="tribe-events-bar-filter-wrap tribe-bar-submit"><input type="submit" name="submit-bar" value="'. __( 'Search', 'tribe-events-calendar' ) .'"/></div>';
+		echo '<div class="tribe-events-bar-filter-wrap tribe-bar-submit"><input class="tribe-events-button-grey" type="submit" name="submit-bar" value="' . __( 'Search', 'tribe-events-calendar' ) . '"/></div>';
 
 		echo '</form><!-- #tribe-events-bar-form -->';
 
@@ -81,13 +85,13 @@ class TribeEventsBar {
 
 		if ( count( $views ) <= $limit ) {
 			// Standard list navigation for larger screens
-			$open     	  = '<ul class="tribe-events-bar-view-list">';
-			$close    	  = "</ul>";
-			$current      = 'active';
-			$open_el  	  = '<li><a class="tribe-events-bar-view !CURRENT!" href="!URL!">';
-			$close_el 	  = "</a></li>";
+			$open     = '<ul class="tribe-events-bar-view-list">';
+			$close    = "</ul>";
+			$current  = 'tribe-active';
+			$open_el  = '<li><a class="tribe-events-bar-view tribe-events-button-grey !CURRENT!" href="!URL!">';
+			$close_el = "</a></li>";
 			// Select input for smaller screens
-			$open_sel     = '<select class="chzn-select" name="tribe-events-bar-view">';
+			$open_sel     = '<select class="tribe-events-bar-view-select chzn-select" name="tribe-events-bar-view">';
 			$close_sel    = "</select>";
 			$current_sel  = 'selected';
 			$open_sel_el  = '<option !CURRENT! value="!URL!">';
@@ -101,9 +105,9 @@ class TribeEventsBar {
 			$open_el  = '<option !CURRENT! value="!URL!">';
 			$close_el = "</option>";
 		}
-		
+
 		// standard list navigation for larger screens or select depending on number of views
-		echo '<h3 class="tribe-events-visuallyhidden">'. __( 'Event Views Navigation', 'tribe-events-calendar' ) .'</h3>';
+		echo '<h3 class="tribe-events-visuallyhidden">' . __( 'Event Views Navigation', 'tribe-events-calendar' ) . '</h3>';
 		echo $open;
 
 		foreach ( $views as $view ) {
@@ -112,7 +116,7 @@ class TribeEventsBar {
 			if ( $tec->displaying === $view['displaying'] ) {
 				$item = str_replace( '!CURRENT!', $current, $item );
 			} else {
-				$item = str_replace( '!CURRENT!', '', $item );
+				$item = str_replace( '!CURRENT!', 'tribe-inactive', $item );
 			}
 
 			echo $item;
@@ -122,7 +126,7 @@ class TribeEventsBar {
 		}
 
 		echo $close;
-		
+
 		// at smaller sizes we use a media query to hide the view buttons
 		// and move to a select input element, which is why we are using this
 		// second foreach
@@ -146,7 +150,7 @@ class TribeEventsBar {
 			}
 			echo $close_sel;
 		}
-		
+
 	}
 
 	/**

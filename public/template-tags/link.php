@@ -135,7 +135,30 @@ if( class_exists( 'TribeEvents' ) ) {
 	 * @since 2.0
 	 */
 	function tribe_get_event_link($event = null) {
-		return trailingslashit( apply_filters( 'tribe_get_event_link', TribeEvents::instance()->getLink('single', $event), $event ) );
+		if ( '' == get_option('permalink_structure') ) {
+			return apply_filters( 'tribe_get_event_link', TribeEvents::instance()->getLink('single', $event), $event );
+		} else {
+			return trailingslashit( apply_filters( 'tribe_get_event_link', TribeEvents::instance()->getLink('single', $event), $event ) );
+		}
+	}
+
+	/**
+	 * Event Website Link (more info)
+	 * 
+	 * @param  object|int $event
+	 * @return $html
+	 */
+	function tribe_get_event_website_link( $event = null, $label = null ){
+		$post_id = is_object($event) && isset($event->tribe_is_event) && $event->tribe_is_event ? $event->ID : $event;
+		$post_id = !empty($post_id) ? $post_id : get_the_ID();
+		$link = tribe_get_event_meta( $post_id, '_EventURL', true );
+		$label = is_null($label) ? $link : $label;
+		$html = empty($link) ? '' : sprintf('<a href="%s" target="%s">%s</a>',
+			$link,
+			apply_filters('tribe_get_event_website_link_target', 'self'),
+			apply_filters('tribe_get_event_website_link_label', $label)
+			);
+		return apply_filters('tribe_get_event_website_link', $html );
 	}
 
 }

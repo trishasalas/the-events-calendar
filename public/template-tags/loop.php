@@ -52,19 +52,6 @@ if( class_exists( 'TribeEvents' ) ) {
 		return apply_filters('tribe_is_day', $is_day);
 	}
 
-
-	/**
-	 * Week Loop View Test
-	 *
-	 * @return bool
-	 * @since 2.1
-	 */
-	function tribe_is_week()  {
-		$tribe_ecp = TribeEvents::instance();
-		$is_week = ($tribe_ecp->displaying == 'week') ? true : false;
-		return apply_filters('tribe_is_week', $is_week);
-	}
-
 	/**
 	 * Past Loop View Test
 	 *
@@ -151,6 +138,10 @@ if( class_exists( 'TribeEvents' ) ) {
 			$title = __('Upcoming Events', 'tribe-events-calendar');
 		}
 
+		if ( tribe_is_past() ) {
+			$title = __( 'Past Events', 'tribe-events-calendar' );
+		}
+
 		if ( is_tax( $tribe_ecp->get_event_taxonomy() ) ) {
 			$cat = get_term_by( 'slug', get_query_var('term'), $tribe_ecp->get_event_taxonomy() );
 			if ( $depth ) {
@@ -161,9 +152,7 @@ if( class_exists( 'TribeEvents' ) ) {
 			}
 		}
 
-		$title = Tribe_Template_Factory::debug( 'tribe_get_events_title' ) . $title . Tribe_Template_Factory::debug( '/tribe_get_events_title', false );
-		
-		return apply_filters('tribe_get_events_title', $title);
+		return apply_filters('tribe_template_factory_debug', apply_filters('tribe_get_events_title', $title), 'tribe_get_events_title');
 	}
 
 	/**
