@@ -194,7 +194,6 @@ td.tribe_message {padding-bottom: 10px !important;}
 /* = Import / Export
 =============================================*/
 .tribe-events-importer-view-more { display: block; margin-bottom: 8px; }
-.tribe-events-importer-table { max-width: 840px; }
 .tribe-greyed td { color: #BBB; }
 .tribe-after-table-link { float: left; }
 .tribe-after-table-button, .tribe-before-table-button { float: right; margin: 5px 0;}
