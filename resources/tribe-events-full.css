@@ -459,6 +459,29 @@ width: 70%;
 	float: right;
 }
 
+/* Date Seperators */
+.tribe_list_separator_year{
+	display: block;
+	text-align: center;
+	font-size: 38px;
+	color: #ccc;
+	padding: 1em 2.25em 0 1em;
+	font-weight: bold;
+}
+
+.tribe_list_separator_month {
+	display: block;
+	text-transform: uppercase;
+	font-weight: bold;
+	font-size: 14px;
+	margin: 2.5em 0 0;
+	background-color: #EEE;
+	padding: 6px 10px;
+}
+
+.tribe_list_separator_month + .vevent.hentry.tribe-first {
+	padding-top: 2.25em;
+}
 
 /* = List View & Single Venue (Pro Version) Template Styles
    @ Template: list.php & single-venue.php
@@ -599,8 +622,8 @@ h3.tribe-event-single-section-title {
 /* Meta Sections */
 .single-tribe_events .tribe-events-event-meta {
 		background: #fafafa;
-		border-width: 1px;
-		border-color: #eee;
+		border: 1px solid #eee;
+		margin: 30px 0;
 }
 
 /* Map */
@@ -634,14 +657,7 @@ h3.tribe-event-single-section-title {
 
 /* Event Meta */
 .tribe-events-event-meta {
-	border-width: 1px 0;
-	border-style: solid;
-	border-color: #bbb;
-	margin: 30px 0;
-	padding: 2% 0;
-	overflow: hidden;
 	font-size: 12px;
-
 }
 .tribe-events-event-meta .tribe-events-meta-column, .tribe-events-event-meta .column {
 	float: left;
@@ -764,9 +780,8 @@ h3.tribe-event-single-section-title {
 	width: 16px;
 	height: 16px;
 	opacity: .7;
-	position: relative;
-	top: 4px;
-	display: inline;	
+	display: inline;
+	vertical-align: middle;	
 	box-shadow: none !important;
 }
 .event-is-recurring:hover img {

@@ -339,6 +339,9 @@ if( class_exists( 'TribeEvents' ) ) {
 		$costs = $wpdb->get_col( 'SELECT meta_value FROM ' . $wpdb->postmeta . ' WHERE meta_key = \'_EventCost\';');
 		
 		$costs = array_map( 'tribe_map_cost_array_callback', $costs );
+		foreach ( $costs as $index => $value ) {
+			$costs[$index] = preg_replace( '/^[^\d]+(\d+.*)$/', '$1', $value );
+		}
 		if ( empty( $costs ) )
 			$costs = array( '0' );
 			
@@ -362,6 +365,10 @@ if( class_exists( 'TribeEvents' ) ) {
 		$costs = $wpdb->get_col( 'SELECT meta_value FROM ' . $wpdb->postmeta . ' WHERE meta_key = \'_EventCost\';');
 		
 		$costs = array_map( 'tribe_map_cost_array_callback', $costs );
+		foreach ( $costs as $index => $value ) {
+			$costs[$index] = preg_replace( '/^[^\d]+(\d+.*)$/', '$1', $value );
+		}
+		
 		if ( empty( $costs ) )
 			$costs = array( '0' );
 		
@@ -518,7 +525,7 @@ if( class_exists( 'TribeEvents' ) ) {
 			if ( tribe_get_start_date( $post_id, false, 'g:i A' ) === tribe_get_end_date( $post_id, false, 'g:i A' ) ) { // Same start/end time
 				$schedule .= '<span class="date-start">' . tribe_get_start_date( $post_id, false, $format ) . '</span> @ <span class="start-time">' . tribe_get_start_date( $post_id, false, 'g:i A' ) . '</span>';
 			} else { // defined start/end time
-				$schedule .= '<span class="date-start">' . tribe_get_start_date( $post_id, false, $format ) . '</span> <span class="date-divider">|</span> <span class="start-time">' . tribe_get_start_date( $post_id, false, 'g:i A' ) . ' - <span class="start-time">' . tribe_get_end_date( $post_id, false, 'g:i A' ) . '</span>';
+				$schedule .= '<span class="date-start">' . tribe_get_start_date( $post_id, false, $format ) . '</span> <span class="date-divider">|</span> <span class="start-time">' . tribe_get_start_date( $post_id, false, 'g:i A' ) . '</span> - <span class="start-time">' . tribe_get_end_date( $post_id, false, 'g:i A' ) . '</span>';
 			}
 		}
 
