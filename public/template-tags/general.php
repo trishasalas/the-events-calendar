@@ -121,7 +121,7 @@ if( class_exists( 'TribeEvents' ) ) {
 		
 		$return_id = array();
 		
-		$tribe_cat_ids = wp_get_object_terms( $post_id, TribeEvents::TAXONOMY );
+		$tribe_cat_ids = get_the_terms( $post_id, TribeEvents::TAXONOMY );
 		if( !empty( $tribe_cat_ids ) ){
 			if( !is_wp_error( $tribe_cat_ids ) ) {
 				foreach( $tribe_cat_ids as $tribe_cat_id ) {
@@ -339,6 +339,9 @@ if( class_exists( 'TribeEvents' ) ) {
 		$costs = $wpdb->get_col( 'SELECT meta_value FROM ' . $wpdb->postmeta . ' WHERE meta_key = \'_EventCost\';');
 		
 		$costs = array_map( 'tribe_map_cost_array_callback', $costs );
+		foreach ( $costs as $index => $value ) {
+			$costs[$index] = preg_replace( '/^[^\d]+(\d+.*)$/', '$1', $value );
+		}
 		if ( empty( $costs ) )
 			$costs = array( '0' );
 			
@@ -362,6 +365,10 @@ if( class_exists( 'TribeEvents' ) ) {
 		$costs = $wpdb->get_col( 'SELECT meta_value FROM ' . $wpdb->postmeta . ' WHERE meta_key = \'_EventCost\';');
 		
 		$costs = array_map( 'tribe_map_cost_array_callback', $costs );
+		foreach ( $costs as $index => $value ) {
+			$costs[$index] = preg_replace( '/^[^\d]+(\d+.*)$/', '$1', $value );
+		}
+		
 		if ( empty( $costs ) )
 			$costs = array( '0' );
 		
@@ -518,7 +525,7 @@ if( class_exists( 'TribeEvents' ) ) {
 			if ( tribe_get_start_date( $post_id, false, 'g:i A' ) === tribe_get_end_date( $post_id, false, 'g:i A' ) ) { // Same start/end time
 				$schedule .= '<span class="date-start">' . tribe_get_start_date( $post_id, false, $format ) . '</span> @ <span class="start-time">' . tribe_get_start_date( $post_id, false, 'g:i A' ) . '</span>';
 			} else { // defined start/end time
-				$schedule .= '<span class="date-start">' . tribe_get_start_date( $post_id, false, $format ) . '</span> <span class="date-divider">|</span> <span class="start-time">' . tribe_get_start_date( $post_id, false, 'g:i A' ) . ' - <span class="start-time">' . tribe_get_end_date( $post_id, false, 'g:i A' ) . '</span>';
+				$schedule .= '<span class="date-start">' . tribe_get_start_date( $post_id, false, $format ) . '</span> <span class="date-divider">|</span> <span class="start-time">' . tribe_get_start_date( $post_id, false, 'g:i A' ) . '</span> - <span class="start-time">' . tribe_get_end_date( $post_id, false, 'g:i A' ) . '</span>';
 			}
 		}
 
@@ -557,6 +564,17 @@ if( class_exists( 'TribeEvents' ) ) {
 
 		// return the parsed template
 		return $list_view_html;
+	}
+
+	function tribe_events_the_notices( $echo = true ){
+		$notices = TribeEvents::getNotices();
+		$html = !empty($notices) ? '<div class="tribe-event-notices"><ul><li>' . implode('</li><li>', $notices ) . '</li></ul></div>' : '';
+		$the_notices = apply_filters('tribe_events_the_notices', $html, $notices );
+		if( $echo ) {
+			echo $the_notices;
+		} else {
+			return $the_notices;
+		}
 	}
 		
 }
