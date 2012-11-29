@@ -747,6 +747,27 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 							update_post_meta($id, '_Event'.$key, $var);
 						}	
 					}
+					if ( isset( $event_array['event']['imageUrl'] ) && $event_array['event']['imageUrl'] != '' ) {
+						/*** This next bit is taken from media.php media_sideload_image().
+						     We need the attachment ID, so we have to copy that part of the function
+						     to make it happen efficiently.
+							***/
+						// Download file to temp location
+						$tmp = download_url( $event_array['event']['imageUrl'] );
+
+						// Set variables for storage
+						// fix file filename for query strings
+						preg_match('/[^\?]+\.(jpg|JPG|jpe|JPE|jpeg|JPEG|gif|GIF|png|PNG)/', $event_array['event']['imageUrl'], $matches);
+						$file_array['name'] = basename($matches[0]);
+						$file_array['tmp_name'] = $tmp;
+				
+						// do the validation and storage stuff
+						$image_id = media_handle_sideload( $file_array, $id );
+						
+						if ( is_numeric( $image_id ) ) {
+							set_post_thumbnail( $id, $image_id );
+						}
+					}
 					if ( isset( $event_array['venue_meta'] ) && count( $event_array['venue_meta'] ) > 0 && isset( $event_data['Venue']['ImportApiID'] ) && $created_venue == true ) {
 						$venue_id = $this->getVenueByImportApiId( $event_data['Venue']['ImportApiID'] );
 						$event_array['venue_meta']['Venue'] = $event_array['venue']['title'];

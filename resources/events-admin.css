@@ -191,6 +191,17 @@ td.tribe_message {padding-bottom: 10px !important;}
 .ui-button .ui-button-text {display: block; line-height: 1.4;}
 .ui-datepicker{font-size:8pt;}
 
+
+/* = Import / Export
+=============================================*/
+.tribe-events-importer-view-more { display: block; margin-bottom: 8px; }
+.tribe-greyed td { color: #BBB; }
+.tribe-after-table-link { float: left; }
+.tribe-after-table-button, .tribe-before-table-button { float: right; margin: 5px 0;}
+.tribe-float-right { float: right; margin-left: 4px; }
+.tribe-spinner { display: none; margin: 0px; }
+.ui-button .ui-button-text {display: block; line-height: 1.4;}
+
 #tribe-loading {
 	display           : none;
 	position          : absolute;
@@ -217,14 +228,3 @@ td.tribe_message {padding-bottom: 10px !important;}
 	margin     : -16px 0 0 -16px;
 	background : url(images/tribe-loading.gif) 0 0 no-repeat;
 }
-
-
-/* = Import / Export
-=============================================*/
-.tribe-events-importer-view-more { display: block; margin-bottom: 8px; }
-.tribe-events-importer-table { max-width: 840px; }
-.tribe-greyed td { color: #BBB; }
-.tribe-after-table-link { float: left; }
-.tribe-after-table-button, .tribe-before-table-button { float: right; margin: 5px 0;}
-.tribe-float-right { float: right; margin-left: 4px; }
-.tribe-spinner { display: none; margin: 0px; }
