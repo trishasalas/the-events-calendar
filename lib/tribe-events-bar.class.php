@@ -49,7 +49,7 @@ class TribeEventsBar {
 		if ( $this->should_show() ) {
 
 			Tribe_Template_Factory::asset_package( 'tribe-events-bar' );
-			Tribe_Template_Factory::asset_package( 'chosen' );
+			Tribe_Template_Factory::asset_package( 'select2' );
 			Tribe_Template_Factory::asset_package( 'jquery-placeholder' );
 			Tribe_Template_Factory::asset_package( 'datepicker' );
 
@@ -88,10 +88,10 @@ class TribeEventsBar {
 			$open     = '<ul class="tribe-events-bar-view-list">';
 			$close    = "</ul>";
 			$current  = 'tribe-active';
-			$open_el  = '<li><a class="tribe-events-bar-view tribe-events-button-grey !CURRENT!" href="!URL!">';
+			$open_el  = '<li><a class="tribe-events-bar-view tribe-events-button-grey tribe-icon-!VIEW! !CURRENT-ACTIVE!" href="!URL!">';
 			$close_el = "</a></li>";
 			// Select input for smaller screens
-			$open_sel     = '<select class="tribe-events-bar-view-select chzn-select" name="tribe-events-bar-view">';
+			$open_sel     = '<select class="tribe-events-bar-view-select tribe-select2" name="tribe-events-bar-view">';
 			$close_sel    = "</select>";
 			$current_sel  = 'selected';
 			$open_sel_el  = '<option !CURRENT! value="!URL!">';
@@ -99,7 +99,7 @@ class TribeEventsBar {
 
 		} else {
 
-			$open     = '<select class="chzn-select" name="tribe-events-bar-view">';
+			$open     = '<select class="tribe-select2" name="tribe-events-bar-view">';
 			$close    = "</select>";
 			$current  = 'selected';
 			$open_el  = '<option !CURRENT! value="!URL!">';
@@ -111,12 +111,14 @@ class TribeEventsBar {
 		echo $open;
 
 		foreach ( $views as $view ) {
+
 			$item = str_replace( '!URL!', esc_url( $view['url'] ), $open_el );
+			$item = str_replace( '!VIEW!', $view['displaying'], $item );
 
 			if ( $tec->displaying === $view['displaying'] ) {
-				$item = str_replace( '!CURRENT!', $current, $item );
+				$item = str_replace( '!CURRENT-ACTIVE!', $current, $item );
 			} else {
-				$item = str_replace( '!CURRENT!', 'tribe-inactive', $item );
+				$item = str_replace( '!CURRENT-ACTIVE!', 'tribe-inactive', $item );
 			}
 
 			echo $item;

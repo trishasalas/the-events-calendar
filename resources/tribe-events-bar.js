@@ -16,8 +16,8 @@ function eventBarWidth() {
 jQuery( document ).ready( function ( $ ) {
 
 	var tribe_var_datepickerOpts = {
-		dateFormat:'yy-mm-dd',
-		showAnim  :'fadeIn'
+		dateFormat: 'yy-mm-dd',
+		showAnim: 'fadeIn'
 	};
 
 	// Implement our datepicker
@@ -27,7 +27,16 @@ jQuery( document ).ready( function ( $ ) {
 	$( 'input[name*="tribe-bar-"]' ).placeholder();
 
 	// Implement chosen
-	$( '#tribe-events-bar-views .chzn-select' ).chosen( { disable_search_threshold:9999 } );
+	function format( view ) {
+    	return '<span class="tribe-icon-' + view.text.toLowerCase() + '">' + view.text + '</span>';
+   	}
+	$( '#tribe-events-bar-views .tribe-select2' ).select2({
+    	placeholder: "Views",
+    	dropdownCssClass: 'tribe-select2-results',
+    	minimumResultsForSearch: 9999,
+    	formatResult: format,
+        formatSelection: format
+    });
 
 	// Wrap non-date inputs with a parent container for toggle
 
