@@ -356,7 +356,7 @@ if( class_exists( 'TribeEvents' ) ) {
 		
 		$costs = array_map( 'tribe_map_cost_array_callback', $costs );
 		foreach ( $costs as $index => $value ) {
-			$costs[$index] = preg_replace( '/^[^\d]+(\d+.*)$/', '$1', $value );
+			$costs[$index] = preg_replace( '/^[^\d]+(\d+\.?\d*)?.*$/', '$1', $value );
 		}
 		if ( empty( $costs ) )
 			$costs = array( '0' );
@@ -382,7 +382,7 @@ if( class_exists( 'TribeEvents' ) ) {
 		
 		$costs = array_map( 'tribe_map_cost_array_callback', $costs );
 		foreach ( $costs as $index => $value ) {
-			$costs[$index] = preg_replace( '/^[^\d]+(\d+.*)$/', '$1', $value );
+			$costs[$index] = preg_replace( '/^[^\d]+(\d+\.?\d*)?.*$/', '$1', $value );
 		}
 		
 		if ( empty( $costs ) )
