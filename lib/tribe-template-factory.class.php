@@ -65,6 +65,7 @@ if( !class_exists('Tribe_Template_Factory') ) {
 					break;
 				case 'tribe-events-import' :
 					wp_enqueue_script( $prefix. '-import', $resouces_url . 'tribe-events-import.js', array( 'jquery' ) );
+					wp_enqueue_script( 'jquery-ui-progressbar' );
 					break;
 				case 'ajax-calendar':
 					$ajax_data = array( "ajaxurl"   => admin_url( 'admin-ajax.php', ( is_ssl() ? 'https' : 'http' ) ) );
