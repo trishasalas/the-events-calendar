@@ -246,6 +246,13 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		abstract public function importTabInstructions();
 		
 		/**
+		 * Abstract function for importing all events.
+		 *
+		 * @since 3.0
+		 */
+		abstract public function ajaxImportAllEvents();
+		
+		/**
 		 * The class constructor function.
 		 *
 		 * @since 2.1
@@ -279,6 +286,7 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 			add_action( 'wp_ajax_tribe_events_' . self::$pluginSlug . '_save_import_query', array( $this, 'ajaxSaveImportQuery' ) );
 			add_action( 'wp_ajax_tribe_events_' . self::$pluginSlug . '_delete_saved_import_query', array( $this, 'ajaxDeleteSavedImportQuery' ) );
 			add_action( 'wp_ajax_tribe_events_' . self::$pluginSlug . '_import_checked_events', array( $this, 'ajaxImportCheckedEvents' ) );
+			add_action( 'wp_ajax_tribe_events_' . self::$pluginSlug . '_import_all_events', array( $this, 'ajaxImportAllEvents' ) );
 			add_action( 'tribe_events_importexport_before_import_info_box_tab_' . self::$pluginSlug, array( $this, 'doImportingOverlay' ) );
 			add_action( 'tribe_events_importexport_content_tab_' . self::$pluginSlug, array( $this, 'generateImportTab' ) );
 			add_action( 'tribe_events_importexport_import_instructions_tab_' . self::$pluginSlug, array( $this, 'importTabInstructions' ) );
