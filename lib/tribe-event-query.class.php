@@ -31,7 +31,7 @@ if (!class_exists('TribeEventsQuery')) {
 			add_filter( 'pre_get_posts', array( __CLASS__, 'pre_get_posts' ), 0 );
 
 			// setup returned posts with event fields ( start date, end date, duration etc )
-			add_filter( 'the_posts', array( __CLASS__, 'the_posts'), 0 );
+			// add_filter( 'the_posts', array( __CLASS__, 'the_posts'), 0 );
 		}
 
 
@@ -88,6 +88,9 @@ if (!class_exists('TribeEventsQuery')) {
 
 				if( !empty($query->query_vars['eventDisplay']) ) {
 	            	switch ( $query->query_vars['eventDisplay'] ) {
+	            		case 'custom':
+	            			// if set this allows for a custom query to not be burdened with these settings
+	            			break;
 	               		case 'past': // setup past event display query
 							$query->set( 'end_date', date_i18n( TribeDateUtils::DBDATETIMEFORMAT ) );
 							$query->set( 'orderby', 'event_date' );
@@ -251,10 +254,10 @@ if (!class_exists('TribeEventsQuery')) {
 					// is event add required fields
 					if( tribe_is_event( $post ) ) {
 						$posts[$id]->tribe_is_event = true;
-						$posts[$id]->tribe_is_allday = tribe_get_event_meta( $post->ID, '_EventAllDay' ) ? true : false;
-						$posts[$id]->EventStartDate = get_post_meta( $post->ID, '_EventStartDate', true);
-						$posts[$id]->EventDuration = get_post_meta( $post->ID, '_EventDuration', true);
-						$posts[$id]->EventEndDate = get_post_meta( $post->ID, '_EventEndDate', true);
+						$posts[$id]->tribe_is_allday = tribe_get_event_meta( $post, '_EventAllDay' ) ? true : false;
+						$posts[$id]->EventStartDate = get_post_meta( $post, '_EventStartDate', true);
+						$posts[$id]->EventDuration = get_post_meta( $post, '_EventDuration', true);
+						$posts[$id]->EventEndDate = get_post_meta( $post, '_EventEndDate', true);
 					}
 				}
 			}
