@@ -228,3 +228,37 @@ td.tribe_message {padding-bottom: 10px !important;}
 	margin     : -16px 0 0 -16px;
 	background : url(images/tribe-loading.gif) 0 0 no-repeat;
 }
+
+.tribe-overlay {
+	z-index:9999;
+	display: none;
+	position:fixed;
+	border: 1px solid #000;
+	top:50px;
+	bottom:30px;
+	left:20px;
+	right: 20px;
+	width:97%;
+	background:#333;
+	opacity:0.55;
+	-moz-opacity:0.55;
+	filter:alpha(opacity=55);
+	border-radius: 7px; 
+	-moz-border-radius: 7px; 
+	-webkit-border-radius: 7px; 
+	-khtml-border-radius: 7px; 
+	-o-border-radius: 7px;
+}
+.tribe-import-progressbar-wrapper { 
+	z-index:9999;
+	position:fixed;
+	top:50%;
+	left:42%;
+	color: #fff;
+	display: none;
+
+}
+.tribe-import-progressbar {
+	width: 200px;
+	border: 1px solid #666;
+}

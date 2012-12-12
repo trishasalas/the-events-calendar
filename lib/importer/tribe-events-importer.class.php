@@ -246,6 +246,13 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		abstract public function importTabInstructions();
 		
 		/**
+		 * Abstract function for importing all events.
+		 *
+		 * @since 3.0
+		 */
+		abstract public function ajaxImportAllEvents();
+		
+		/**
 		 * The class constructor function.
 		 *
 		 * @since 2.1
@@ -278,6 +285,9 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 			add_action( 'wp_ajax_tribe_events_' . self::$pluginSlug . '_get_possible_events', array( $this, 'ajaxGetPossibleEvents' ) );
 			add_action( 'wp_ajax_tribe_events_' . self::$pluginSlug . '_save_import_query', array( $this, 'ajaxSaveImportQuery' ) );
 			add_action( 'wp_ajax_tribe_events_' . self::$pluginSlug . '_delete_saved_import_query', array( $this, 'ajaxDeleteSavedImportQuery' ) );
+			add_action( 'wp_ajax_tribe_events_' . self::$pluginSlug . '_import_checked_events', array( $this, 'ajaxImportCheckedEvents' ) );
+			add_action( 'wp_ajax_tribe_events_' . self::$pluginSlug . '_import_all_events', array( $this, 'ajaxImportAllEvents' ) );
+			add_action( 'tribe_events_importexport_before_import_info_box_tab_' . self::$pluginSlug, array( $this, 'doImportingOverlay' ) );
 			add_action( 'tribe_events_importexport_content_tab_' . self::$pluginSlug, array( $this, 'generateImportTab' ) );
 			add_action( 'tribe_events_importexport_import_instructions_tab_' . self::$pluginSlug, array( $this, 'importTabInstructions' ) );
 			add_action( 'tribe_events_importexport_import_form_tab_' . self::$pluginSlug, array( $this, 'doImportForm' ) );
@@ -432,6 +442,9 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		 * @return void
 		 */
 		public function displayMessages() {
+			if ( isset( $_REQUEST['num_imported_events'] ) && is_numeric( $_REQUEST['num_imported_events'] ) ) {
+				$this->messages[] = sprintf( _n( '%s event successfully imported.', '%s events successfully imported.', $_REQUEST['num_imported_events'], 'tribe-events-calendar' ), $_REQUEST['num_imported_events'], $_REQUEST['num_imported_events'] );
+			}
 			if ( isset( $this->messages ) && is_array( $this->messages ) ) {
 				foreach ( $this->messages as $message ) {
 					echo '<div class="updated">';
@@ -564,6 +577,22 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 			}
 			echo json_encode( $this->response );
 			die();
+		}
+		
+		/**
+		 * AJAX import checked events.
+		 *
+		 * @since 2.1
+		 * @author PaulHughes01
+		 *
+		 * @return void
+		 */
+		public function ajaxImportCheckedEvents() {
+			if ( isset( $_POST['tribe_events_importexport_events_to_import'] ) ) {
+				$num_imported_events = $this->processImportSubmission();
+				$return_array = array( 'num_imported_events' => $num_imported_events );
+				die( json_encode( $return_array ) );
+			}
 		}
 		
 		/**
@@ -710,7 +739,7 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 					if ( isset( $event_array['venue']['title'] ) ) $event_data['Venue']['Venue'] = $event_array['venue']['title'];
 					if ( isset( $event_array['venue']['address'] ) ) $event_data['Venue']['Address'] = $event_array['venue']['address'];
 					if ( isset( $event_array['venue']['city'] ) ) $event_data['Venue']['City'] = $event_array['venue']['city'];
-					if ( isset( $event_array['venue']['stateProvince'] ) ) $event_data['Venue']['State'] = $event_array['venue']['stateProvince'];
+					if ( isset( $event_array['venue']['stateProvince'] ) ) $event_data['Venue']['State'] = $event_data['Venue']['Province'] = $event_array['venue']['stateProvince'];
 					if ( isset( $event_array['venue']['country'] ) ) $event_data['Venue']['Country'] = $event_array['venue']['country'];
 					if ( isset( $event_array['venue']['zipCode'] ) ) $event_data['Venue']['Zip'] = $event_array['venue']['zipCode'];
 					if ( isset( $event_array['venue']['phone'] ) ) $event_data['Venue']['Phone'] = $event_array['venue']['phone'];
@@ -880,6 +909,20 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 			}
 
 			return $event_id;
+		}
+		
+		/**
+		 * Generate the importing process overlay.
+		 *
+		 * @since 3.0
+		 * @author PaulHughes01
+		 *
+		 * @return void
+		 */
+		public function doImportingOverlay() {
+			echo '<div class="tribe-overlay" id="tribe-events-import-process-overlay">';
+			echo '</div>';
+			echo '<div class="tribe-import-progressbar-wrapper"><span id="tribe-events-import-current-fraction">0/0</span><div class="tribe-import-progressbar"></div></div>';
 		}
 		
 		/**
