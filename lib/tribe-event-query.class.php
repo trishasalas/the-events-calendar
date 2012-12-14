@@ -31,7 +31,7 @@ if (!class_exists('TribeEventsQuery')) {
 			add_filter( 'pre_get_posts', array( __CLASS__, 'pre_get_posts' ), 0 );
 
 			// setup returned posts with event fields ( start date, end date, duration etc )
-			// add_filter( 'the_posts', array( __CLASS__, 'the_posts'), 0 );
+			add_filter( 'the_posts', array( __CLASS__, 'the_posts'), 0 );
 		}
 
 
@@ -41,7 +41,14 @@ if (!class_exists('TribeEventsQuery')) {
 		 * @return object $query (modified)
 		 */
 		public function pre_get_posts( $query ) {
-			$types = ( !empty( $query->query_vars['post_type'] ) ? (array)$query->query_vars['post_type'] : array() );
+			
+			global $wp_the_query;
+			if ( $query === $wp_the_query && tribe_get_option( 'showEventsInMainLoop', false ) && !in_array( TribeEvents::POSTTYPE, $query->query_vars['post_type'] ) ) {
+				$query->query_vars['post_type'] = (array) $query->query_vars['post_type'];
+				$query->query_vars['post_type'][] = TribeEvents::POSTTYPE;
+			}
+		
+			$types = ( !empty( $query->query_vars['post_type'] ) ? (array) $query->query_vars['post_type'] : array() );
 
 			// check if any possiblity of this being an event query
 			$query->tribe_is_event = ( in_array( TribeEvents::POSTTYPE, $types ) )
@@ -246,18 +253,20 @@ if (!class_exists('TribeEventsQuery')) {
 		 * @return array $posts (modified)
 		 */
 		public function the_posts( $posts ) {
-			if( !empty($posts) ) {
-				foreach( $posts as $id => $post ) {
-					$posts[$id]->tribe_is_event = false;
-					$posts[$id]->tribe_is_recurrance = false;
+			if ( ( defined( 'DOING_AJAX' ) && DOING_AJAX ) || !is_admin() ) {
+				if( !empty($posts) ) {
+					foreach( $posts as $id => $post ) {
+						$posts[$id]->tribe_is_event = false;
+						$posts[$id]->tribe_is_recurrance = false;
 
-					// is event add required fields
-					if( tribe_is_event( $post ) ) {
-						$posts[$id]->tribe_is_event = true;
-						$posts[$id]->tribe_is_allday = tribe_get_event_meta( $post, '_EventAllDay' ) ? true : false;
-						$posts[$id]->EventStartDate = get_post_meta( $post, '_EventStartDate', true);
-						$posts[$id]->EventDuration = get_post_meta( $post, '_EventDuration', true);
-						$posts[$id]->EventEndDate = get_post_meta( $post, '_EventEndDate', true);
+						// is event add required fields
+						if( tribe_is_event( $post ) ) {
+							$posts[$id]->tribe_is_event = true;
+							$posts[$id]->tribe_is_allday = tribe_get_event_meta( $post, '_EventAllDay' ) ? true : false;
+							$posts[$id]->EventStartDate = get_post_meta( $post, '_EventStartDate', true);
+							$posts[$id]->EventDuration = get_post_meta( $post, '_EventDuration', true);
+							$posts[$id]->EventEndDate = get_post_meta( $post, '_EventEndDate', true);
+						}
 					}
 				}
 			}
@@ -319,21 +328,24 @@ if (!class_exists('TribeEventsQuery')) {
 			// if it's a true event query then we to setup where conditions
 			if ( $query->tribe_is_event || $query->tribe_is_event_category ) {
 
+				$start_date = !empty($query->start_date) ? $query->start_date : $query->get( 'start_date');
+				$end_date = !empty($query->end_date) ? $query->end_date : $query->get( 'end_date');
+
 				// we can't store end date directly because it messes up the distinc clause
 				$duration_filter = " DATE_ADD(CAST({$wpdb->postmeta}.meta_value AS DATETIME), INTERVAL tribe_event_duration.meta_value SECOND) ";
 
 				// build where conditionals for events if date range params are set
-				if( $query->get( 'start_date') != '' && $query->get( 'end_date') != '' ){
-					$start_clause = $wpdb->prepare("({$wpdb->postmeta}.meta_value >= %s AND {$wpdb->postmeta}.meta_value <= %s)", $query->get( 'start_date'), $query->get( 'end_date'));
-					$end_clause = $wpdb->prepare("($duration_filter >= %s AND {$wpdb->postmeta}.meta_value <= %s )", $query->get( 'start_date'), $query->get( 'end_date'));
-					$within_clause = $wpdb->prepare("({$wpdb->postmeta}.meta_value < %s AND $duration_filter >= %s )", $query->get( 'start_date'), $query->get( 'end_date'));
+				if( $start_date != '' && $end_date != '' ){
+					$start_clause = $wpdb->prepare("({$wpdb->postmeta}.meta_value >= %s AND {$wpdb->postmeta}.meta_value <= %s)", $start_date, $end_date);
+					$end_clause = $wpdb->prepare("($duration_filter >= %s AND {$wpdb->postmeta}.meta_value <= %s )", $start_date, $end_date);
+					$within_clause = $wpdb->prepare("({$wpdb->postmeta}.meta_value < %s AND $duration_filter >= %s )", $start_date, $end_date);
 					$where_sql .= " AND ($start_clause OR $end_clause OR $within_clause)";
-				} else if( $query->get( 'start_date') != ''){
-					$end_clause = $wpdb->prepare("{$wpdb->postmeta}.meta_value > %s", $query->get( 'start_date'));
-					$within_clause = $wpdb->prepare("({$wpdb->postmeta}.meta_value <= %s AND $duration_filter >= %s )", $query->get( 'start_date'), $query->get( 'start_date'));
+				} else if( $start_date != ''){
+					$end_clause = $wpdb->prepare("{$wpdb->postmeta}.meta_value > %s", $start_date);
+					$within_clause = $wpdb->prepare("({$wpdb->postmeta}.meta_value <= %s AND $duration_filter >= %s )", $start_date, $start_date);
 					$where_sql .= " AND ($end_clause OR $within_clause)";
-				} else if( $query->get( 'end_date') != ''){
-					$where_sql .= " AND " . $wpdb->prepare( "$duration_filter < %s", $query->get( 'end_date') );
+				} else if( $end_date != ''){
+					$where_sql .= " AND " . $wpdb->prepare( "$duration_filter < %s", $end_date );
 				}
 			}
 
@@ -348,9 +360,10 @@ if (!class_exists('TribeEventsQuery')) {
 		 */
 		public static function posts_orderby( $order_sql, $query ){
 			global $wpdb;
-			if( $query->get( 'orderby' ) == 'event_date' ) {
-				$order_direction = $query->get( 'order' );
-				$order_sql = "DATE({$wpdb->postmeta}.meta_value) {$order_direction}, TIME({$wpdb->postmeta}.meta_value) {$order_direction}";
+			$order = !empty($query->order) ? $query->order : $query->get( 'order' );
+			$orderby = !empty($query->orderby) ? $query->orderby : $query->get( 'orderby' );
+			if( $orderby == 'event_date' ) {
+				$order_sql = "DATE({$wpdb->postmeta}.meta_value) {$order}, TIME({$wpdb->postmeta}.meta_value) {$order}";
 			}
 
 			return $order_sql;

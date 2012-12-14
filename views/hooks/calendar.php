@@ -136,6 +136,7 @@ if( !class_exists('Tribe_Events_Calendar_Template')){
 
 			// get all upcoming ids to hide so we're not querying 31 times
 			$hide_upcoming_ids = TribeEventsQuery::getHideFromUpcomingEvents();
+			$posts_per_page_limit = 3;
 			$daysInMonth = isset( $date ) ? date( 't', $date ) : date( 't' );
 			$startOfWeek = get_option( 'start_of_week', 0 );
 			list( $year, $month ) = split( '-', $tribe_ecp->date );
@@ -143,7 +144,6 @@ if( !class_exists('Tribe_Events_Calendar_Template')){
 			$rawOffset = date( 'w', $date ) - $startOfWeek;
 			$offset = ( $rawOffset < 0 ) ? $rawOffset + 7 : $rawOffset; // month begins on day x
 			$rows = 1;
-
 			// $monthView = tribe_sort_by_month( $eventPosts, $tribe_ecp->date );
 ?>
 			<table class="tribe-events-calendar">
@@ -178,7 +178,7 @@ if( !class_exists('Tribe_Events_Calendar_Template')){
 							$current_day = date_i18n( 'd' );
 							$current_month = date_i18n( 'm' );
 							$current_year = date_i18n( 'Y' );
-            				$date = "$year-$month-$day";
+            				$date = date( 'Y-m-d', strtotime("$year-$month-$day"));
 
 							$ppf = '';
 
@@ -220,11 +220,11 @@ if( !class_exists('Tribe_Events_Calendar_Template')){
 			    				// setup our own custom hide upcoming
 			    				'post__not_in' => $hide_upcoming_ids, 
 			    				'hide_upcoming' => false,
-			    				'posts_per_page' => 3,
+			    				'posts_per_page' => $posts_per_page_limit,
 			    				'orderby' => 'event_date',
 								'order' => 'ASC',
-			    				'eventDisplay' => 'custom',
-			    				'no_found_rows' => true
+			    				'eventDisplay' => 'custom'
+			    				// 'no_found_rows' => true
 			    				);
 
 			    			if ( is_tax( $tribe_ecp->get_event_taxonomy() ) ) {
@@ -232,9 +232,9 @@ if( !class_exists('Tribe_Events_Calendar_Template')){
 								$args['eventCat'] = (int) $cat->term_id;
 							}
 
-			    			$daily_events = TribeEvents::getEvents( $args );
-
-							foreach( $daily_events as $post ) {
+			    			$daily_events = TribeEventsQuery::getEvents( $args, true );
+			    			// print_r( $daily_events);
+							foreach( $daily_events->posts as $post ) {
 								// setup_postdata( $post );
 								$eventId	= $post->ID.'-'.$day;
 								$start		= tribe_get_start_date( $post->ID, false, 'U' );
@@ -307,6 +307,17 @@ if( !class_exists('Tribe_Events_Calendar_Template')){
 
 
 							}
+
+							$remaining_not_shown = !empty($daily_events->found_posts) && $daily_events->found_posts > 0 ? 
+								$daily_events->found_posts - $posts_per_page_limit : 
+								0;
+							if( (int) $remaining_not_shown > 0 ) {
+								printf( '<div><a href="%s">View %d More Events</a></div>',
+									tribe_get_day_link( $date ),
+									$remaining_not_shown
+									);
+							}
+								
 
 			    			// echo $date;
 							// tribe_the_display_day( $day, $daily_events );
