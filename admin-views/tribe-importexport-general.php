@@ -8,7 +8,7 @@ if ( !defined('ABSPATH') ) { die('-1'); }
 <?php
 	echo '<h2>' . __( 'The Events Calendar: Import / Export', 'tribe-events-calendar' ) . '</h2>';
 	echo '<h3>' . __( 'Instructions', 'tribe-events-calendar' ) . '</h3>';
-	echo '<p class="admin-indent">' . __( 'These are instructions for the Import / Export General tab.', 'tribe-events-calendar' ) . '</p>';
+	echo '<p class="admin-indent">' . __( 'To start importing / exporting you Eventful events, input your Eventful API Key below (which you can get from your Eventful account), and choose the status you would like your events to be imported with.', 'tribe-events-calendar' ) . '</p><p class="admin-indent">' . __( 'Save your settings and then move on to the Import or Export tab as needed to setup your criteria.', 'tribe-events-calendar' ) . '</p>';
 ?>
 </div>
 <?php do_action( 'tribe_events_importexport_after_import_info_box' ); ?>

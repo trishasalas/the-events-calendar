@@ -229,12 +229,11 @@ if (!class_exists('Tribe_Events_ImportExport_Registrar')) {
 				echo '<a id="' . $tab . '" class="nav-tab' . $class . '" href="?post_type=' .TribeEvents::POSTTYPE . '&page=' . self::$slug . '&tab=' . urlencode( $tab ) . '">' . $name . '</a>';
 			}
 			if ( is_array( $this->import_apis ) && !empty( $this->import_apis ) ) {
-			echo ' ' . __( 'Import:', 'tribe-events-calendar' ) . ' ';
 				foreach ( $this->import_apis as $importer ) {
 						$tab = esc_attr( $importer['slug'] );
 						$name = esc_attr( $importer['name'] );
 						$class = ( $tab == $this->currentTab ) ? ' nav-tab-active' : '';
-						echo '<a id="' . $tab . '" class="nav-tab' . $class . '" href="?post_type=' .TribeEvents::POSTTYPE . '&page=' . self::$slug . '&tab=' . urlencode( $tab ) . '">' . $name . '</a>';
+						echo '<a id="' . $tab . '" class="nav-tab' . $class . '" href="?post_type=' .TribeEvents::POSTTYPE . '&page=' . self::$slug . '&tab=' . urlencode( $tab ) . '">'. __( 'Import: ' ,'tribe-events-calendar' ) . $name . '</a>';
 					}
 					do_action( 'tribe_events_importexport_after_tabs' );
 				echo '</h2>';
