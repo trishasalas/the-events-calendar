@@ -21,7 +21,6 @@ if( !class_exists('Tribe_Events_List_Template')){
 
 		public static function init(){
 
-
 			// Our various messages if there are no events for the query
 			if ( ! have_posts() ) { // Messages if currently no events
 				$tribe_ecp = TribeEvents::instance();
@@ -35,15 +34,18 @@ if( !class_exists('Tribe_Events_List_Template')){
 					}
 				}
 				if( tribe_is_day() ) {
-					TribeEvents::setNotice( sprintf( __( '<p>No events scheduled for <strong>%s</strong>. Please try another day.</p>', 'tribe-events-calendar' ), date_i18n( 'F d, Y', strtotime( get_query_var( 'eventDate' ) ) ) ) );
+					TribeEvents::setNotice( 'events-not-found', sprintf( __( 'No events scheduled for <strong>%s</strong>. Please try another day.', 'tribe-events-calendar' ), date_i18n( 'F d, Y', strtotime( get_query_var( 'eventDate' ) ) ) ) );
 				} elseif( tribe_is_upcoming() ) {
-					TribeEvents::setNotice( __('No upcoming events ', 'tribe-events-calendar') . $is_cat_message );
+					$date = date('Y-m-d', strtotime($tribe_ecp->date));
+					if ( $date == date('Y-m-d') ) {
+						TribeEvents::setNotice( 'events-not-found', __('No upcoming events ', 'tribe-events-calendar') . $is_cat_message );
+					} else {
+						TribeEvents::setNotice( 'events-not-found', __('No matching events ', 'tribe-events-calendar') . $is_cat_message );
+					}
 				} elseif( tribe_is_past() ) {
-					TribeEvents::setNotice( __('No previous events ', 'tribe-events-calendar') . $is_cat_message );
+					TribeEvents::setNotice( 'events-past-not-found', __('No previous events ', 'tribe-events-calendar') . $is_cat_message );
 				}
 			}
-
-
 
 			// Start list template
 			add_filter( 'tribe_events_list_before_template', array( __CLASS__, 'before_template' ), 1, 1 );
@@ -148,7 +150,7 @@ if( !class_exists('Tribe_Events_List_Template')){
 				}
 
 				if ( self::$prev_event_month != tribe_get_start_date( $post_id, false, 'm' ) ) {
-					echo sprintf( "<span class='tribe_list_separator_month'>%s</span>", tribe_get_start_date( $post_id, false, 'M' ) );
+					echo sprintf( "<span class='tribe_list_separator_month'>%s</span>", tribe_get_start_date( $post_id, false, 'F' ) );
 				}
 
 				self::$prev_event_year  = tribe_get_start_date( $post_id, false, 'Y' );
@@ -172,7 +174,7 @@ if( !class_exists('Tribe_Events_List_Template')){
 		public static function before_the_event_details ( $post_id ){
 			$html = '<div class="tribe-events-event-details">';
 			if ( tribe_get_cost() ) { // Get our event cost 
-				$html .=	'<div class="tribe-events-event-cost"><span>'. tribe_get_cost() .'</span></div>';
+				$html .=	'<div class="tribe-events-event-cost"><span>'. tribe_get_cost( null, true ) .'</span></div>';
 			 } 				
 			return apply_filters('tribe_template_factory_debug', $html, 'tribe_events_list_before_the_event_details'); 
 		}							
@@ -198,7 +200,16 @@ if( !class_exists('Tribe_Events_List_Template')){
 					<?php } ?>
 					<?php echo tribe_events_event_schedule_details(), tribe_events_event_recurring_info_tooltip(); ?>
 				</h3>
-				<?php tribe_display_meta( 'tribe_list_venue_name_address' ); ?>
+				<?php 
+
+				// venue display info
+				tribe_display_meta( 'tribe_event_venue_name' );
+				// $venue_address = tribe_get_meta('tribe_event_venue_address');
+				// if( !empty($venue_address)){
+				// 	echo ', ' . $venue_address;
+				// }
+
+				?>
 			</div><!-- .tribe-events-event-meta -->
 <?php
 			$html = ob_get_clean();
@@ -261,20 +272,20 @@ if( !class_exists('Tribe_Events_List_Template')){
 			// Display Previous Page Navigation
 			$html = '<li class="tribe-nav-previous">';
 			if(tribe_is_upcoming() && get_previous_posts_link())
-				$html .= get_previous_posts_link( __( '&laquo; Previous Events', 'tribe-events-calendar' ) );
+				$html .= get_previous_posts_link( __( '&larr; Previous Events', 'tribe-events-calendar' ) );
 			elseif(tribe_is_upcoming() && !get_previous_posts_link())
-				$html .= '<a href="'. tribe_get_past_link() .'" rel="prev">'. __( '&laquo; Previous Events', 'tribe-events-calendar' ) .'</a>';
+				$html .= '<a href="'. tribe_get_past_link() .'" rel="prev">'. __( '&larr; Previous Events', 'tribe-events-calendar' ) .'</a>';
 			elseif(tribe_is_past() && get_next_posts_link()) 
-				$html .= get_next_posts_link( __( '&laquo; Previous Events', 'tribe-events-calendar' ) );
+				$html .= get_next_posts_link( __( '&larr; Previous Events', 'tribe-events-calendar' ) );
 			$html .= '</li><!-- .tribe-nav-previous -->';
 			// Display Next Page Navigation
 			$html .= '<li class="tribe-nav-next">';
 			if(tribe_is_upcoming() && get_next_posts_link())
-				$html .= get_next_posts_link( __( 'Next Events &raquo;', 'tribe-events-calendar' ) );
+				$html .= get_next_posts_link( __( 'Next Events &rarr;', 'tribe-events-calendar' ) );
 			elseif(tribe_is_past() && get_previous_posts_link())
-				$html .= get_previous_posts_link( __( 'Next Events &raquo;', 'tribe-events-calendar' ) );
+				$html .= get_previous_posts_link( __( 'Next Events &rarr;', 'tribe-events-calendar' ) );
 			elseif(tribe_is_past() && !get_previous_posts_link()) 
-				$html .= '<a href="'. tribe_get_upcoming_link() .'" rel="next">'. __( 'Next Events &raquo;', 'tribe-events-calendar' ) .'</a>';
+				$html .= '<a href="'. tribe_get_upcoming_link() .'" rel="next">'. __( 'Next Events &rarr;', 'tribe-events-calendar' ) .'</a>';
 			$html .= '</li><!-- .tribe-nav-next -->';	
 			return apply_filters('tribe_template_factory_debug', $html, 'tribe_events_list_pagination');
 		}

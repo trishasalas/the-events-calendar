@@ -113,11 +113,8 @@ if( class_exists( 'TribeEvents' ) ) {
  	 * @uses wp_get_object_terms()
  	 * @since 2.1
  	 */    	
-	function tribe_get_event_cat_ids( $post_id ) {
-
-		if ( isset( $post_id ) ) {
-			$post_id = get_the_ID();
-		}
+	function tribe_get_event_cat_ids( $post_id = 0 ) {
+		$post_id = TribeEvents::postIdHelper($post_id);
 		
 		$return_id = array();
 		
@@ -197,13 +194,16 @@ if( class_exists( 'TribeEvents' ) ) {
 	 * @uses the_terms()
 	 * @since 2.1
 	 */
-	function tribe_meta_event_tags( $label=null, $separator=', ')  {
+	function tribe_meta_event_tags( $label=null, $separator=', ', $echo = true)  {
 		if( !$label ) { $label = __('Tags:', 'tribe-events-calendar'); }
 
 		$tribe_ecp = TribeEvents::instance();
 		$list = apply_filters('tribe_meta_event_tags', get_the_term_list( get_the_ID(), 'post_tag', '<dt>'.$label.'</dt><dd class="tribe-event-tags">', $separator, '</dd>' ));
-
-		echo $list;
+		if( $echo ) {
+			echo $list;
+		} else {
+			return $list;	
+		}
 	}
 
 	/**
@@ -218,7 +218,7 @@ if( class_exists( 'TribeEvents' ) ) {
 	 * @since 2.0
 	 */
 	function tribe_get_event_meta( $postId = null, $meta = false, $single = true ){
-		$postId = TribeEvents::postIdHelper( $postId );
+		//$postId = TribeEvents::postIdHelper( $postId );
 		$tribe_ecp = TribeEvents::instance();
 		$output = $tribe_ecp->getEventMeta( $postId, $meta, $single );
 		return apply_filters('tribe_get_event_meta', $output);
@@ -302,7 +302,7 @@ if( class_exists( 'TribeEvents' ) ) {
 	 * @param int $postId (optional)
 	 * @return string Cost of the event.
 	 */
-	function tribe_get_cost( $postId = null)  {
+	function tribe_get_cost( $postId = null, $withCurrencySymbol = false)  {
 		$tribe_ecp = TribeEvents::instance();
 		$postId = TribeEvents::postIdHelper( $postId );
 		if( class_exists( 'Eventbrite_for_TribeEvents' ) ) {
@@ -321,6 +321,16 @@ if( class_exists( 'TribeEvents' ) ) {
 			$cost = __( "Free", 'tribe-events-calendar' );
 		}else{
 			$cost = esc_html($cost);
+		}
+		
+		if ( $withCurrencySymbol && is_numeric( $cost ) ) {
+			$currency = tribe_get_event_meta( $postId, '_EventCurrencySymbol', true );
+			
+			if ( !$currency ) {
+				$currency = tribe_get_option( 'defaultCurrencySymbol', '$' );
+			}
+			
+			$cost = $currency . $cost;
 		}
 
 		return apply_filters( 'tribe_get_cost', $cost );
@@ -534,13 +544,14 @@ if( class_exists( 'TribeEvents' ) ) {
 		return apply_filters( 'tribe_events_event_schedule_details', $schedule );
 	}
 
-	function tribe_get_days_between( $start_date, $end_date ){
+	function tribe_get_days_between( $start_date, $end_date ) {
 
 		$start_date = new DateTime( $start_date );
-		$end_date = new DateTime( $end_date );
-		$interval = $start_date->diff($end_date);
+		$end_date   = new DateTime( $end_date );
+//      This doesn't work on php 5.2
+//		$interval = $start_date->diff($end_date);
 
-		return $interval->days;
+		return TribeEventsQuery::dateDiff( $start_date->format( 'Y-m-d' ), $end_date->format( 'Y-m-d' ) );
 	}
 
 	function tribe_include_view_list( $args = null ){
@@ -551,6 +562,9 @@ if( class_exists( 'TribeEvents' ) ) {
 			$reset_q = $wp_query;
 			$wp_query = TribeEventsQuery::getEvents( $args, true );
 		}
+
+		// single-event notices are jumping in on this init when loading as a module
+		TribeEvents::removeNotice( 'event-past' );
 
 		// get the list view template
 		ob_start();

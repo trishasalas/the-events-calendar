@@ -16,6 +16,14 @@ function tribe_get_url_params() {
 	return location.search.substr(1);
 }
 
+function tribe_parse_query_string( string ) {    
+    var map   = {};
+    string.replace(/([^&=]+)=?([^&]*)(?:&+|$)/g, function(match, key, value) {
+        (map[key] = map[key] || []).push(value);
+    });
+    return map;
+}
+
 // tribe shared ajax tests
 
 function tribe_pre_ajax_tests( tribe_ajax_callback ) {		
@@ -60,28 +68,27 @@ function tribe_pre_ajax_tests( tribe_ajax_callback ) {
 // tribe tooltips
 
 function tribe_event_tooltips() {
-	jQuery( 'body' ).delegate( 'div[id*="tribe-events-event-"], div[id*="tribe-events-daynum-"]:has(a), div.event-is-recurring', 'mouseenter',function () {
-		// Week View Tooltips
+	
+	jQuery( 'body' ).on( 'mouseenter', 'div[id*="tribe-events-event-"], div[id*="tribe-events-daynum-"]:has(a), div.event-is-recurring',function () {
+		
+		var bottomPad = '';
 		if ( jQuery( 'body' ).hasClass( 'tribe-events-week' ) ) {
-			var bottomPad = jQuery( this ).outerHeight() + 5;
+			bottomPad = jQuery( this ).outerHeight() + 5;
 		} else if ( jQuery( 'body' ).hasClass( 'events-gridview' ) ) { // Cal View Tooltips
-			var bottomPad = jQuery( this ).find( 'a' ).outerHeight() + 18;
+			bottomPad = jQuery( this ).find( 'a' ).outerHeight() + 18;
 		} else if ( jQuery( 'body' ).is( '.single-tribe_events, .events-list' ) ) { // Single/List View Recurring Tooltips
-			var bottomPad = jQuery( this ).outerHeight() + 12;
+			bottomPad = jQuery( this ).outerHeight() + 12;
 		}	
 		
 		// Widget Tooltips
 		if ( jQuery( this ).parents( '.tribe-events-calendar-widget' ).length ) {
-			var bottomPad = jQuery( this ).outerHeight() - 6;
+			bottomPad = jQuery( this ).outerHeight() - 6;
 		}
 		jQuery( this ).find( '.tribe-events-tooltip' ).css( 'bottom', bottomPad ).show();
-	} ).delegate( 'div[id*="tribe-events-event-"], div[id*="tribe-events-daynum-"]:has(a), div.event-is-recurring', 'mouseleave', function () {
-			if ( jQuery.browser.msie && jQuery.browser.version <= 9 ) {
-				jQuery( this ).find( '.tribe-events-tooltip' ).hide()
-			} else {
-				jQuery( this ).find( '.tribe-events-tooltip' ).stop( true, false ).fadeOut( 200 );
-			}
-		} );
+		
+	} ).on( 'mouseleave', 'div[id*="tribe-events-event-"], div[id*="tribe-events-daynum-"]:has(a), div.event-is-recurring', function () {
+		jQuery( this ).find( '.tribe-events-tooltip' ).stop( true, false ).fadeOut( 200 );			
+	} );
 }
 
 // tribe local storage functions
@@ -113,7 +120,7 @@ jQuery.fn.tribeClearForm = function() {
 
 // tribe global vars, sorry, we need em
 
-var tribe_has_pushstate = window.history && window.history.pushState && !navigator.userAgent.match(/((iPod|iPhone|iPad).+\bOS\s+[1-4]|WebApps\/.+CFNetwork)/);
+var tribe_has_pushstate = !!(window.history && history.pushState);
 var tribe_cur_url = tribe_get_path( jQuery( location ).attr( 'href' ) );
 var tribe_do_string, tribe_popping, tribe_initial_load = false;
 var tribe_pushstate = true;	
@@ -125,14 +132,12 @@ jQuery( document ).ready( function ( $ ) {
 	/* Let's hide the widget calendar if we find more than one instance */
 	$(".tribe-events-calendar-widget").not(":eq(0)").hide();
 
-
-
 	// Global Tooltips
 	if ( $( '.tribe-events-calendar' ).length || $( '.tribe-events-grid' ).length || $( '.tribe-events-list' ).length || $( '.tribe-events-single' ).length || $( 'tribe-geo-wrapper' ).length ) {
 		tribe_event_tooltips();
 	}
 
-	//remove border  on list view event before month divider
+	//remove border on list view event before month divider
 	if (  $( '.tribe-events-list' ).length ) {
 		$('.tribe_list_separator_month').prev('.vevent').addClass('tribe-event-end-month');
 	}

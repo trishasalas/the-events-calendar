@@ -12,20 +12,20 @@ jQuery( document ).ready( function ( $ ) {
 		var GeoLoc = {"map_view":""};	
 
 	if( tribe_has_pushstate && !GeoLoc.map_view ) {
+		
+		var initial_url = location.href;
+		var current_params = {};
+		
+		if( tribe_storage ) {
+			tribe_storage.setItem( 'tribe_initial_load', 'true' );	
+			tribe_storage.setItem( 'tribe_current_post_count', '' );	
+		}			
 
-		// let's fix any browser that fires popstate on first load incorrectly
-
-		var popped = ('state' in window.history), initialURL = location.href;
-
-		$(window).bind('popstate', function(event) {
-			var initialPop = !popped && location.href == initialURL;
-			popped = true;
-
-			// if it was an inital load, let's get out of here
-
-			if ( initialPop ) return;
-
-			// this really is popstate, let's fire the ajax but not overwrite our history
+		$(window).bind('popstate', function(event) {			
+		
+		var initial_load = '';
+		if( tribe_storage )
+			initial_load = tribe_storage.getItem( 'tribe_initial_load' );			
 
 			if( event.state ) {				
 				tribe_do_string = false;
@@ -36,6 +36,16 @@ jQuery( document ).ready( function ( $ ) {
 				tribe_pre_ajax_tests( function() {
 					tribe_events_list_ajax_post( '', tribe_pushstate, tribe_do_string, tribe_popping, tribe_params, tribe_url_params );	
 				});
+				
+				current_params = tribe_parse_query_string( tribe_url_params );				
+				$.each(current_params, function(key,value) {
+					if( key !== 'action' ) {						
+						$('[name^="' + decodeURI(key) + '"]').val(value);						
+					}					
+				});
+				
+			} else if( tribe_storage && initial_load !== 'true' ) {
+				window.location = initial_url;
 			}
 		} );
 		
@@ -74,20 +84,9 @@ jQuery( document ).ready( function ( $ ) {
 			} );
 		}
 		
-		// event bar datepicker monitoring 
-
-		$('#tribe-bar-date').bind( 'change', function (e) {		
-
-			e.preventDefault();
-			tribe_list_paged = 1;
-			tribe_pre_ajax_tests( function() {
-				tribe_events_list_ajax_post( tribe_cur_url );
-			});
-
-		} );
-
-		$( 'form#tribe-events-bar-form' ).bind( 'submit', function ( e ) {
-
+		// event bar monitoring 
+		
+		function tribe_events_bar_listajax_actions(e) {
 			if ( tribe_events_bar_action != 'change_view' ) {
 				e.preventDefault();
 				tribe_list_paged = 1;
@@ -95,12 +94,28 @@ jQuery( document ).ready( function ( $ ) {
 					tribe_events_list_ajax_post( tribe_cur_url );
 				});
 			}
+		}
+
+		$('#tribe-bar-date').bind( 'change', function (e) {		
+			tribe_events_bar_listajax_actions(e);
+		} );
+
+		$( 'form#tribe-bar-form' ).bind( 'submit', function ( e ) {
+			tribe_events_bar_listajax_actions(e);
+		} );
+		
+		$( '.tribe-bar-settings button[name="settingsUpdate"]' ).bind( 'click', function (e) {		
+			tribe_events_bar_listajax_actions(e);	
+			$( '#tribe-events-bar [class^="tribe-bar-button-"]' )
+				.removeClass( 'open' )
+				.next( '.tribe-bar-drop-content' )
+				.hide();
 		} );
 
 
 		function tribe_events_list_ajax_post( tribe_href_target, tribe_pushstate, tribe_do_string, tribe_popping, tribe_params, tribe_url_params ) {
 
-			$( '.ajax-loading' ).show();
+			$( '#ajax-loading' ).show();
 			
 			
 			
@@ -124,12 +139,19 @@ jQuery( document ).ready( function ( $ ) {
 				
 				// add any set values from event bar to params. want to use serialize but due to ie bug we are stuck with second
 
-				$( 'form#tribe-events-bar-form :input[value!=""]' ).each( function () {
+				$( 'form#tribe-bar-form :input[value!=""]' ).each( function () {					
 					var $this = $( this );
-					if( $this.val().length && $this.attr('name') != 'submit-bar' ) {
-						tribe_params[$this.attr('name')] = $this.val();
-						tribe_url_params[$this.attr('name')] = $this.val();						
-					}			
+					if( $this.val().length && !$this.hasClass('tribe-no-param') ) {
+						if( $this.is(':checkbox') ) {
+							if( $this.is(':checked') ) {
+								tribe_params[$this.attr('name')] = $this.val();
+								tribe_url_params[$this.attr('name')] = $this.val();
+							}
+						} else {
+							tribe_params[$this.attr('name')] = $this.val();
+							tribe_url_params[$this.attr('name')] = $this.val();
+						}					
+					}								
 				} );
 				
 				tribe_params = $.param(tribe_params);
@@ -160,9 +182,14 @@ jQuery( document ).ready( function ( $ ) {
 					tribe_params,
 					function ( response ) {
 						$( "#ajax-loading" ).hide();
-
+						
+						if( tribe_storage ) {
+							tribe_storage.setItem( 'tribe_initial_load', 'false' );
+							tribe_storage.setItem( 'tribe_current_post_count', response.total_count );
+						}							
+						
 						if ( response.success ) {
-
+							
 							tribe_list_paged = response.tribe_paged;
 
 							$( '#tribe-events-list-hash' ).val( response.hash );
