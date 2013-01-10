@@ -3466,9 +3466,6 @@ if ( !class_exists( 'TribeEvents' ) ) {
 			die();
 		}
 
-
-
-
 	} // end TribeEvents class
 
 } // end if !class_exists TribeEvents

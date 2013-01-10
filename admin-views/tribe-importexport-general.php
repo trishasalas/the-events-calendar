@@ -14,7 +14,9 @@ if ( !defined('ABSPATH') ) { die('-1'); }
 <?php do_action( 'tribe_events_importexport_after_import_info_box' ); ?>
 <?php do_action( 'tribe_events_importexport_after_import_info_box_tab_general' ); ?>
 <?php do_action( 'tribe_events_importexport_before_general_content' ); ?>
+<div class="tribe-settings-form">
 <form method="POST">
+<div class="tribe-settings-form-wrap">
 <?php do_action( 'tribe_events_importexport_before_apikeys' ); ?>
 <h3><?php _e( 'API Credentials', 'tribe-events-calendar' ); ?></h3>
 <?php do_action( 'tribe_events_importexport_apikeys' ); ?>
@@ -50,5 +52,7 @@ wp_nonce_field( 'tribe-events-importexport-general-settings-nonce-submit', 'trib
 <p>
 <input type="submit" name="tribe-events-importexport-general-settings-submit" class="button-primary" value="Save Settings" />
 </p>
+</div>
 </form>
+</div>
 <?php do_action( 'tribe_events_importexport_after_general_content' ); ?>
