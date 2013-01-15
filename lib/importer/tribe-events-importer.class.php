@@ -288,6 +288,7 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 			add_action( 'wp_ajax_tribe_events_' . self::$pluginSlug . '_import_checked_events', array( $this, 'ajaxImportCheckedEvents' ) );
 			add_action( 'wp_ajax_tribe_events_' . self::$pluginSlug . '_import_all_events', array( $this, 'ajaxImportAllEvents' ) );
 			add_action( 'tribe_events_importexport_before_import_info_box_tab_' . self::$pluginSlug, array( $this, 'doImportingOverlay' ) );
+			add_action( 'tribe_events_importexport_after_import_info_box_tab_' . self::$pluginSlug, array( $this, 'importContentWrapOpen' ) );
 			add_action( 'tribe_events_importexport_content_tab_' . self::$pluginSlug, array( $this, 'generateImportTab' ) );
 			add_action( 'tribe_events_importexport_import_instructions_tab_' . self::$pluginSlug, array( $this, 'importTabInstructions' ) );
 			add_action( 'tribe_events_importexport_import_form_tab_' . self::$pluginSlug, array( $this, 'doImportForm' ) );
@@ -926,6 +927,18 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		}
 		
 		/**
+		 * Open wrappers for import content.
+		 *
+		 * @since 3.0
+		 * @author RyanUrban
+		 *
+		 * @return void
+		 */
+		public function importContentWrapOpen() {
+			echo '<div class="tribe-settings-form"><div class="tribe-settings-form-wrap">';
+		}
+		
+		/**
 		 * Add the total number counter above the import table.
 		 *
 		 * @since 2.1
@@ -977,7 +990,7 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		 * @return void
 		 */
 		public function doClosingFormTag() {
-			echo '</form>';
+			echo '</form></div></div>';
 		}
 		
 		/**
@@ -1016,6 +1029,7 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		 */
 		public function doSavedImportsHeader() {
 			echo '<h3>' . __( 'Saved Imports', 'tribe-events-calendar' ) . '</h3>';
+			echo '<p class="description">'. __( 'A list of of your saved imports.', 'tribe-events-calendar' ) .'</p>';
 			echo '<div class="tribe-events-importer-table">';
 		}
 		
@@ -1051,6 +1065,7 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		 */
 		public function doImportWrap() {
 			echo '<h3>' . __( 'New Import', 'tribe-events-calendar' ) . '</h3>';
+			echo '<p class="description">'. __( 'Select your settings to create a new import.', 'tribe-events-calendar' ) .'</p>';
 			echo '<div id="tribe-events-importexport-import-form">';
 		}
 		

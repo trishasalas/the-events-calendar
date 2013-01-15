@@ -14,22 +14,10 @@ if ( !defined('ABSPATH') ) { die('-1'); }
 </div>
 <?php do_action( 'tribe_events_importexport_after_import_info_box' ); ?>
 <?php do_action( 'tribe_events_importexport_after_import_info_box_tab_' . self::$pluginSlug ); ?>
-
-<?php
-do_action( 'tribe_events_importexport_before_saved_imports_table' );
-do_action( 'tribe_events_importexport_before_saved_imports_table_tab' . self::$pluginSlug );
-
-do_action( 'tribe_events_importexport_saved_imports_table' );
-do_action( 'tribe_events_importexport_saved_imports_table_tab' . self::$pluginSlug );
-
-do_action( 'tribe_events_importexport_after_saved_imports_table' );
-do_action( 'tribe_events_importexport_after_saved_imports_table_tab' . self::$pluginSlug );
-?>
 <?php
 do_action( 'tribe_events_importexport_before_import_form' );
 do_action( 'tribe_events_importexport_before_import_form_tab_' . self::$pluginSlug );
 ?>
-
 <?php
 do_action( 'tribe_events_importexport_import_form' );
 do_action( 'tribe_events_importexport_import_form_tab_' . self::$pluginSlug );
@@ -51,5 +39,16 @@ do_action( 'tribe_events_importexport_after_import_table' );
 do_action( 'tribe_events_importexport_after_import_table_tab_' . self::$pluginSlug );
 ?>
 <?php
+do_action( 'tribe_events_importexport_before_saved_imports_table' );
+do_action( 'tribe_events_importexport_before_saved_imports_table_tab' . self::$pluginSlug );
+
+do_action( 'tribe_events_importexport_saved_imports_table' );
+do_action( 'tribe_events_importexport_saved_imports_table_tab' . self::$pluginSlug );
+
+do_action( 'tribe_events_importexport_after_saved_imports_table' );
+do_action( 'tribe_events_importexport_after_saved_imports_table_tab' . self::$pluginSlug );
+?>
+<?php
 do_action( 'tribe_events_importexport_after_import_page' );
 do_action( 'tribe_events_importexport_after_import_page_tab_' . self::$pluginSlug );
+?>
