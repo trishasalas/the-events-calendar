@@ -86,7 +86,7 @@ if (!class_exists('Tribe_Events_ImportExport_Registrar')) {
 				$tribe_events_importexport_mu_default_options = array();
 				if ( file_exists( WP_CONTENT_DIR . '/tribe-events-mu-defaults.php' ) )
 					include( WP_CONTENT_DIR . '/tribe-events-mu-defaults.php' );
-				self::$importExportDefaultMuOptions = apply_filters( 'tribe_mu_events_importer_eventful_apikey', $tribe_events_importexport_mu_default_options );
+				self::$importExportDefaultMuOptions = apply_filters( 'tribe_mu_events_importexport_default_options', $tribe_events_importexport_mu_default_options );
 			}
 			
 			$this->addActions();
