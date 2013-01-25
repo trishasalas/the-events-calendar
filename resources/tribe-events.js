@@ -44,8 +44,15 @@ tribe_ev.fn = {
 			});			
 		}
 	},
-	enable_inputs: function( parent, type ) {
-		jQuery( parent ).find( type ).prop('disabled', false);
+	disable_empty: function( parent, type ) {
+		jQuery( parent ).find( type ).each(function(){ 
+			if ( jQuery(this).val() === '' ){ 
+				jQuery(this).prop('disabled', true); 
+			} 
+		});			
+	},
+	enable_inputs: function( parent, type ) {		
+		jQuery( parent ).find( type ).prop('disabled', false);		
 		if( jQuery( parent ).find('.select2-container').length ) {			
 			jQuery( parent ).find('.select2-container').each( function() {
 				var s2_id = jQuery(this).attr('id');
@@ -123,6 +130,13 @@ tribe_ev.fn = {
 			}
 		}
 	},
+	serialize: function( form, type ) {
+		tribe_ev.fn.enable_inputs( form, type );
+		tribe_ev.fn.disable_empty( form, type );
+		var params = jQuery( form ).serialize();
+		tribe_ev.fn.disable_inputs( form, type );	
+		return params;
+	},
 	set_form: function( params ){
 		jQuery('body').addClass('tribe-reset-on');
 		
@@ -176,8 +190,7 @@ tribe_ev.fn = {
 					} else if( jQuery('[name="' + name + '"][value="' + value + '"]').is(':checkbox, :radio')) {
 						jQuery('[name="' + name + '"][value="' + value + '"]').prop("checked", true);	
 					} else if( jQuery('[name="' + name + '"]').is('select') ) {
-						jQuery('select[name="' + name + '"] option[value="' + value + '"]').attr('selected',true);
-						console.log('select[name="' + name + '"] option[value="' + value + '"]')
+						jQuery('select[name="' + name + '"] option[value="' + value + '"]').attr('selected',true);						
 					}										
 				} else {										
 					for ( var i = 0; i < value.length; i++ ) {						
@@ -243,48 +256,91 @@ tribe_ev.fn = {
 		
 		jQuery( 'body' ).on( 'mouseenter', 'div[id*="tribe-events-event-"], div[id*="tribe-events-daynum-"]:has(a), div.event-is-recurring',function () {
 			
-			var bottomPad = '';
-			if ( jQuery( 'body' ).hasClass( 'tribe-events-week' ) ) {
-				var $this = jQuery( this );	
+			var bottomPad = 0;
+			var $this = jQuery( this );
+			
+			if ( jQuery( 'body' ).hasClass( 'tribe-events-week' ) ) {	
+				
 				var $tip = $this.find( '.tribe-events-tooltip' );
-				var $parent = $this.parent();
-				var cwidth = $this.width();
-				var theight = $tip.height();
-				var scroll = jQuery('.tribe-week-grid-wrapper').scrollTop();
-				var poffset = $this.position();
-				var ptop = Math.ceil(poffset.top);
-				var toffset = scroll - ptop;
-				bottomPad = $this.outerHeight() + 12;
-				
-				if (toffset > 0) {
-					toffset = toffset + 5;
-				} else {
-					toffset = 5;
-				}
-				
-				console.log('toffset: ' + toffset);
-				if( $this.parents('.tribe-grid-allday').length ) {
-					$tip.css( 'bottom', bottomPad ).show();					
-				} else {
-					if( $parent.hasClass('tribe-events-right') ){					
-						$tip.addClass('.tribe-tooltip-right').css( {'right':cwidth + 20, 'bottom':'auto', 'top':toffset} ).show();
-					} else {
-						$tip.addClass('.tribe-tooltip-left').css( {'left':cwidth + 20, 'bottom':'auto', 'top':toffset} ).show();
+
+				if( !$this.parents('.tribe-grid-allday').length ) {				
+					
+					var $wrapper = jQuery('.tribe-week-grid-wrapper');					
+					var $parent = $this.parent();
+					var $container = $parent.parent();
+
+					var pwidth = Math.ceil($container.width());
+					var cwidth = Math.ceil($this.width());
+					var twidth = Math.ceil($tip.outerWidth());				
+					var gheight = $wrapper.height();
+
+					var scroll = $wrapper.scrollTop();
+					var coffset = $parent.position();	
+					var poffset = $this.position();				
+					var ptop = Math.ceil(poffset.top);
+					var toffset = scroll - ptop;
+					
+					var isright = $parent.hasClass('tribe-events-right');
+					var wcheck;
+					var theight;
+					var available;
+					var cssmap = {};
+
+					if( !$tip.hasClass('hovered') ) {
+						$tip.attr('data-ow', twidth).addClass('hovered');							
 					}
+
+					if( isright )
+						wcheck = Math.ceil(coffset.left) - 20;
+					else 
+						wcheck = pwidth - cwidth - Math.ceil(coffset.left);											
+
+					if( twidth >= wcheck ) 
+						twidth = wcheck;
+					else if( $tip.attr('data-ow') > wcheck )
+						twidth = wcheck;
+					else
+						twidth = $tip.attr('data-ow');
+
+					if( isright )
+						cssmap = { "right":cwidth + 20, "bottom":"auto", "width": twidth + "px"};
+					else 
+						cssmap = { "left" :cwidth + 20, "bottom":"auto", "width": twidth + "px"};
+
+					$tip.css( cssmap );
+
+					theight = $tip.height();
+
+					if ( toffset >= 0 ) {
+						toffset = toffset + 5;
+					} else {
+						available = toffset + gheight;
+						if( theight > available )
+							toffset = available - theight - 8;
+						else 
+							toffset = 5;
+					}	
+
+					$tip.css( "top", toffset ).show();	
+				
+				} else {
+					bottomPad = $this.outerHeight() + 6;
+					$tip.css( 'bottom', bottomPad ).show();	
 				}
+				
 								
 			} else if ( jQuery( 'body' ).hasClass( 'events-gridview' ) ) { // Cal View Tooltips
-				bottomPad = jQuery( this ).find( 'a' ).outerHeight() + 18;
+				bottomPad = $this.find( 'a' ).outerHeight() + 18;
 			} else if ( jQuery( 'body' ).is( '.single-tribe_events, .events-list' ) ) { // Single/List View Recurring Tooltips
-				bottomPad = jQuery( this ).outerHeight() + 12;
+				bottomPad = $this.outerHeight() + 12;
 			}	
 			
 			// Widget Tooltips
-			if ( jQuery( this ).parents( '.tribe-events-calendar-widget' ).length ) {
-				bottomPad = jQuery( this ).outerHeight() - 6;
+			if ( $this.parents( '.tribe-events-calendar-widget' ).length ) {
+				bottomPad = $this.outerHeight() - 6;
 			}
 			if ( !jQuery( 'body' ).hasClass( 'tribe-events-week' ) ) {
-				jQuery( this ).find( '.tribe-events-tooltip' ).css( 'bottom', bottomPad ).show();
+				$this.find( '.tribe-events-tooltip' ).css( 'bottom', bottomPad ).show();
 			}
 			
 		} ).on( 'mouseleave', 'div[id*="tribe-events-event-"], div[id*="tribe-events-daynum-"]:has(a), div.event-is-recurring', function () {
