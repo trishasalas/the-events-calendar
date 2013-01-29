@@ -25,7 +25,7 @@ if ( !defined('ABSPATH') ) { die('-1'); }
 <?php do_action( 'tribe_events_importexport_before_import_settings' ); ?>
 <h3><?php _e( 'Import Settings', 'tribe-events-calendar' ); ?></h3>
 <p>
-<?php _e( 'Default Imported Event Status:', 'tribe-events-calendar' ); ?>
+<?php _e( 'Default imported event status:', 'tribe-events-calendar' ); ?>
 <?php $import_statuses = array(
 	'publish' => __( 'Published', 'tribe-events-calendar' ),
 	'pending' => __( 'Pending', 'tribe-events-calendar' ),

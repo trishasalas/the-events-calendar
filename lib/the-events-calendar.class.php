@@ -215,6 +215,9 @@ if ( !class_exists( 'TribeEvents' ) ) {
 			require_once( 'tribe-debug-bar.class.php' );
 			require_once( 'importer/tribe-events-importexport-registrar.class.php' );
 
+			// caching
+			require_once( 'tribe-events-cache.class.php' );
+
 			// App Shop
 			if (!defined("TRIBE_HIDE_UPSELL") || TRIBE_HIDE_UPSELL !== true ){
 				require_once( 'tribe-app-shop.class.php' );
@@ -288,6 +291,7 @@ if ( !class_exists( 'TribeEvents' ) ) {
 			add_action( "trash_" . TribeEvents::ORGANIZER_POST_TYPE, array($this, 'cleanupPostOrganizers'));
 			add_action( "wp_ajax_tribe_event_validation", array($this,'ajax_form_validate') );
 			add_action( 'tribe_debug', array( $this, 'renderDebug' ), 10, 2 );
+			add_action( 'plugins_loaded', array('TribeEventsCacheListener', 'instance') );
 			// Load organizer and venue editors
 			add_action( 'admin_menu', array( $this, 'addVenueAndOrganizerEditor' ) );
 			add_action( 'tribe_venue_table_top', array( $this, 'displayEventVenueDropdown' ) );
@@ -2392,17 +2396,16 @@ if ( !class_exists( 'TribeEvents' ) ) {
 			//That would be bad.
 			remove_action( 'save_post', array( $this, 'save_venue_data' ), 16, 2 );
 
-
-			if ( !isset( $_POST['post_title'] ) || !$_POST['post_title'] ) {
-				if ( !empty( $post->post_title ) ) {
-					$_POST['post_title'] = $post->post_title;
+			$data = $_POST['venue'];
+			if ( empty($data['Venue']) ) {
+				if ( !empty($_POST['post_title']) ) {
+					$data['Venue'] = $_POST['post_title'];
 				} else {
-					$_POST['post_title'] = "Unnamed Venue";
+					$data['Venue'] = __('Unnamed Venue', 'tribe-events-calendar');
 				}
 			}
 
-			$_POST['venue']['Venue'] = $_POST['post_title'];
-			$data = stripslashes_deep($_POST['venue']);
+			$data = stripslashes_deep($data);
 			$venue_id = TribeEventsAPI::updateVenue($postID, $data);
 
 			return $venue_id;
@@ -2467,7 +2470,15 @@ if ( !class_exists( 'TribeEvents' ) ) {
 			//That would be bad.
 			remove_action( 'save_post', array( $this, 'save_organizer_data' ), 16, 2 );
 
-			$data = stripslashes_deep($_POST['organizer']);
+			$data = $_POST['organizer'];
+			if ( empty($data['Organizer']) ) {
+				if ( !empty($_POST['post_title']) ) {
+					$data['Organizer'] = $_POST['post_title'];
+				} else {
+					$data['Organizer'] = __('Unnamed Organizer', 'tribe-events-calendar');
+				}
+			}
+			$data = stripslashes_deep($data);
 
 			$organizer_id = TribeEventsAPI::updateOrganizer($postID, $data);
 
@@ -2773,6 +2784,7 @@ if ( !class_exists( 'TribeEvents' ) ) {
 				<div id='eventDetails' class="inside eventForm">
 					<table cellspacing="0" cellpadding="0" id="EventInfo" class="OrganizerInfo">
 					<?php
+					$hide_organizer_title = TRUE;
 					$organizer_meta_box_template = apply_filters('tribe_events_organizer_meta_box_template', $this->pluginPath . 'admin-views/organizer-meta-box.php');
 					if( !empty($organizer_meta_box_template) )
 						include( $organizer_meta_box_template );

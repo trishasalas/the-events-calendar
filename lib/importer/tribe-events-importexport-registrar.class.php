@@ -35,6 +35,11 @@ if (!class_exists('Tribe_Events_ImportExport_Registrar')) {
 		 * @var The exporters.
 		 */
 		protected $export_apis;
+		
+		/**
+		 * @var The mu default options.
+		 */
+		protected static $importExportDefaultMuOptions;
 
 		/**
 		 * Create the plugin instance and include the other class.
@@ -75,6 +80,14 @@ if (!class_exists('Tribe_Events_ImportExport_Registrar')) {
 			$this->errors = array();
 			$this->messages = array();
 			$this->options = array();
+			
+			// Load multisite defaults
+			if ( is_multisite() ) {
+				$tribe_events_importexport_mu_default_options = array();
+				if ( file_exists( WP_CONTENT_DIR . '/tribe-events-mu-defaults.php' ) )
+					include( WP_CONTENT_DIR . '/tribe-events-mu-defaults.php' );
+				self::$importExportDefaultMuOptions = apply_filters( 'tribe_mu_events_importexport_default_options', $tribe_events_importexport_mu_default_options );
+			}
 			
 			$this->addActions();
 			$this->addFilters();
@@ -154,6 +167,9 @@ if (!class_exists('Tribe_Events_ImportExport_Registrar')) {
 				$defaults = array(
 					'imported_post_status' => 'publish',
 				);
+				if ( is_multisite() && is_array( self::$importExportDefaultMuOptions ) ) {
+					$defaults = array_merge( $defaults, self::$importExportDefaultMuOptions );
+				}
 				$current_options = get_option( 'tribe-events-importexport-general-settings', array() );
 				$this->options = wp_parse_args( $current_options, $defaults );
 			}
