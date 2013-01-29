@@ -385,15 +385,30 @@ jQuery(document).ready(function($) {
 	// Default Layout Settings
 	// shows / hides proper views that are to be used on front-end
 	if( $('#tribe-field-tribeEnableViews').length ) {
-		$('#tribe-field-tribeEnableViews').live('change', 'input:checkbox', function () {	
+		$('#tribe-field-tribeEnableViews').on('change', 'input:checkbox', function () {
+			reset_val = false;
+			if( jQuery('[name="tribeEnableViews[]"]:checked').size() < 1 ) {
+				$(this).attr('checked',true);
+				$('#tribe-field-tribeEnableViews .tribe-field-wrap p.description').css('color', 'red');
+			} else {
+				$('#tribe-field-tribeEnableViews .tribe-field-wrap p.description').removeAttr('style');
+			}
 			$('select[name="viewOption"] option').each(function(i,val) {
 				option_val = $(this).val();
 				if( $('#tribe-field-tribeEnableViews input[value=' + option_val + ']').is(":checked") ) { 
-					$(this).show();
+					$(this).prop('disabled',false);
 				} else { 
-					$(this).hide();
+					$(this).removeAttr('selected');
+					$(this).prop('disabled', true);
 				}
     		});
+    		views = new Array();
+    		$('[name="tribeEnableViews[]"]:checked').each(function(){
+    			views.push( $(this).val() );
+    		});
+			if( typeof $('select[name="viewOption"] option:selected').first().val() == 'undefined' || ! $.inArray( $('select[name="viewOption"] option:selected').first().val(), views ) ) {
+				$('select[name="viewOption"] option').not(':disabled').first().attr('selected','selected');
+	    	}
     		$('select[name="viewOption"]').trigger("liszt:updated");
     	});
     }
