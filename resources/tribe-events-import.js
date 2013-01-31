@@ -104,8 +104,31 @@ function ajaxDeleteSavedImportQuery( ajaxUrl, pluginSlug, clicked ) {
 		});
 	});
 }
+function tribe_events_import_validate_form() {
+	var success = false;
+	jQuery( function($) {
+		var search_fields = $('#tribe-events-importexport-import-form :input:not(:button, select)');
+		var filled_fields = search_fields.filter(function() {
+			if ( $(this).is(':checkbox') && !$(this).is(':checked') ) {
+				return false;
+			}
+			return $.trim(this.value) != '';
+		});
+	
+		if ( filled_fields.length > 0 ) {
+			success = true;
+		}
+	});
+	return success;
+}
 jQuery( function($) {
 	$("#tribe-events-importexport-list-check-all").click(function() {
 		$("[name='tribe_events_events_to_import']").attr("checked", this.checked);
+	});
+	
+	$("#tribe-events-importexport-import-form :submit, #tribe-events-importexport-import-form :button").on( 'click', function() {
+		if ( !tribe_events_import_validate_form() ) {
+			$("#tribe_error_no_fields_filled").show();
+		}
 	});
 });

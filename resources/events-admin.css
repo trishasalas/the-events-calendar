@@ -272,6 +272,10 @@ td.tribe_message {padding-bottom: 10px !important;}
 	width: 200px;
 	border: 1px solid #666;
 }
+
+.tribe-hidden {
+	display: none;
+}
 /* = Admin Retina Bits
 =============================================*/
 @media 

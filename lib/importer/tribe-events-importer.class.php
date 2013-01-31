@@ -281,6 +281,7 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		protected function _addActions() {
 			add_action( 'admin_notices', array( $this, 'displayMessages' ) );
 			add_action( 'admin_notices', array( $this, 'displayErrors' ) );
+			add_action( 'tribe_events_importexport_after_import_form', array( $this, 'displayHiddenMessages' ) );
 			
 			add_action( 'wp_ajax_tribe_events_' . self::$pluginSlug . '_get_possible_events', array( $this, 'ajaxGetPossibleEvents' ) );
 			add_action( 'wp_ajax_tribe_events_' . self::$pluginSlug . '_save_import_query', array( $this, 'ajaxSaveImportQuery' ) );
@@ -459,6 +460,18 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 				unset( $saved_import['number_imported'] );
 				$args = array( $saved_import );
 			}
+		}
+		
+		/**
+		 * Echo hidden messages that can be shown via jQuery (for i18n purposes).
+		 *
+		 * @since 3.0
+		 * @author PaulHughes01
+		 *
+		 * @retur void
+		 */
+		public function displayHiddenMessages() {
+			echo '<div class="error tribe-hidden" id="tribe_error_no_fields_filled"><p>' . __( 'At least one filter must be used before searching. Please adjust your search criteria.', 'tribe-events-calendar' ) . '</p></div>';
 		}
 		
 		/**
