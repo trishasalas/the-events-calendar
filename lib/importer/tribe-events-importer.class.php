@@ -796,6 +796,8 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 						     to make it happen efficiently.
 							***/
 						// Download file to temp location
+						require_once(ABSPATH . 'wp-admin/includes/file.php');
+						
 						$tmp = download_url( $event_array['event']['imageUrl'] );
 
 						// Set variables for storage
