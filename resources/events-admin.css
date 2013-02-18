@@ -278,6 +278,18 @@ td.tribe_message {padding-bottom: 10px !important;}
 .tribe-hidden {
 	display: none;
 }
+
+.tribe-error-notice {
+	background-color: #ffebe8;
+	border-color: #c00;
+	-webkit-border-radius: 3px;
+	border-radius: 3px;
+	border-width: 1px;
+	border-style: solid;
+	padding: 0 .6em;
+	margin: 5px 0 15px;
+}
+
 /* = Admin Retina Bits
 =============================================*/
 @media 

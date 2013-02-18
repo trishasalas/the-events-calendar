@@ -471,7 +471,7 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		 * @retur void
 		 */
 		public function displayHiddenMessages() {
-			echo '<div class="error tribe-hidden" id="tribe_error_no_fields_filled"><p>' . __( 'At least one filter must be used before searching. Please adjust your search criteria.', 'tribe-events-calendar' ) . '</p></div>';
+			echo '<div class="tribe-error-notice tribe-hidden" id="tribe_error_no_fields_filled"><p>' . __( 'At least one filter must be used before searching. Please adjust your search criteria.', 'tribe-events-calendar' ) . '</p></div>';
 		}
 		
 		/**
