@@ -129,6 +129,8 @@ jQuery( function($) {
 	$("#tribe-events-importexport-import-form :submit, #tribe-events-importexport-import-form :button").on( 'click', function() {
 		if ( !tribe_events_import_validate_form() ) {
 			$("#tribe_error_no_fields_filled").show();
+		} else {
+			$("#tribe_error_no_fields_filled").hide();
 		}
 	});
 });
