@@ -75,6 +75,8 @@ td.tribe_message {padding-bottom: 10px !important;}
 #rec-end-error { color: red; }
 #rec-days-error { color: red; }
 .rec-error { display:none; }
+#recurrence-pattern-description { font-style: italic; }
+.recurrence-pattern-description-row { display: none; }
 
 /* = Upgrade Screen
 =============================================*/
@@ -272,6 +274,22 @@ td.tribe_message {padding-bottom: 10px !important;}
 	width: 200px;
 	border: 1px solid #666;
 }
+
+.tribe-hidden {
+	display: none;
+}
+
+.tribe-error-notice {
+	background-color: #ffebe8;
+	border-color: #c00;
+	-webkit-border-radius: 3px;
+	border-radius: 3px;
+	border-width: 1px;
+	border-style: solid;
+	padding: 0 .6em;
+	margin: 5px 0 15px;
+}
+
 /* = Admin Retina Bits
 =============================================*/
 @media 
