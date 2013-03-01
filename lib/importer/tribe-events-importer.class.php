@@ -962,11 +962,14 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		 * @return void
 		 */
 		public function addTotalNumberCounter() {
+			ob_start();
 			echo '<form method="POST" id="tribe-events-import-all-events-form">';
 			wp_nonce_field( 'submit-import-all', 'tribe-events-' . self::$pluginSlug . '-submit-import-all' );
 			echo '<span id="tribe-events-import-all-events-form-elements"></span>';
 			echo '<p><input type="submit" style="float:left;" name="tribe-events-importexport-import-all" id="tribe-events-importexport-import-all" value="' . sprintf( __( 'Import All %s', 'tribe-events-calendar' ), '(0)' ) . '" class="button-secondary tribe-before-table-button" /></p>';
 			echo '</form>';
+			$html = ob_get_clean();
+			echo apply_filters( 'tribe_events_importexport_add_total_counter_content', $html );
 		}
 		
 		/**
