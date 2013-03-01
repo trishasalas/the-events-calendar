@@ -938,7 +938,7 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		public function doImportingOverlay() {
 			echo '<div class="tribe-overlay" id="tribe-events-import-process-overlay">';
 			echo '</div>';
-			echo '<div class="tribe-import-progressbar-wrapper"><span id="tribe-events-import-current-fraction">0/0</span><div class="tribe-import-progressbar"></div></div>';
+			echo '<div class="tribe-import-progressbar-wrapper"><span id="tribe-events-import-current-fraction">0/0</span><div class="tribe-import-progressbar"></div><p>' . __( 'There is a limit to 250 events per import.', 'tribe-events-calendar' ) . '</p></div>';
 		}
 		
 		/**
