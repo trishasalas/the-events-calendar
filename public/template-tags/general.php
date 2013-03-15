@@ -292,7 +292,7 @@ if( class_exists( 'TribeEvents' ) ) {
 	 * @since 2.0
 	 */
 	function tribe_events_before_html() {
-		echo apply_filters('tribe_events_before_html', stripslashes(tribe_get_option('tribeEventsBeforeHTML')));
+		echo wpautop( apply_filters('tribe_events_before_html', stripslashes(tribe_get_option('tribeEventsBeforeHTML'))) );
 	}
 
 	/**
@@ -595,7 +595,7 @@ if( class_exists( 'TribeEvents' ) ) {
 		global $wp_query;
 
 		// hijack the main query to load the events via provided $args
-		if( !is_null($args) || ! ( $wp_query->tribe_is_event || $wp_query->tribe_is_event_category ) ) {
+		if( !$wp_query->is_main_query() && ( !is_null($args) || ! ( $wp_query->tribe_is_event || $wp_query->tribe_is_event_category ) ) ) {
 			$reset_q = $wp_query;
 			$wp_query = TribeEventsQuery::getEvents( $args, true );
 		}
@@ -646,6 +646,8 @@ if( class_exists( 'TribeEvents' ) ) {
 		$disabled = array();
 		foreach ( $views as $view ) {
 			if ( !in_array($view['displaying'], $enabled) ) {
+				if ( $view['displaying'] == 'upcoming' )
+					$disabled[] = 'past';
 				$disabled[] = $view['displaying'];
 			}
 		}

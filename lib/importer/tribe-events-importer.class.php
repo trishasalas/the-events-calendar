@@ -797,6 +797,7 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 							***/
 						// Download file to temp location
 						require_once(ABSPATH . 'wp-admin/includes/file.php');
+						require_once(ABSPATH . 'wp-admin/includes/media.php');
 						
 						$tmp = download_url( $event_array['event']['imageUrl'] );
 
@@ -938,7 +939,7 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		public function doImportingOverlay() {
 			echo '<div class="tribe-overlay" id="tribe-events-import-process-overlay">';
 			echo '</div>';
-			echo '<div class="tribe-import-progressbar-wrapper"><span id="tribe-events-import-current-fraction">0/0</span><div class="tribe-import-progressbar"></div></div>';
+			echo '<div class="tribe-import-progressbar-wrapper"><span id="tribe-events-import-current-fraction">0/0</span><div class="tribe-import-progressbar"></div><p>' . __( 'There is a limit to 250 events per import.', 'tribe-events-calendar' ) . '</p></div>';
 		}
 		
 		/**
@@ -962,11 +963,14 @@ if ( !class_exists( 'Tribe_Events_Importer' ) ) {
 		 * @return void
 		 */
 		public function addTotalNumberCounter() {
+			ob_start();
 			echo '<form method="POST" id="tribe-events-import-all-events-form">';
 			wp_nonce_field( 'submit-import-all', 'tribe-events-' . self::$pluginSlug . '-submit-import-all' );
 			echo '<span id="tribe-events-import-all-events-form-elements"></span>';
 			echo '<p><input type="submit" style="float:left;" name="tribe-events-importexport-import-all" id="tribe-events-importexport-import-all" value="' . sprintf( __( 'Import All %s', 'tribe-events-calendar' ), '(0)' ) . '" class="button-secondary tribe-before-table-button" /></p>';
 			echo '</form>';
+			$html = ob_get_clean();
+			echo apply_filters( 'tribe_events_importexport_add_total_counter_content', $html );
 		}
 		
 		/**
