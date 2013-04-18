@@ -415,7 +415,7 @@ if ( class_exists( 'TribeEvents' ) ) {
 	 * @since 3.0
 	 **/
 	function tribe_events_get_days_of_week() {
-		$days_of_week = TribeEvents::instance()->daysOfWeek;
+		$days_of_week = TribeEvents::instance()->daysOfWeekShort;
 		$start_of_week = get_option('start_of_week', 0);
 		for ($i = 0; $i < $start_of_week; $i++) {
 			$day = $days_of_week[$i];
