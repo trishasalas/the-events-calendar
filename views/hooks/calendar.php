@@ -316,6 +316,11 @@ if( !class_exists('Tribe_Events_Calendar_Template')){
 			if ( $column > 0 && ( $column % 4 == 0 || $column % 5 == 0 || $column % 6 == 0 ) ) {
 				$ppf .= ' tribe-events-right';
 			}
+
+			if  ( $calendar_day['total_events'] > 0 ) {
+				$ppf .= ' tribe-events-has-events';
+			}	
+
 			return $ppf;
 		}
 
