@@ -21,7 +21,7 @@ $week = 0;
 
 
 <?php do_action('tribe_events_calendar_before_the_grid') ?>
-<table class="tribe-events-calendar">
+<table class="tribe-events-calendar tribe-events-calendar-full">
 	<thead>
 		<tr>
 		<?php foreach($days_of_week as $day) : ?>
