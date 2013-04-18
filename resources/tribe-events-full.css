@@ -992,6 +992,9 @@ select.tribe-events-dropdown {
 	letter-spacing: 1px;
 	font-weight: normal;
 }
+#tribe-events-content .tribe-events-tooltip h4.entry-title a {
+	color: #fff;
+}
 .tribe-events-tooltip .tribe-events-event-body {
 	font-size: 11px;
 	padding: 3px 6px 6px;
@@ -1013,6 +1016,93 @@ select.tribe-events-dropdown {
 	padding: 0;
 	font-size: 11px;
 	line-height: 1.5;
+}
+.tribe-events-tooltip .tribe-events-read-more {
+	display: none;
+}
+
+/* = Mobile Grid View
+=============================================*/
+#tribe-events-content .tribe-events-calendar.tribe-events-calendar-collapse td {
+	height: 32px;
+	padding: 5px;
+}
+
+#tribe-events-content .tribe-events-calendar.tribe-events-calendar-collapse td.tribe-events-has-events:hover {
+	cursor: pointer;
+} 
+
+#tribe-events-content .tribe-events-calendar.tribe-events-calendar-collapse div[id*="tribe-events-event-"] h3.entry-title {
+	display: none;
+}
+
+#tribe-events-content .tribe-events-calendar.tribe-events-calendar-collapse .tribe-events-calendar-day-events {
+	height: 7px;
+	width: 7px;
+	padding: 0;
+	border-radius: 7px;
+	background: #333333;
+	margin: 5px auto;
+}
+
+#tribe-events-content .tribe-events-calendar.tribe-events-calendar-collapse td.tribe-events-past .tribe-events-calendar-day-events {
+	color: #ccc;
+}
+#tribe-events-content .tribe-events-calendar.tribe-events-calendar-collapse td.tribe-events-present .tribe-events-calendar-day-events {
+	background: #fff;
+}
+
+.events-archive.events-gridview #tribe-events-content table.tribe-events-calendar-collapse .vevent {
+	border: none;
+}
+
+.tribe-events-calendar.tribe-events-calendar-collapse td div[id*="tribe-events-daynum-"] {
+	text-align: center;
+	padding: 0;
+	background: none;
+	font-size: 16px;
+	line-height: 1;
+	background: none;
+}
+
+/* remove background of current day number */
+.tribe-events-calendar.tribe-events-calendar-collapse td.tribe-events-present div[id*="tribe-events-daynum-"], .tribe-events-calendar td.tribe-events-present div[id*="tribe-events-daynum-"] > a {
+	background: none;
+}
+
+.tribe-events-calendar.tribe-events-calendar-collapse td.tribe-events-present {
+	background: #666666;
+}
+
+.tribe-events-calendar-collapse .tribe-events-viewmore {
+	display: none;
+}
+.tribe-events-calendar-collapse-list {
+	margin-top: 30px;
+}
+.tribe-events-mini-event {
+	display: block !important;
+}
+.tribe-events-mini-event + .tribe-events-mini-event {
+	margin-top: 40px;
+}
+
+.tribe-events-mini-event .duration {
+	margin: 10px 0;
+}
+.tribe-events-calendar-collapse-list 
+.tribe-events-mini-event
+.tribe-events-event-body {
+	margin-top: 10px;
+} 
+.tribe-events-calendar-collapse-list .tribe-events-event-thumb {
+	float: left;
+	margin: 0 10px 5px 0;
+}
+
+.tribe-events-calendar-collapse-list .tribe-events-viewmore {
+	margin: 40px 0 0;
+	padding: 0;
 }
 
 /* = Events List Widget Styles (Sidebar)
@@ -1451,6 +1541,13 @@ input[name*="tribe-bar-"]:-moz-placeholder {
 .tribe-bar-collapse .tribe-bar-filters > div, .tribe-bar-collapse #tribe-bar-views {
 	width: 100%;
 	height: auto;
+}
+
+.tribe-bar-collapse #tribe-bar-views [class^="tribe-icon-"] {
+	margin: 0;
+}
+.tribe-bar-collapse #tribe-bar-views .select2-container .select2-choice > span {
+	margin: 0;
 }
 
 .tribe-bar-collapse #tribe-bar-collapse-toggle {
