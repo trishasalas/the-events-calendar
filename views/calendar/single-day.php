@@ -28,9 +28,13 @@ $day = tribe_events_get_current_calendar_day();
 	</div>
 
 	<!-- Events List -->
-	<?php while ($day['events']->have_posts()) : $day['events']->the_post() ?>
-		<?php tribe_get_template_part('calendar/single', 'event') ?>
-	<?php endwhile; ?>
+	<?php if ( $day['events']->have_posts() )  : ?>
+		<div class="tribe-events-calendar-day-events">
+		<?php while ($day['events']->have_posts()) : $day['events']->the_post() ?>
+			<?php tribe_get_template_part('calendar/single', 'event') ?>
+		<?php endwhile; ?>
+		</div>
+	<?php endif; ?>
 
 	<!-- View More -->
 	<?php if ($day['view_more']) : ?>
