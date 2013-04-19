@@ -418,6 +418,90 @@ var tribe_ev = window.tribe_ev || {};
 
 jQuery(document).ready(function ($) {
 
+    var touchAction = "click";
+    if ('ontouchstart' in document.documentElement || navigator.msMaxTouchPoints > 0 ) {
+           touchAction = window.navigator.msPointerEnabled ? "MSPointerDown" : "touchstart";
+    }
+
+    var $tribecalendar = $('table.tribe-events-calendar');
+
+    // Check width of events bar
+    function calendarWidth($tribegrid) {
+
+        var tribeCalendarWidth = $tribecalendar.width();
+
+        if (tribeCalendarWidth < 670) {
+            $tribecalendar.removeClass('tribe-events-calendar-full').addClass('tribe-events-calendar-collapse');
+        } else {
+            $tribecalendar.removeClass('tribe-events-calendar-collapse').addClass('tribe-events-calendar-full');
+             $('.tribe-events-calendar-collapse-list').remove();
+        }
+    }
+
+    calendarWidth($tribecalendar);
+
+    $tribecalendar.resize(function () {
+        calendarWidth($tribecalendar);
+    });
+
+    $('#tribe-events').on( 'click', '.tribe-events-has-events', function() {
+
+        var $this = $(this);
+
+        if ( $('.tribe-events-calendar').is('.tribe-events-calendar-collapse') ) {
+            console.log('the calendar is responsive');
+
+            var $eventsToAdd = $this.find('.tribe-events-tooltip').clone();
+            var $viewMore = $this.find('.tribe-events-viewmore').clone();
+
+
+            if ( !$('.tribe-events-calendar-collapse-list').length ) {
+                console.log('the list wrapper does not exist');
+
+                $('#tribe-events-content').append('<div class="tribe-events-calendar-collapse-list" />');
+                var $eventsListWrap = $('.tribe-events-calendar-collapse-list');
+
+                $eventsListWrap.html( $eventsToAdd );
+
+                $eventsListWrap.find('.tribe-events-tooltip')
+                    .removeClass('tribe-events-tooltip')
+                    .addClass('tribe-events-mini-event');
+                
+                if(typeof $viewMore != 'undefined') {
+                    console.log($viewMore);
+                   $eventsListWrap.append( $viewMore );
+                }
+                $('html, body').stop().animate( {
+                  scrollTop:$eventsListWrap.offset().top - 100
+                 }, {
+                  duration: 500
+                });                
+
+            } else {
+                console.log('the list wrapper exists');                
+                var $eventsListWrap = $('.tribe-events-calendar-collapse-list');
+                
+                $eventsListWrap.html( $eventsToAdd );
+                
+                $eventsListWrap.find('.tribe-events-tooltip')
+                    .removeClass('tribe-events-tooltip')
+                    .addClass('tribe-events-mini-event');
+
+                if(typeof $viewMore != 'undefined') {
+                    console.log($viewMore);
+                    $eventsListWrap.append( $viewMore );
+                }               
+                $('html, body').stop().animate( {
+                  scrollTop:$eventsListWrap.offset().top - 100
+                 }, {
+                  duration: 500                
+                });                 
+            }
+
+        }
+
+    });    
+
     tribe_ev.state.category = tribe_ev.fn.get_category();
     tribe_ev.data.base_url = tribe_ev.fn.get_base_url();
 
