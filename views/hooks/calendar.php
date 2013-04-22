@@ -25,10 +25,12 @@ if( !class_exists('Tribe_Events_Calendar_Template')){
 		private static $calendar_days = array();
 		private static $current_day = -1;
 		private static $current_week = -1;
+		protected $excerpt_length = 30;
+		protected $asset_packages = array( 'ajax-calendar' );
 
-		public static function init(){
+		protected function __construct() {
 
-			Tribe_Template_Factory::asset_package( 'ajax-calendar' );
+			parent::__construct();
 			
 			$tribe_ecp = TribeEvents::instance();
 			$tribe_ecp->date = tribe_get_month_view_date();
@@ -42,7 +44,6 @@ if( !class_exists('Tribe_Events_Calendar_Template')){
 
 			// let's find out how many events are happening each day and share
 			self::$event_daily_counts = self::get_daily_counts($date);
-			$total_counts = array_unique(self::$event_daily_counts);
 
 			// save tribe bar args
 			if ( empty(self::$tribe_bar_args) ) {
@@ -52,7 +53,15 @@ if( !class_exists('Tribe_Events_Calendar_Template')){
 					}
 				}
 			}
+		}
 
+		/**
+		 * Set the notices used on month view
+		 *
+		 * @return void
+		 * @since 3.0
+		 **/
+		function set_notices() {
 			global $wp_query;
 			// setup a search term for query or via ajax
 			if( !empty( $wp_query->query_vars['s'] )){
@@ -61,27 +70,11 @@ if( !class_exists('Tribe_Events_Calendar_Template')){
 				$search_term = $_POST['tribe-bar-search'];
 			}
 
+			$total_counts = array_unique(self::$event_daily_counts);
+
 			if( count($total_counts) < 2 && !empty($search_term)) {
 				TribeEvents::setNotice( 'event-search-no-results', sprintf( __( 'There were no results found for <strong>"%s"</strong> this month. Try searching next month.', 'tribe-events-calendar' ), $search_term ) );
 			}
-
-			// set up an array of the days of the current month
-			self::setup_month();			
-
-			add_filter( 'excerpt_length', array(__CLASS__, 'excerpt_length'));
-
-		}
-
-		/**
-		 * Limit the excerpt length on the calendar view
-		 *
-		 * @param $length
-		 *
-		 * @return int
-		 * @since 3.0
-		 */
-		function excerpt_length( $length ) {
-			return 30;
 		}
 
 		private static function get_daily_counts( $date ) {
@@ -166,7 +159,8 @@ if( !class_exists('Tribe_Events_Calendar_Template')){
 		 * @return void
 		 * @since 3.0 
 		 **/
-		private static function setup_month() {
+		public function setup_view() {
+
 			$tribe_ecp = TribeEvents::instance();
 			$tribe_ecp->date = tribe_get_month_view_date();
 
@@ -316,11 +310,6 @@ if( !class_exists('Tribe_Events_Calendar_Template')){
 			if ( $column > 0 && ( $column % 4 == 0 || $column % 5 == 0 || $column % 6 == 0 ) ) {
 				$ppf .= ' tribe-events-right';
 			}
-
-			if  ( $calendar_day['total_events'] > 0 ) {
-				$ppf .= ' tribe-events-has-events';
-			}	
-
 			return $ppf;
 		}
 
@@ -367,5 +356,5 @@ if( !class_exists('Tribe_Events_Calendar_Template')){
 		}
 	} // class Tribe_Events_Calendar_Template
 
-	Tribe_Events_Calendar_Template::init();
+	Tribe_Events_Calendar_Template::instance();
 }

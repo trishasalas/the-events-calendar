@@ -19,6 +19,11 @@
 ?>
 
 <?php do_action('tribe_events_calendar_before_template') ?>
+
+<!-- Tribe Bar -->
+<?php tribe_get_template_part('modules/bar'); ?>
+
+<!-- Main Events Content -->
 <div id="tribe-events-content" class="tribe-events-calendar">
 	
 	<!-- Calendar Title -->
@@ -31,7 +36,7 @@
 
 	<!-- Calendar Header -->
 	<?php do_action('tribe_events_calendar_before_header') ?>
-	<div id="tribe-events-header" <?php tribe_events_header_attributes() ?>>
+	<div id="tribe-events-header" <?php tribe_events_the_header_attributes() ?>>
 
 		<!-- Header Navigation -->
 		<?php tribe_get_template_part('calendar/nav', 'header'); ?>

@@ -37,7 +37,7 @@ jQuery(document).ready(function ($) {
         });
     }
 
-    $('#tribe-events-list-view').on('click', 'li.tribe-events-nav-next a',function (e) {
+    $('#tribe-events-content-wrapper').on('click', 'li.tribe-events-nav-next a',function (e) {
         e.preventDefault();
 
         if (tribe_ev.state.ajax_running)
@@ -78,7 +78,7 @@ jQuery(document).ready(function ($) {
             });
         });
 
-    tribe_ev.fn.snap('#tribe-events-list-view', '#tribe-events-list-view', '#tribe-events-footer .tribe-events-nav-previous a, #tribe-events-footer .tribe-events-nav-next a');
+    tribe_ev.fn.snap('#tribe-events-content-wrapper', '#tribe-events-content-wrapper', '#tribe-events-footer .tribe-events-nav-previous a, #tribe-events-footer .tribe-events-nav-next a');
 
     function tribe_events_bar_listajax_actions(e) {
         if (tribe_events_bar_action != 'change_view') {
@@ -114,7 +114,7 @@ jQuery(document).ready(function ($) {
 
     function tribe_events_list_ajax_post() {
 
-        tribe_ev.fn.spin_show();
+        $('#tribe-events-header').tribe_spin();
         tribe_ev.state.ajax_running = true;
 
         if (!tribe_ev.state.popping) {
