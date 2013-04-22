@@ -448,7 +448,7 @@ jQuery(document).ready(function ($) {
 
         var tribeCalendarWidth = $tribecalendar.width();
 
-        if (tribeCalendarWidth < 670) {
+        if (tribeCalendarWidth < 600) {
             $tribecalendar.removeClass('tribe-events-calendar-full').addClass('tribe-events-calendar-collapse');
         } else {
             $tribecalendar.removeClass('tribe-events-calendar-collapse').addClass('tribe-events-calendar-full');
