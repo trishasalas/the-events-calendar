@@ -357,6 +357,11 @@ var tribe_ev = window.tribe_ev || {};
                     bottomPad = $this.outerHeight() + 10;
                 }
 
+                // Return if it's the mobile calendar 
+                if ($this.parents('.tribe-events-calendar-collapse').length) {
+                    return;
+                }
+
                 // Widget Tooltips
                 if ($this.parents('.tribe-events-calendar-widget').length) {
                     bottomPad = $this.outerHeight() - 6;
@@ -467,6 +472,8 @@ jQuery(document).ready(function ($) {
             var $eventsToAdd = $this.find('.tribe-events-tooltip').clone();
             var $viewMore = $this.find('.tribe-events-viewmore').clone();
 
+            $('.tribe-events-has-events').removeClass('tribe-events-active');
+            $this.addClass('tribe-events-active');
 
             if ( !$('.tribe-events-calendar-collapse-list').length ) {
                 console.log('the list wrapper does not exist');
