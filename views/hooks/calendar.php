@@ -304,6 +304,9 @@ if( !class_exists('Tribe_Events_Calendar_Template')){
 				}
 
 			}
+			if ( $calendar_day['total_events'] > 0 ) {
+				$ppf .= ' tribe-events-has-events';
+			}
 
 			$column = (self::$current_day) - (self::$current_week * 7);
 
