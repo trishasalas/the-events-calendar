@@ -1401,7 +1401,7 @@ input[name*="tribe-bar-"]:-moz-placeholder {
 	-webkit-box-shadow: none;		
 }
 
-#tribe-bar-views .tribe-bar-views-option:first-child, #tribe-bar-views .tribe-bar-views-option.tribe-bar-active,
+#tribe-bar-views .tribe-bar-active, #tribe-bar-views .tribe-bar-views-option.tribe-bar-active,
 #tribe-bar-views.tribe-bar-views-open .tribe-bar-views-option {
 	display: list-item;
 }

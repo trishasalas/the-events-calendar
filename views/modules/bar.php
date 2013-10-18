@@ -37,13 +37,15 @@ $views   = tribe_events_get_views();
 			<div class="tribe-bar-views-inner tribe-clearfix">
 				<h3 class="tribe-events-visuallyhidden"><?php _e( 'Event Views Navigation', 'tribe-events-calendar' ) ?></h3>
 				<label><?php _e( 'View As', 'tribe-events-calendar' ); ?></label>
-				<select class="tribe-bar-views-select tribe-no-param" name="tribe-bar-view">
-					<?php foreach ( $views as $view ) : ?>
-						<option <?php echo tribe_is_view($view['displaying']) ? 'selected' : 'tribe-inactive' ?> value="<?php echo $view['url'] ?>" data-view="<?php echo $view['displaying'] ?>">
-							<?php echo $view['anchor'] ?>
-						</option>
-					<?php endforeach; ?>
-				</select>
+				<ul class="tribe-bar-views-list">
+					<?php $i = 0; foreach ( $views as $view ) :  ?>
+						<li class="tribe-bar-views-option tribe-bar-views-option-<?php echo $view['displaying'] ?> <?php echo tribe_is_view($view['displaying']) ? 'tribe-bar-active' : 'tribe-inactive' ?>" data-view="<?php echo $view['displaying'] ?>" data-tribe-bar-order="<?php echo $i; ?>">
+							<a href="<?php echo $view['url'] ?>"><span class="tribe-icon-<?php echo $view['displaying'] ?>"><?php echo $view['anchor'] ?></span></a>
+						</li>												
+					<?php $i++; endforeach; ?>
+					<? /* <option <?php echo tribe_is_view($view['displaying']) ? 'selected' : 'tribe-inactive' ?> value="<?php echo $view['url'] ?>" data-view="<?php echo $view['displaying'] ?>"> */ ?>
+
+				</ul>
 			</div><!-- .tribe-bar-views-inner -->
 		</div><!-- .tribe-bar-views -->
 		<?php } // if ( count( $views ) > 1 ) ?>

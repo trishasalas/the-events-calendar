@@ -107,33 +107,7 @@ var tribe_events_bar_action;
 		// Implement placeholder
 		$('input[name*="tribe-bar-"]').placeholder();
 
-		// Create list
-		$('<ul class="tribe-bar-views-list" />').insertAfter( $tribebarselect );
-
 		var $tribebarviews = $('.tribe-bar-views-list');
-
-		// Create list from select options
-		$tribebarselect.find('option').each(function(i){
-			var $view = $(this);
-			// build list items and append them
-			var unique_c = 'tribe-bar-views-option-' + $view.data('view');
-			$('<li></li>', {
-				'class': 'tribe-bar-views-option ' + unique_c,
-				'data-tribe-bar-order': i,
-				'data-view': $view.data('view')
-			}).html([
-                '   <a href="#">',
-                '   <span class="tribe-icon-' + $.trim($view.text().toLowerCase()) + '">' + $view.text() + '</span>',
-                '</a>'].join("")
-			).appendTo( '.tribe-bar-views-list' );
-
-		}); 
-		
-		//find the current view and select it in the bar
-		var currentview = $tribebarselect.find(':selected').data('view'),
-			$currentli = $tribebarviews.find('li[data-view='+ currentview +']');
-
-		$currentli.prependTo($tribebarviews).addClass('tribe-bar-active');
 
 		// toggle the views dropdown	
 		$tribebar.on('click', '#tribe-bar-views', function (e) {
@@ -142,16 +116,24 @@ var tribe_events_bar_action;
 			$this.toggleClass('tribe-bar-views-open');
 		});
 
+		//find the current view and select it in the bar
+		$currentli = $tribebarviews.find('.tribe-bar-active');
+		$currentli.prependTo($tribebarviews);		
+
 		// change views
 		$tribebar.on('click', '.tribe-bar-views-option', function(e) {
 			e.preventDefault();
 			var $this = $(this);
 			if ( !$this.is('.tribe-bar-active') ) {
+				$('.tribe-bar-views-option').removeClass('tribe-bar-active');
+				$this
+					.addClass('tribe-bar-active')
+					.prependTo($tribebarviews);
 
 				var target = $this.data('view');
 
-				ts.cur_url = $('option[data-view='+ target +']').val();
-				ts.view_target = $('select[name=tribe-bar-view] option[value="' + ts.cur_url + '"]').data('view');
+				ts.cur_url = $this.find('a').attr('href');
+				ts.view_target = $this.data('view');
 				tribe_events_bar_action = 'change_view';
 				tribe_events_bar_change_view();
 
