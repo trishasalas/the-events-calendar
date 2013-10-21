@@ -256,7 +256,9 @@ h2.tribe-events-page-title,
 }
 
 .single-tribe_events a.tribe-events-ical, 
-.single-tribe_events a.tribe-events-gcal {
+.single-tribe_events a.tribe-events-ical:hover, 
+.single-tribe_events a.tribe-events-gcal, 
+.single-tribe_events a.tribe-events-gcal:hover {
 	background-color: transparent;
 	text-transform: none;
 	font-size: 14px;
@@ -264,6 +266,7 @@ h2.tribe-events-page-title,
 	letter-spacing: 0;
 	padding: 0;
 	float: none;
+	color: #21759B;
 }
 
 /* Featured Image */
@@ -466,15 +469,14 @@ h2.tribe-events-page-title,
 	border-top-color: transparent;
 }
 
-
 /* = WooTickets
 =============================================*/
 h2.tribe-events-tickets-title {
 	font-size: 17px;
 }
 
-
-/* Events Retina Bits */
+/* = Retina
+=============================================*/
 @media 
 only screen and (min--moz-device-pixel-ratio: 2),
 only screen and (-o-min-device-pixel-ratio: 2/1),
