@@ -167,9 +167,6 @@ if( !class_exists('Tribe_Template_Factory') ) {
 		 **/
 		public function event_classes( $classes ) {
 
-			// only run once
-			remove_filter( 'tribe_events_event_classes', array( $this, 'event_classes' ) );
-
 			global $post, $wp_query;
 
 			$classes = array_merge($classes, array( 'hentry', 'vevent', 'type-tribe_events', 'post-' . $post->ID, 'tribe-clearfix' ));
@@ -260,7 +257,7 @@ if( !class_exists('Tribe_Template_Factory') ) {
 				if( tribe_is_day() ) {
 					TribeEvents::setNotice( 'events-not-found', sprintf( __( 'No events scheduled for <strong>%s</strong>. Please try another day.', 'tribe-events-calendar' ), date_i18n( 'F d, Y', strtotime( get_query_var( 'eventDate' ) ) ) ) );
 				} elseif( tribe_is_upcoming() ) {
-					$date = date('Y-m-d', strtotime($tribe_ecp->date));
+					$date = date('Y-m-d', strtotime($wp_query->get('start_date')));
 					if ( $date == date('Y-m-d') ) {
 						TribeEvents::setNotice( 'events-not-found', __('No upcoming events ', 'tribe-events-calendar') . $is_cat_message );
 					} else {
@@ -372,6 +369,9 @@ if( !class_exists('Tribe_Template_Factory') ) {
 
 			// add body class
 			remove_filter( 'body_class', array($this, 'body_class') );
+
+			// event classes 
+			remove_filter( 'tribe_events_event_classes', array( $this, 'event_classes' ) );
 
 		}
 
