@@ -1190,16 +1190,24 @@ Date.prototype.format = function (mask, utc) {
 		 */
 
 		function tribe_ical_url() {
-			var url = document.URL,
-				separator = '?';
+			$('a.tribe-events-ical').each(function() {
+				var $this = $(this);
+				var icalLink = $this.attr('href'),
+					url = document.URL,
+					separator = '?';
 
-			if (url.indexOf('?') > 0)
-				separator = '&';
+				if (url.indexOf('?') > 0)
+					separator = '&';
 
-			var new_link = url + separator + 'ical=1' + '&' + 'tribe_display=' + ts.view;
+				if (icalLink.substring(0,9) == 'webcal://')
+					url = url.replace(/https?:\/\//, 'webcal://');
 
-			$('a.tribe-events-ical').attr('href', new_link);
+				var new_link = url + separator + 'ical=1' + '&' + 'tribe_display=' + ts.view;
+
+				$(this).attr('href', new_link);
+			});
 		}
+
 
 		$(te).on("tribe_ev_ajaxSuccess", function () {
 			tribe_ical_url();
