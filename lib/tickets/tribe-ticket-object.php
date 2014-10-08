@@ -5,6 +5,8 @@ if ( ! class_exists( 'TribeEventsTicketObject' ) ) {
 	 */
 	class TribeEventsTicketObject {
 
+		const GLOBAL_STOCKS_META = 'tribe_events_global_stocks';
+
 		/**
 		 * This value - an empty string - should be used to populate the stock
 		 * property in situations where no limit has been placed on stock
@@ -76,12 +78,12 @@ if ( ! class_exists( 'TribeEventsTicketObject' ) ) {
 		 * Global stock affected by the ticket sales.
 		 *
 		 * Will be `false` if the ticket does not affect any global stock,
-		 * will be a string defining the name of the global stock affected
+		 * will be a string defining the ID of the global stock affected
 		 * otherwise.
 		 *
-		 * @var bool
+		 * @var bool/string
 		 */
-		public $global_stock = false;
+		public $global_stock_id = false;
 
 		/**
 		 * Amount of tickets of this kind sold
@@ -112,37 +114,39 @@ if ( ! class_exists( 'TribeEventsTicketObject' ) ) {
 		public $end_date;
 
 		public function __set( $property, $value ) {
-			if ( $property == 'stock' && $this->global_stock ) {
-				$global_stock = $this->get_event_global_stock();
-				if ( !$global_stock  ) {
-					// TODO: throw? Return? What?
-					return;
+			if ( $property == 'stock' && $this->global_stock_id ) {
+				$event = TribeEventsTickets::find_matching_event( $this->ID );
+				$global_stocks = $this->get_global_stocks($event);
+				$global_stocks[$this->global_stock_id] = $value;
+				$event->{self::GLOBAL_STOCKS_META} = $global_stocks;
+			}
+			if ($property == 'global_stock_id') {
+				if (!is_string($value)) {
+					throw new Exception('Global stock ID must be a string');
 				}
-
 			}
 			$this->$property = $value;
 		}
 
 		public function __get( $property ) {
-			if ( $property == 'stock' && $this->global_stock ) {
-				$global_stock = $this->get_event_global_stock();
-				if ( !$global_stock  ) {
-					// TODO: throw? Return? What?
-					return;
-				}
+			if ( $property == 'stock' && $this->global_stock_id ) {
+				$event = TribeEventsTickets::find_matching_event( $this->ID );
+				$global_stocks = $this->get_global_stocks($event);
+
+				return $global_stocks[$this->global_stock_id];
 			}
 
 			return $this->$property;
 		}
 
-		/**
-		 * Fetches the
-		 */
-		protected function get_event_global_stock() {
-			if ( ! $event = TribeEventsTickets::find_matching_event( $this->ID ) ) {
-				return false;
+		protected function get_global_stocks(WP_Post $event) {
+			if ( ! $event ) {
+				throw new Exception( 'There was a problem retrieving the event for the ticket' );
 			}
-			return $event->get_stock_object_by_name( $this->global_stock );
+			$stocks    = $event->{self::GLOBAL_STOCKS_META};
+
+			return $stocks;
 		}
+
 	}
 }
