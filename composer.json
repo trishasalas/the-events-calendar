@@ -13,6 +13,6 @@
 	"minimum-stability": "dev",
 	"prefer-stable": true,
 	"autoload": {
-		"classmap": ["lib/tickets"]
+		"classmap": ["lib/tickets", "lib"]
 	}
 }

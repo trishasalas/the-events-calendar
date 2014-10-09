@@ -12,14 +12,10 @@ if ( ! class_exists( 'TribeEventsGlobalTicketStock' ) ) {
 			if ( ! is_int( $value ) ) {
 				throw new Exception( 'Stock value must be an int' );
 			}
-			$event                                       = TribeEventsTickets::find_matching_event( $this->ticket->ID );
-			$new_global_stocks                           = $old_global_stocks = $this->get_global_stocks( $event );
+			$event                                               = TribeEventsTickets::find_matching_event( $this->ticket->ID );
+			$new_global_stocks                                   = $old_global_stocks = $this->get_global_stocks( $event );
 			$new_global_stocks[ $this->ticket->global_stock_id ] = $value;
-			if ( '' == get_post_meta( $event->ID, TribeEventsTicketObject::GLOBAL_STOCKS_META, true ) ) {
-				add_post_meta( $event->ID, TribeEventsTicketObject::GLOBAL_STOCKS_META, $new_global_stocks, true );
-			} else {
-				update_post_meta( $event->ID, Trct::GLOBAL_STOCKS_META, $new_global_stocks, $old_global_stocks );
-			}
+			update_post_meta( $event->ID, TribeEventsTicketObject::GLOBAL_STOCKS_META, $new_global_stocks, $old_global_stocks );
 		}
 
 		/**
@@ -38,16 +34,37 @@ if ( ! class_exists( 'TribeEventsGlobalTicketStock' ) ) {
 			if ( ! $event ) {
 				throw new Exception( 'There was a problem retrieving the event for the ticket' );
 			}
-			$stocks = $event->{TribeEventsTicketObject::GLOBAL_STOCKS_META};
+			$global_stocks = $event->{TribeEventsTicketObject::GLOBAL_STOCKS_META};
+			if ( ! $global_stocks ) {
+				$global_stocks = array();
+				$this->update_event_stock_meta( $event, $global_stocks );
+			}
 
-			return $stocks;
+			return $global_stocks;
 		}
 
 		public function get_stock() {
 			$event         = TribeEventsTickets::find_matching_event( $this->ticket->ID );
 			$global_stocks = $this->get_global_stocks( $event );
+			if ( ! isset( $global_stocks[ $this->ticket->global_stock_id ] ) ) {
+				$global_stocks[ $this->ticket->global_stock_id ] = 0;
+				$this->update_event_stock_meta( $event, $global_stocks );
+			}
 
 			return $global_stocks[ $this->ticket->global_stock_id ];
+		}
+
+		protected function update_event_stock_meta( $event, array $global_stocks ) {
+			$meta_key = TribeEventsTicketObject::GLOBAL_STOCKS_META;
+			if ( '' == get_post_meta( $event->ID, $meta_key, true ) ) {
+				$stock_meta_was_added = add_post_meta( $event->ID, $meta_key, $global_stocks, true );
+				if ( ! $stock_meta_was_added ) {
+					throw new Exception( 'Stock meta could not be added to event with ID ' . $event->ID );
+				}
+			} else {
+				update_post_meta( $event->ID, $meta_key, $global_stocks );
+			}
+
 		}
 	}
 }
