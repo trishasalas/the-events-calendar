@@ -118,18 +118,13 @@ if ( ! class_exists( 'TribeEventsTicketObject' ) ) {
 		 * @param $property
 		 * @param $value
 		 *
-		 * @throws Exception if accessing the `stock` property on a global
-		 *                   ticket and the event associated with the ticket
-		 *                   cannot be found.
+		 * @throws Exception
 		 */
 		public function __set( $property, $value ) {
 			$could_use_global_stock  = $property == 'stock' && is_string( $this->global_stock_id );
 			$should_use_global_stock = $this->is_global_stock_enabled() && $could_use_global_stock;
 			if ( $should_use_global_stock ) {
-				$event                                   = TribeEventsTickets::find_matching_event( $this->ID );
-				$global_stocks                           = $this->get_global_stocks( $event );
-				$global_stocks[ $this->global_stock_id ] = $value;
-				$event->{self::GLOBAL_STOCKS_META}       = $global_stocks;
+				(new TribeEventsGlobalTicketStock($this))->set_stock($value);
 			}
 			if ( $property == 'global_stock_id' ) {
 				if ( ! is_string( $value ) ) {
@@ -140,46 +135,21 @@ if ( ! class_exists( 'TribeEventsTicketObject' ) ) {
 		}
 
 		/**
-		 * @param string $property
+		 * @param $property
 		 *
 		 * @return mixed
-		 * @throws Exception if accessing the `stock` property on a global
-		 *                   ticket and the event associated with the ticket
-		 *                   cannot be found.
 		 */
 		public function __get( $property ) {
 			$could_use_global_stock  = $property == 'stock' && is_string( $this->global_stock_id );
 			$should_use_global_stock = $this->is_global_stock_enabled() && $could_use_global_stock;
 			if ( $should_use_global_stock ) {
-				$event         = TribeEventsTickets::find_matching_event( $this->ID );
-				$global_stocks = $this->get_global_stocks( $event );
-
-				return $global_stocks[ $this->global_stock_id ];
+				return (new TribeEventsGlobalTicketStock($this))->get_stock();
 			}
 
 			return $this->$property;
 		}
 
-		/**
-		 * Returns the global stocks array stored as an event meta.
-		 *
-		 * @param bool/WP_Post $event Either a `WP_Post` instance or `false`
-		 *
-		 * @return array The global stocks stored in the event meta.
-		 *               The array will have the format `global_stock_id/value`:
-		 *
-		 *                  ['global_stock_1': 20, 'global_stock_2': 10]
-		 *
-		 * @throws Exception if the event object is false
-		 */
-		protected function get_global_stocks( $event ) {
-			if ( ! $event ) {
-				throw new Exception( 'There was a problem retrieving the event for the ticket' );
-			}
-			$stocks = $event->{self::GLOBAL_STOCKS_META};
 
-			return $stocks;
-		}
 
 		/**
 		 * Checks if the use of global stock has been enabled on a filter

@@ -76,10 +76,11 @@ class  TribeEventsTicketObjectTest extends \PHPUnit_Framework_TestCase {
 		$event                                                = $this->getMock( 'WP_Post' );
 		$event->{TribeEventsTicketObject::GLOBAL_STOCKS_META} = $meta;
 		Test::double( 'TribeEventsTickets', [ 'find_matching_event' => $event ] );
+		$globalStock = Test::double('TribeEventsGlobalTicketStock', ['set_stock' => true]);
 
 		$sut->stock = $value;
 
-		$this->assertEquals( $value, $event->{TribeEventsTicketObject::GLOBAL_STOCKS_META}['stock1'] );
+		$globalStock->verifyInvokedOnce('set_stock');
 	}
 
 	/**
