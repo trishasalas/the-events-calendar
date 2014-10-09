@@ -6,4 +6,5 @@
 
 class_name: FunctionalTester
 modules:
-    enabled: [Filesystem, FunctionalHelper]
+    enabled: [WPDb, WPLoader, Filesystem, FunctionalHelper]
+    config: { WPDb: { dsn: 'mysql:host=127.0.0.1;dbname=tribe-pro-tests', user: root, password: root, dump: tests/_data/dump.sql, populate: true, cleanup: true, url: 'http://tribe-pro.local', tablePrefix: tribe_, checkExistence: true, update: true }, WPLoader: { wpRootFolder: /Users/Luca/Dropbox/Developer/WebDeveloper/websites/tribe-pro/wp, dbName: tribe-pro-tests, dbHost: 127.0.0.1, dbUser: root, dbPassword: root, wpDebug: true, dbCharset: utf8, dbCollate: '', tablePrefix: tribe_, domain: tribe-pro.local, adminEmail: admin@tribe-pro.local, title: 'Tribe Premium Plugins Tests', phpBinary: php, language: '' } }
