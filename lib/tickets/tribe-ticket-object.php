@@ -114,8 +114,17 @@ if ( ! class_exists( 'TribeEventsTicketObject' ) ) {
 		 */
 		public $end_date;
 
+		/**
+		 * @param $property
+		 * @param $value
+		 *
+		 * @throws Exception if accessing the `stock` property on a global
+		 *                   ticket and the event associated with the ticket
+		 *                   cannot be found.
+		 */
 		public function __set( $property, $value ) {
-			$should_use_global_stock = $property == 'stock' && is_string( $this->global_stock_id ) && $this->is_global_stock_enabled();
+			$could_use_global_stock  = $property == 'stock' && is_string( $this->global_stock_id );
+			$should_use_global_stock = $this->is_global_stock_enabled() && $could_use_global_stock;
 			if ( $should_use_global_stock ) {
 				$event                                   = TribeEventsTickets::find_matching_event( $this->ID );
 				$global_stocks                           = $this->get_global_stocks( $event );
@@ -130,6 +139,14 @@ if ( ! class_exists( 'TribeEventsTicketObject' ) ) {
 			$this->$property = $value;
 		}
 
+		/**
+		 * @param string $property
+		 *
+		 * @return mixed
+		 * @throws Exception if accessing the `stock` property on a global
+		 *                   ticket and the event associated with the ticket
+		 *                   cannot be found.
+		 */
 		public function __get( $property ) {
 			$could_use_global_stock  = $property == 'stock' && is_string( $this->global_stock_id );
 			$should_use_global_stock = $this->is_global_stock_enabled() && $could_use_global_stock;
@@ -143,7 +160,19 @@ if ( ! class_exists( 'TribeEventsTicketObject' ) ) {
 			return $this->$property;
 		}
 
-		protected function get_global_stocks( WP_Post $event ) {
+		/**
+		 * Returns the global stocks array stored as an event meta.
+		 *
+		 * @param bool/WP_Post $event Either a `WP_Post` instance or `false`
+		 *
+		 * @return array The global stocks stored in the event meta.
+		 *               The array will have the format `global_stock_id/value`:
+		 *
+		 *                  ['global_stock_1': 20, 'global_stock_2': 10]
+		 *
+		 * @throws Exception if the event object is false
+		 */
+		protected function get_global_stocks( $event ) {
 			if ( ! $event ) {
 				throw new Exception( 'There was a problem retrieving the event for the ticket' );
 			}
@@ -152,9 +181,28 @@ if ( ! class_exists( 'TribeEventsTicketObject' ) ) {
 			return $stocks;
 		}
 
+		/**
+		 * Checks if the use of global stock has been enabled on a filter
+		 * level.
+		 *
+		 * @return bool `true` if the filter return value evaluates to true, `false` otherwise.
+		 */
 		public function is_global_stock_enabled() {
 
-			return apply_filters( self::GLOBAL_STOCK_ENABLE, $this );
+			/**
+			 * Enables or disables the use of global stock.
+			 *
+			 * Filter will return `null` disabling the function by
+			 * default. To activate the function hook into the filter
+			 * and return a value evaluating to boolean `true`.
+			 *
+			 * @since 1.5
+			 *
+			 * @param TribeEventsTicketObject $this The current ticket instance.
+			 */
+			$global_stock_enabled = apply_filters( self::GLOBAL_STOCK_ENABLE, $this );
+
+			return $global_stock_enabled ? true : false;
 		}
 
 	}
