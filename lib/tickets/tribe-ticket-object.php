@@ -87,6 +87,11 @@ if ( ! class_exists( 'TribeEventsTicketObject' ) ) {
 		public $global_stock_id = false;
 
 		/**
+		 * @var TribeEventsGlobalTicketStock
+		 */
+		protected $global_stock;
+
+		/**
 		 * Amount of tickets of this kind sold
 		 *
 		 * @var int
@@ -121,10 +126,10 @@ if ( ! class_exists( 'TribeEventsTicketObject' ) ) {
 		 * @throws Exception
 		 */
 		public function __set( $property, $value ) {
-			$could_use_global_stock  = $property == 'stock' && is_string( $this->global_stock_id );
-			$should_use_global_stock = $this->is_global_stock_enabled() && $could_use_global_stock;
-			if ( $should_use_global_stock ) {
-				(new TribeEventsGlobalTicketStock($this))->set_stock($value);
+			if ( $this->accessing_global_stock( $property ) ) {
+				$this->maybe_init_global_stock_object();
+
+				$this->global_stock->set_stock($value);
 			}
 			if ( $property == 'global_stock_id' ) {
 				if ( ! is_string( $value ) ) {
@@ -140,10 +145,10 @@ if ( ! class_exists( 'TribeEventsTicketObject' ) ) {
 		 * @return mixed
 		 */
 		public function __get( $property ) {
-			$could_use_global_stock  = $property == 'stock' && is_string( $this->global_stock_id );
-			$should_use_global_stock = $this->is_global_stock_enabled() && $could_use_global_stock;
-			if ( $should_use_global_stock ) {
-				return (new TribeEventsGlobalTicketStock($this))->get_stock();
+			if ( $this->accessing_global_stock( $property ) ) {
+				$this->maybe_init_global_stock_object();
+
+				return $this->global_stock->get_stock();
 			}
 
 			return $this->$property;
@@ -173,6 +178,24 @@ if ( ! class_exists( 'TribeEventsTicketObject' ) ) {
 			$global_stock_enabled = apply_filters( self::GLOBAL_STOCK_ENABLE, $this );
 
 			return $global_stock_enabled ? true : false;
+		}
+
+		protected function maybe_init_global_stock_object() {
+			if ( ! $this->global_stock ) {
+				$this->global_stock = new TribeEventsGlobalTicketStock( $this );
+			}
+		}
+
+		/**
+		 * @param $property
+		 *
+		 * @return bool
+		 */
+		protected function accessing_global_stock( $property ) {
+			$could_use_global_stock  = $property == 'stock' && is_string( $this->global_stock_id );
+			$should_use_global_stock = $could_use_global_stock && $this->is_global_stock_enabled();
+
+			return $should_use_global_stock;
 		}
 
 	}
