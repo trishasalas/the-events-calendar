@@ -128,8 +128,7 @@ if ( ! class_exists( 'TribeEventsTicketObject' ) ) {
 		public function __set( $property, $value ) {
 			if ( $this->accessing_global_stock( $property ) ) {
 				$this->maybe_init_global_stock_object();
-
-				$this->global_stock->set_stock($value);
+				$this->global_stock->set_stock( $value );
 			}
 			if ( $property == 'global_stock_id' ) {
 				if ( ! is_string( $value ) ) {
@@ -153,7 +152,6 @@ if ( ! class_exists( 'TribeEventsTicketObject' ) ) {
 
 			return $this->$property;
 		}
-
 
 
 		/**
