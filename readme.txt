@@ -328,6 +328,8 @@ At no point during the 3.0 lifecycle will the major version change. But you can 
 
 * Incorporated updated Icelandic translation files courtesy of Baldvin Örn Berndsen
 * Incorporated updated German translation files courtesy of Oliver Heinrich
+* Fixed a bug where the wrong date was showing in the title of the page when a date was selected in the tribe bar
+* Fixed a bug where previous and next events links were (or were not) showing up when they're supposed to
 
 = 3.8 =
 
