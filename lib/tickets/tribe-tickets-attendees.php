@@ -164,7 +164,7 @@ class TribeEventsTicketsAttendeesTable extends WP_List_Table {
 	 */
 	function column_check_in( $item ) {
 		if ( $item['check_in'] === false ) {
-			return sprintf( '<span class="button disabled">%s</span>', $item['order_status'] );
+			return sprintf( '<span class="button disabled">%s</span>', ucfirst( $item['order_status_label'] ) );
 		}
 		$checkin   = sprintf( '<a href="#" data-attendee-id="%d" data-provider="%s" class="button-secondary tickets_checkin">%s</a>', esc_attr( $item['attendee_id'] ), esc_attr( $item['provider'] ), __( 'Check in', 'tribe-events-calendar' ) );
 		$uncheckin = sprintf( '<span class="delete"><a href="#" data-attendee-id="%d" data-provider="%s" class="tickets_uncheckin">%s</a></span>', esc_attr( $item['attendee_id'] ), esc_attr( $item['provider'] ), __( 'Undo Check in', 'tribe-events-calendar' ) );
