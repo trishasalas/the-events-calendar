@@ -9,6 +9,7 @@ if ( ! class_exists( 'TribeEventsGlobalTicketStock' ) ) {
 		}
 
 		public function set_stock( $value ) {
+			// todo use is_numeric
 			if ( ! is_int( $value ) ) {
 				throw new Exception( 'Stock value must be an int' );
 			}
@@ -62,6 +63,7 @@ if ( ! class_exists( 'TribeEventsGlobalTicketStock' ) ) {
 					throw new Exception( 'Stock meta could not be added to event with ID ' . $event->ID );
 				}
 			} else {
+				// todo use just this!
 				update_post_meta( $event->ID, $meta_key, $global_stocks );
 			}
 
