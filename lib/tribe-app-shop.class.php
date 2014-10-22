@@ -15,20 +15,22 @@ if ( ! class_exists( 'TribeAppShop' ) ) {
 		/**
 		 * Version of the data model
 		 */
-		const API_VERSION = "1.0";
+		const API_VERSION = "1.1";
+
 		/**
 		 * URL of the API
 		 */
-		const API_ENDPOINT = "http://tri.be/api/app-shop/";
+		const API_ENDPOINT = "http://tools/tribe-app-store/";
 
 		/**
 		 * Base name for the transients key
 		 */
-		const CACHE_KEY_BASE = "tribe-app-shop";
+		const CACHE_KEY = "tribe-app-shop";
+
 		/**
 		 * Duration of the transients, in seconds.
 		 */
-		const CACHE_EXPIRATION = 300; //5 min
+		const CACHE_EXPIRATION = 1800; // 30mins
 
 		/**
 		 * Slug of the WP admin menu item
@@ -41,12 +43,24 @@ if ( ! class_exists( 'TribeAppShop' ) ) {
 		 * @var null or TribeAppShop
 		 */
 		private static $instance = null;
+
 		/**
 		 * The slug for the new admin page
 		 *
 		 * @var string
 		 */
 		private $admin_page = null;
+
+		/**
+		 * Available components for the app store.
+		 *
+		 * @var array
+		 */
+		protected $data = array(
+			'html' => '',
+			'css'  => '',
+			'js'   => ''
+		);
 
 
 		/**
@@ -55,6 +69,12 @@ if ( ! class_exists( 'TribeAppShop' ) ) {
 		public function __construct() {
 			add_action( 'admin_menu', array( $this, 'add_menu_page' ), 100 );
 			add_action( 'wp_before_admin_bar_render', array( $this, 'add_toolbar_item' ), 20 );
+			add_action( 'current_screen', array( $this, 'setup_page' ) );
+		}
+
+		public function setup_page( $screen ) {
+			if ( $screen->id !== $this->admin_page ) return;
+			$this->get_data();
 		}
 
 		/**
@@ -64,7 +84,6 @@ if ( ! class_exists( 'TribeAppShop' ) ) {
 			$page_title = __( 'Event Add-Ons', 'tribe-events-calendar' );
 			$menu_title = __( 'Event Add-Ons', 'tribe-events-calendar' );
 			$capability = "edit_posts";
-
 
 			$where = 'edit.php?post_type=' . TribeEvents::POSTTYPE;
 
@@ -76,14 +95,12 @@ if ( ! class_exists( 'TribeAppShop' ) ) {
 			);
 
 			add_action( 'admin_print_styles-' . $this->admin_page, array( $this, 'enqueue' ) );
-
 		}
 
 		/**
 		 * Adds a link to the shop app to the WP admin bar
 		 */
 		public function add_toolbar_item() {
-
 			// prevent users who cannot manage the plugin to see addons link
 			if ( current_user_can( 'edit_tribe_events' ) ) {
 				global $wp_admin_bar;
@@ -107,33 +124,31 @@ if ( ! class_exists( 'TribeAppShop' ) ) {
 		public function enqueue() {
 			wp_enqueue_style( 'app-shop', TribeEvents::instance()->pluginUrl . 'resources/app-shop.css', array(), apply_filters( 'tribe_events_css_version', TribeEvents::VERSION ) );
 			wp_enqueue_script( 'app-shop', TribeEvents::instance()->pluginUrl . 'resources/app-shop.js', array(), apply_filters( 'tribe_events_js_version', TribeEvents::VERSION ) );
+
+			$this->print_js();
+			$this->print_css();
+		}
+
+		protected function print_js() {
+			if ( empty( $this->data['js'] ) ) return;
+			echo '<script type="text/javascript">';
+			echo $this->data['js'];
+			echo '</script>';
+		}
+
+		protected function print_css() {
+			if ( empty( $this->data['css'] ) ) return;
+			echo '<style>';
+			echo $this->data['css'];
+			echo '</style>';
 		}
 
 		/**
 		 * Renders the Shop App page
 		 */
 		public function do_menu_page() {
-			$remote = $this->get_all_products();
-
-			if ( ! empty( $remote ) ) {
-				$products = null;
-				if ( property_exists( $remote, 'data' ) ) {
-					$products = $remote->data;
-				}
-				$banner = null;
-				if ( property_exists( $remote, 'banner' ) ) {
-					$banner = $remote->banner;
-				}
-
-				if ( empty( $products ) ) {
-					return;
-				}
-
-				$categories = array_unique( wp_list_pluck( $products, 'category' ) );
-
-				include_once( TribeEvents::instance()->pluginPath . 'admin-views/app-shop.php' );
-			}
-
+			$html = $this->data['html'];
+			include_once( TribeEvents::instance()->pluginPath . 'admin-views/app-shop.php' );
 		}
 
 
@@ -142,46 +157,33 @@ if ( ! class_exists( 'TribeAppShop' ) ) {
 		 *
 		 * @return array|WP_Error
 		 */
-		private function get_all_products() {
+		private function get_data() {
+			$data = get_transient( self::CACHE_KEY );
 
-			$cache_key = self::CACHE_KEY_BASE . '-products';
-			$products  = get_transient( $cache_key );
-
-			if ( ! $products ) {
-				$products = $this->remote_get( 'get-products' );
-				if ( $products && ! $products->error ) {
-					set_transient( $cache_key, $products, self::CACHE_EXPIRATION );
-				}
+			if ( ! $data ) {
+				$this->remote_get();
+				if ( ! empty( $this->data['html'] ) )
+					set_transient( self::CACHE_KEY, $this->data, self::CACHE_EXPIRATION );
 			}
 
-			if ( is_string( $products ) ) {
-				$products = json_decode( $products );
-			}
-
-			return $products;
-
+			if ( is_array( $data ) )
+				$this->data = array_merge( $this->data, $data );
 		}
 
 		/**
 		 * Makes the remote call to the API endpoint
 		 *
-		 * @param            $action
-		 * @param array|null $args
-		 *
-		 * @return array|WP_Error
+		 * @param $action
 		 */
-		private function remote_get( $action, $args = null ) {
-
+		private function remote_get( $action = '' ) {
 			$url = trailingslashit( self::API_ENDPOINT . self::API_VERSION ) . $action;
+			$url = apply_filters( 'tribe_app_store_api', $url );
 
-			$ret = wp_remote_get( $url );
+			$data = wp_remote_get( $url );
 
-			if ( ! is_wp_error( $ret ) && isset( $ret["body"] ) ) {
-				return json_decode( $ret["body"] );
+			if ( ! is_wp_error( $data ) && isset( $data['body'] ) ) {
+				$this->data = array_merge( $this->data, json_decode( $data['body'], true ) );
 			}
-
-			return null;
-
 		}
 
 		/**
