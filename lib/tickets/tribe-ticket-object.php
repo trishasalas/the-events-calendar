@@ -100,14 +100,24 @@
 			public $end_date;
 
 			final public function __construct( TribeEventsTicketsStockObject $stockObject = null ) {
-				$this->stock_object = $stockObject ? $stockObject : new TribeEventsTicketStockObject($this);
+				$this->stock_object = $stockObject ? $stockObject : new TribeEventsTicketStockObject( $this );
 			}
 
 			public function __set( $property, $value ) {
+				if ( $property == 'stock' ) {
+					$this->stock_object->set_stock( $value );
+
+					return;
+				}
+
 				$this->$property = $value;
 			}
 
 			public function __get( $property ) {
+				if ( $property == 'stock' ) {
+					return $this->stock_object->get_stock();
+				}
+
 				return $this->$property;
 			}
 
@@ -139,6 +149,11 @@
 			public function get_stock_object() {
 				return $this->stock_object;
 			}
+
+			public function set_stock_object( TribeEventsTicketStockObject $stock_object = null ) {
+				$this->stock_object = $stock_object;
+			}
+
 
 		}
 	}
