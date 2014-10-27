@@ -68,105 +68,133 @@
 			public function get_type() {
 				return $this->type;
 			}
-		}
-	}
 
-
-	interface TribeEventsTicket_Stock_Type {
-
-		public function use_global( $value );
-
-		public function use_local( $value );
-	}
-
-
-	abstract class TribeEventsTickets_Stock_AbstractType implements TribeEventsTicket_Stock_Type {
-
-		public function use_global( $value ) {
-			throw new Exception;
-		}
-
-		public function use_local( $value ) {
-			throw new Exception;
-		}
-	}
-
-
-	class TribeEventsTickets_Stock_NoStockType extends TribeEventsTickets_Stock_AbstractType {
-
-		public function use_global( $value ) {
-			if ( $value ) {
-				return new TribeEventsTickets_Stock_GlobalType();
+			public function is_local() {
+				return ( $this->type instanceof TribeEventsTickets_Stock_LocalType || $this->type instanceof TribeEventsTickets_Stock_GlobalLocalType );
 			}
 
-			return $this;
-		}
+			public function is_global() {
+				return ( $this->type instanceof TribeEventsTickets_Stock_GlobalType || $this->type instanceof TribeEventsTickets_Stock_GlobalLocalType );
+			}
 
-		public function use_local( $value ) {
-			if ( $value ) {
+			public function is_global_and_local() {
+				return $this->type instanceof TribeEventsTickets_Stock_GlobalLocalType;
+			}
+
+			public function is_unlimited() {
+				return $this->type instanceof TribeEventsTickets_Stock_UnlimitedType;
+			}
+
+			public function set_type( TribeEventsTicket_Stock_Type $type ) {
+				$this->type = $type;
+			}
+		}
+	}
+
+	if ( ! interface_exists( 'TribeEventsTicket_Stock_Type' ) ) {
+		interface TribeEventsTicket_Stock_Type {
+
+			public function use_global( $value );
+
+			public function use_local( $value );
+		}
+	}
+
+	if ( ! class_exists( 'TribeEventsTickets_Stock_AbstractType' ) ) {
+		abstract class TribeEventsTickets_Stock_AbstractType implements TribeEventsTicket_Stock_Type {
+
+			public function use_global( $value ) {
+				throw new Exception;
+			}
+
+			public function use_local( $value ) {
+				throw new Exception;
+			}
+		}
+	}
+
+	if ( ! class_exists( 'TribeEventsTickets_Stock_UnlimitedType' ) ) {
+		class TribeEventsTickets_Stock_UnlimitedType extends TribeEventsTickets_Stock_AbstractType {
+
+			public function use_global( $value ) {
+				if ( $value ) {
+					return new TribeEventsTickets_Stock_GlobalType();
+				}
+
+				return $this;
+			}
+
+			public function use_local( $value ) {
+				if ( $value ) {
+					return new TribeEventsTickets_Stock_LocalType();
+				}
+
+				return $this;
+			}
+		}
+	}
+
+	if ( ! class_exists( 'TribeEventsTickets_Stock_LocalType' ) ) {
+		class TribeEventsTickets_Stock_LocalType extends TribeEventsTickets_Stock_AbstractType {
+
+			public function use_global( $value ) {
+				if ( $value ) {
+					return new TribeEventsTickets_Stock_GlobalLocalType();
+				}
+
+				return $this;
+			}
+
+			public function use_local( $value ) {
+				if ( $value ) {
+					return $this;
+				}
+
+				return new TribeEventsTickets_Stock_UnlimitedType();
+			}
+		}
+	}
+
+	if ( ! class_exists( 'TribeEventsTickets_Stock_GlobalType' ) ) {
+		class TribeEventsTickets_Stock_GlobalType extends TribeEventsTickets_Stock_AbstractType {
+
+			public function use_global( $value ) {
+				if ( $value ) {
+					return $this;
+				}
+
+				return new TribeEventsTickets_Stock_UnlimitedType;
+			}
+
+			public function use_local( $value ) {
+				if ( $value ) {
+					return new TribeEventsTickets_Stock_GlobalLocalType();
+				}
+
+				return $this;
+			}
+		}
+	}
+
+
+	if ( ! class_exists( 'TribeEventsTickets_Stock_GlobalLocalType' ) ) {
+		class TribeEventsTickets_Stock_GlobalLocalType extends TribeEventsTickets_Stock_AbstractType {
+
+			public function use_global( $value ) {
+				if ( $value ) {
+					return $this;
+				}
+
 				return new TribeEventsTickets_Stock_LocalType();
 			}
 
-			return $this;
+			public function use_local( $value ) {
+				if ( $value ) {
+					return $this;
+				}
+
+				return new TribeEventsTickets_Stock_GlobalLocalType;
+			}
 		}
 	}
 
-
-	class TribeEventsTickets_Stock_LocalType extends TribeEventsTickets_Stock_AbstractType {
-
-		public function use_global( $value ) {
-			if ( $value ) {
-				return new TribeEventsTickets_Stock_GlobalLocalType();
-			}
-
-			return $this;
-		}
-
-		public function use_local( $value ) {
-			if ( $value ) {
-				return $this;
-			}
-
-			return new TribeEventsTickets_Stock_NoStockType();
-		}
-	}
-
-
-	class TribeEventsTickets_Stock_GlobalType extends TribeEventsTickets_Stock_AbstractType {
-
-		public function use_global( $value ) {
-			if ( $value ) {
-				return $this;
-			}
-
-			return new TribeEventsTickets_Stock_NoStockType;
-		}
-
-		public function use_local( $value ) {
-			if ( $value ) {
-				return new TribeEventsTickets_Stock_GlobalLocalType();
-			}
-
-			return $this;
-		}
-	}
-
-
-	class TribeEventsTickets_Stock_GlobalLocalType extends TribeEventsTickets_Stock_AbstractType {
-
-		public function use_global( $value ) {
-			if ( $value ) {
-				return $this;
-			}
-
-			return new TribeEventsTickets_Stock_LocalType();
-		}
-
-		public function use_local( $value ) {
-			if ( $value ) {
-				return $this;
-			}
-
-			return new TribeEventsTickets_Stock_GlobalLocalType;
-		}
-	}
