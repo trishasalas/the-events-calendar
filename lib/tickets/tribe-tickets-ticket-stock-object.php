@@ -1,14 +1,20 @@
 <?php
+
 	if ( ! class_exists( 'TribeEventsTicketStockObject' ) ) {
 		class TribeEventsTicketStockObject {
 
 			protected $ticket;
 
-			public function __construct( TribeEventsTicketObject $ticket = null ) {
+			/** @var TribeEventsTicket_Stock_Type */
+			protected $type;
+
+			public function __construct( TribeEventsTicketObject $ticket = null, TribeEventsTicket_Stock_Type $type = null ) {
 				$this->ticket = $ticket;
+				$this->type = $type ? $type : new TribeEventsTickets_Stock_LocalType();
 			}
 
 			public function set_stock( $value ) {
+				$this->set_stock( $this->type->set_stock( $value ) );
 				if ( ! is_numeric( $value ) ) {
 					throw new Exception( 'Stock value must be a number' );
 				}
@@ -58,5 +64,109 @@
 				$meta_key = TribeEventsTicketObject::GLOBAL_STOCKS_META;
 				update_post_meta( $event->ID, $meta_key, $global_stocks );
 			}
+
+			public function get_type() {
+				return $this->type;
+			}
+		}
+	}
+
+
+	interface TribeEventsTicket_Stock_Type {
+
+		public function use_global( $value );
+
+		public function use_local( $value );
+	}
+
+
+	abstract class TribeEventsTickets_Stock_AbstractType implements TribeEventsTicket_Stock_Type {
+
+		public function use_global( $value ) {
+			throw new Exception;
+		}
+
+		public function use_local( $value ) {
+			throw new Exception;
+		}
+	}
+
+
+	class TribeEventsTickets_Stock_NoStockType extends TribeEventsTickets_Stock_AbstractType {
+
+		public function use_global( $value ) {
+			if ( $value ) {
+				return new TribeEventsTickets_Stock_GlobalType();
+			}
+
+			return $this;
+		}
+
+		public function use_local( $value ) {
+			if ( $value ) {
+				return new TribeEventsTickets_Stock_LocalType();
+			}
+
+			return $this;
+		}
+	}
+
+
+	class TribeEventsTickets_Stock_LocalType extends TribeEventsTickets_Stock_AbstractType {
+
+		public function use_global( $value ) {
+			if ( $value ) {
+				return new TribeEventsTickets_Stock_GlobalLocalType();
+			}
+
+			return $this;
+		}
+
+		public function use_local( $value ) {
+			if ( $value ) {
+				return $this;
+			}
+
+			return new TribeEventsTickets_Stock_NoStockType();
+		}
+	}
+
+
+	class TribeEventsTickets_Stock_GlobalType extends TribeEventsTickets_Stock_AbstractType {
+
+		public function use_global( $value ) {
+			if ( $value ) {
+				return $this;
+			}
+
+			return new TribeEventsTickets_Stock_NoStockType;
+		}
+
+		public function use_local( $value ) {
+			if ( $value ) {
+				return new TribeEventsTickets_Stock_GlobalLocalType();
+			}
+
+			return $this;
+		}
+	}
+
+
+	class TribeEventsTickets_Stock_GlobalLocalType extends TribeEventsTickets_Stock_AbstractType {
+
+		public function use_global( $value ) {
+			if ( $value ) {
+				return $this;
+			}
+
+			return new TribeEventsTickets_Stock_LocalType();
+		}
+
+		public function use_local( $value ) {
+			if ( $value ) {
+				return $this;
+			}
+
+			return new TribeEventsTickets_Stock_GlobalLocalType;
 		}
 	}
