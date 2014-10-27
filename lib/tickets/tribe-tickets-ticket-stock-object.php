@@ -1,10 +1,10 @@
 <?php
-	if ( ! class_exists( 'TribeEventsGlobalTicketStock' ) ) {
-		class TribeEventsGlobalTicketStock {
+	if ( ! class_exists( 'TribeEventsTicketStockObject' ) ) {
+		class TribeEventsTicketStockObject {
 
 			protected $ticket;
 
-			public function __construct( TribeEventsTicketObject $ticket ) {
+			public function __construct( TribeEventsTicketObject $ticket = null ) {
 				$this->ticket = $ticket;
 			}
 
