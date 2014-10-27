@@ -42,4 +42,14 @@
 			$this->assertEquals( $is_glocal, $sut->is_global_and_local() );
 			$this->assertEquals( $is_unlimited, $sut->is_unlimited() );
 		}
+
+		/**
+		 * @test
+		 * it should query the ticket for the global stock abilitation when constructing
+		 */
+		public function it_should_query_the_ticket_for_the_global_stock_abilitation_when_constructing() {
+			$ticket = $this->getMock('TribeEventsTicketObject', array('is_global_stock_enabled'));
+			$sut = new TribeEventsTicketStockObject($ticket);
+			//wwid
+		}
 	}
