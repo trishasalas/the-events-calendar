@@ -21,7 +21,7 @@
 			 *
 			 * @var
 			 */
-			public $ID;
+			protected $ID;
 			/**
 			 * Name of the ticket
 			 *
@@ -72,6 +72,11 @@
 			protected $stock_object;
 
 			/**
+			 * @var TribeEventsTickets_TicketMeta
+			 */
+			protected $meta_object;
+
+			/**
 			 * Amount of tickets of this kind sold
 			 *
 			 * @var int
@@ -99,7 +104,8 @@
 			 */
 			public $end_date;
 
-			final public function __construct( TribeEventsTicketsStockObject $stockObject = null ) {
+			final public function __construct( TribeEventsTickets_TicketMeta $meta_object = null, TribeEventsTicketsStockObject $stockObject = null ) {
+				$this->meta_object = $meta_object ? $meta_object : new TribeEventsTickets_TicketMeta( $this );
 				$this->stock_object = $stockObject ? $stockObject : new TribeEventsTicketStockObject( $this );
 			}
 
@@ -108,10 +114,14 @@
 					$this->stock_object->set_stock( $value );
 
 					return;
+				} else if ( $property == 'ID' ) {
+					$meta = $this->meta_object->get_meta();
+					$this->stock_object->set_stock_meta( $meta['stock_meta'] );
 				}
 
 				$this->$property = $value;
 			}
+
 
 			public function __get( $property ) {
 				if ( $property == 'stock' ) {
@@ -154,6 +164,63 @@
 				$this->stock_object = $stock_object;
 			}
 
+			public function set_meta_object( TribeEventsTickets_TicketMeta $meta_object ) {
+				$this->meta_object = $meta_object;
+			}
 
+			public function get_event_stock_meta() {
+				return $this->meta_object->get_event_stock_meta();
+			}
+
+			public function get_ticket_meta_object() {
+				return $this->meta_object;
+			}
+
+		}
+	}
+
+	if ( ! class_exists( 'TribeEventsTickets_TicketMeta' ) ) {
+		class TribeEventsTickets_TicketMeta {
+
+			protected $ticket;
+
+			public function __construct( TribeEventsTicketObject $ticket ) {
+				$this->ticket = $ticket;
+			}
+
+			public function get_meta() {
+				if ( ! $this->ticket->ID ) {
+					return array();
+				}
+				if ( $meta = get_post_meta( $this->ticket->ID, 'tribe_tickets_ticket_meta', true ) ) {
+					return wp_parse_args( self::get_meta_defaults(), $meta );
+				}
+
+				return array( self::get_meta_defaults() );
+			}
+
+			public static function get_meta_defaults() {
+				return array(
+					'stock_meta' => array(
+						'use_global'      => false,
+						'use_local'       => false,
+						'local_qty'       => TribeEventsTicketObject::UNLIMITED_STOCK,
+						'global_stock_id' => 'default'
+					)
+				);
+			}
+
+			public function get_event_stock_meta() {
+				$event = TribeEventsTickets::find_matching_event( $this->ticket->ID );
+				$meta = get_post_meta( $event->ID, TribeEventsTicketObject::GLOBAL_STOCKS_META, true );
+
+				return wp_parse_args( $this->get_event_stock_meta_defaults(), $meta );
+			}
+
+			public function get_event_stock_meta_defaults() {
+				return array(
+					'default' => TribeEventsTicketObject::UNLIMITED_STOCK
+				);
+			}
 		}
 	}
