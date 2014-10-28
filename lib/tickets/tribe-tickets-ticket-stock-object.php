@@ -22,10 +22,14 @@
 
 			public function set_stock( $value ) {
 				if ( $this->type->is_unlimited() ) {
-					$this->use_local( true );
+					return;
 				}
-				if ( $this->type->is_local() ) {
-					$this->local_qty = $value;
+				$delta = $this->get_stock() - $value;
+				if ( $this->type->is_local() || $this->type->is_global_and_local() ) {
+					$this->local_qty = $this->local_qty - $delta;
+				}
+				if ( $this->type->is_global_and_local() || $this->type->is_global() ) {
+					$this->set_global_qty( $this->get_global_qty() - $delta );
 				}
 //				if ( ! is_numeric( value ) ) {
 //					throw new Exception( 'Stock value must be a number' );
@@ -36,7 +40,8 @@
 //				update_post_meta( $event->ID, TribeEventsTicketObject::GLOBAL_STOCKS_META, $new_global_stocks, $old_global_stocks );
 			}
 
-			public function get_local_qty() { return ( $this->type->is_local() || $this->type->is_global_and_local() ) ? $this->local_qty : false;
+			public function get_local_qty() {
+				return ( $this->type->is_local() || $this->type->is_global_and_local() ) ? $this->local_qty : false;
 			}
 
 			public function get_global_qty() {
@@ -127,6 +132,12 @@
 
 			public function use_local( $value ) {
 				$this->set_type( $this->type->use_local( $value ) );
+			}
+
+			private function set_global_qty( $value ) {
+				if ( $this->type->is_global() || $this->type->is_global_and_local() ) {
+					$this->event_stock_meta[ $this->global_stock_id ] = $value;
+				}
 			}
 
 		}

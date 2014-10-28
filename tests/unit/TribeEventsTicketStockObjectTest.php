@@ -97,21 +97,6 @@
 
 		/**
 		 * @test
-		 * it should change to local stock type and set the quantity when setting a stock
-		 */
-		public function it_should_change_to_local_stock_type_and_set_the_quantity_when_setting_a_stock() {
-			list( $mock_ticket, $mock_ticket_meta ) = $this->get_mock_ticket_and_meta();
-			$sut = new TribeEventsTicketStockObject( $mock_ticket, $mock_ticket_meta );
-
-			$sut->set_stock( 23 );
-
-			$this->assertTrue( $sut->type->is_local() );
-			$this->assertEquals( 23, $sut->get_stock() );
-			$this->assertEquals( 23, $sut->get_local_qty() );
-		}
-
-		/**
-		 * @test
 		 * it should set stock meta when set_stock_meta method is called
 		 */
 		public function it_should_set_stock_meta_when_set_stock_meta_method_is_called() {
@@ -176,5 +161,46 @@
 			$this->assertEquals( $global_stock_qty, $sut->get_global_qty() );
 			$this->assertEquals( $expected, $sut->get_stock() );
 		}
+public function new_glocal_values(){
+//	$global_qty, $local_qty, $new_value, $expected_global_qty, $expected_local_qty, $expected_stock
+	return array(
+		array(10, 5, 3, 8, 3, 3),
+		array(10, 20, 1, 1, 11, 1),
+		array(20, 20, 10, 10, 10, 10),
+		array(20, 0, 5, 25, 5, 5),
+		array(0, 10, 15, 15, 25, 15),
+		array(0, 0, 7, 7, 7, 7),
+	    array(20, 0, 0, 20, 0, 0)
+	);
+}
+		/**
+		 * @test
+		 * it should properly set the global and the local stock is ticket is global and local
+		 * @dataProvider new_glocal_values
+		 */
+		public function it_should_properly_set_the_global_and_the_local_stock_is_ticket_is_global_and_local( $global_qty, $local_qty, $new_value, $expected_global_qty, $expected_local_qty, $expected_stock ) {
+			$mock_ticket = $this->getMockBuilder( 'TribeEventsTicketObject' )->disableOriginalConstructor()->getMock();
+			$mock_ticket_meta = $this->getMockBuilder( 'TribeEventsTicket_TicketMeta' )
+			                         ->setMethods( array( 'get_event_stock_meta' ) )->disableOriginalConstructor()
+			                         ->getMock();
 
+			$sut = new TribeEventsTicketStockObject( $mock_ticket, $mock_ticket_meta );
+
+			$event_stock_meta = array( 'default' => $global_qty );
+			$mock_ticket_meta->expects( $this->any() )->method( 'get_event_stock_meta' )
+			                 ->will( $this->returnValue( $event_stock_meta ) );
+			$meta = array(
+				'use_global'      => true,
+				'use_local'       => true,
+				'local_qty'       => $local_qty,
+				'global_stock_id' => 'default'
+			);
+			$sut->set_stock_meta( $meta );
+
+			$sut->set_stock( $new_value );
+
+			$this->assertEquals( $expected_local_qty, $sut->get_local_qty() );
+			$this->assertEquals( $expected_global_qty, $sut->get_global_qty() );
+			$this->assertEquals( $expected_stock, $sut->get_stock() );
+		}
 	}
