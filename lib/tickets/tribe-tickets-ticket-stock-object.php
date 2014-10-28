@@ -1,5 +1,4 @@
 <?php
-
 	if ( ! class_exists( 'TribeEventsTicketStockObject' ) ) {
 		class TribeEventsTicketStockObject {
 
@@ -13,8 +12,9 @@
 			protected $local_qty;
 			protected $global_stock_id;
 			protected $event_stock_meta;
+			protected $ticket_meta;
 
-			public function __construct( TribeEventsTicketObject $ticket = null, TribeEventsTicket_TicketMeta $ticket_meta = null, TribeEventsTicket_Stock_Type $type = null ) {
+			public function __construct( TribeEventsTicketObject $ticket, TribeEventsTicket_TicketMeta $ticket_meta = null, TribeEventsTicket_Stock_Type $type = null ) {
 				$this->ticket = $ticket;
 				$this->ticket_meta = $ticket_meta ? $ticket_meta : $this->ticket->get_ticket_meta_object();
 				$this->type = $type ? $type : new TribeEventsTickets_Stock_UnlimitedType();
@@ -36,8 +36,7 @@
 //				update_post_meta( $event->ID, TribeEventsTicketObject::GLOBAL_STOCKS_META, $new_global_stocks, $old_global_stocks );
 			}
 
-			public function get_local_qty() {
-				return ( $this->type->is_local() || $this->type->is_global_and_local() ) ? $this->local_qty : false;
+			public function get_local_qty() { return ( $this->type->is_local() || $this->type->is_global_and_local() ) ? $this->local_qty : false;
 			}
 
 			public function get_global_qty() {
@@ -129,6 +128,7 @@
 			public function use_local( $value ) {
 				$this->set_type( $this->type->use_local( $value ) );
 			}
+
 		}
 	}
 	if ( ! interface_exists( 'TribeEventsTicket_Stock_Type' ) ) {

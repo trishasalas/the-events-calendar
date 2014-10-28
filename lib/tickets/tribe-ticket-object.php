@@ -214,10 +214,10 @@
 				$event = TribeEventsTickets::find_matching_event( $this->ticket->ID );
 				$meta = get_post_meta( $event->ID, TribeEventsTicketObject::GLOBAL_STOCKS_META, true );
 
-				return wp_parse_args( $this->get_event_stock_meta_defaults(), $meta );
+				return wp_parse_args( self::get_event_stock_meta_defaults(), $meta );
 			}
 
-			public function get_event_stock_meta_defaults() {
+			public static function get_event_stock_meta_defaults() {
 				return array(
 					'default' => TribeEventsTicketObject::UNLIMITED_STOCK
 				);
