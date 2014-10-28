@@ -13,10 +13,10 @@
 		 * @test
 		 * it should default to local stock
 		 */
-		public function it_should_default_to_local_stock() {
+		public function it_should_default_to_unlimited_stock() {
 			$sut = new TribeEventsTicketStockObject();
 
-			$this->assertInstanceOf( 'TribeEventsTickets_Stock_LocalType', $sut->get_type() );
+			$this->assertInstanceOf( 'TribeEventsTickets_Stock_UnlimitedType', $sut->get_type() );
 		}
 
 		public function types_and_queries() {

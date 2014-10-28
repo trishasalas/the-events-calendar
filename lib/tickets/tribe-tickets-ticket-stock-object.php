@@ -8,15 +8,9 @@
 			/** @var TribeEventsTicket_Stock_Type */
 			protected $type;
 
-			/**
-			 * @var bool
-			 */
-			protected $global_stock_enabled;
-
 			public function __construct( TribeEventsTicketObject $ticket = null, TribeEventsTicket_Stock_Type $type = null ) {
 				$this->ticket = $ticket;
-				$this->global_stock_enabled = $this->ticket->is_global_stock_enabled();
-				$this->type = $type ? $type : new TribeEventsTickets_Stock_LocalType();
+				$this->type = $type ? $type : new TribeEventsTickets_Stock_UnlimitedType();
 			}
 
 			public function set_stock( $value ) {
