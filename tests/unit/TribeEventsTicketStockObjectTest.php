@@ -137,11 +137,23 @@
 			$this->assertEquals( 23, $sut->get_stock() );
 		}
 
+		public function smaller_quantities() {
+			return array(
+				array( 23, 12, 12 ),
+				array( 12, 12, 12 ),
+				array( 12, 23, 12 ),
+				array( 0, 12, 0 ),
+				array( 0, 0, 0 ),
+				array( 12, 0, 0 )
+			);
+		}
+
 		/**
 		 * @test
 		 * it should return the min between local and global set if both set
+		 * @dataProvider smaller_quantities
 		 */
-		public function it_should_return_the_min_between_local_and_global_set_if_both_set() {
+		public function it_should_return_the_min_between_local_and_global_set_if_both_set( $global_stock_qty, $local_stock_qty, $expected ) {
 			$mock_ticket = $this->getMockBuilder( 'TribeEventsTicketObject' )->disableOriginalConstructor()->getMock();
 			$mock_ticket_meta = $this->getMockBuilder( 'TribeEventsTicket_TicketMeta' )
 			                         ->setMethods( array( 'get_event_stock_meta' ) )->disableOriginalConstructor()
@@ -149,19 +161,20 @@
 
 			$sut = new TribeEventsTicketStockObject( $mock_ticket, $mock_ticket_meta );
 
-			$event_stock_meta = array( 'default' => 12 );
+			$event_stock_meta = array( 'default' => $global_stock_qty );
 			$mock_ticket_meta->expects( $this->any() )->method( 'get_event_stock_meta' )
-			                       ->will( $this->returnValue( $event_stock_meta ) );
+			                 ->will( $this->returnValue( $event_stock_meta ) );
 			$meta = array(
 				'use_global'      => true,
 				'use_local'       => true,
-				'local_qty'       => 23,
+				'local_qty'       => $local_stock_qty,
 				'global_stock_id' => 'default'
 			);
 			$sut->set_stock_meta( $meta );
 
-			$this->assertEquals( 23, $sut->get_local_qty() );
-			$this->assertEquals( 12, $sut->get_global_qty() );
-			$this->assertEquals( 12, $sut->get_stock() );
+			$this->assertEquals( $local_stock_qty, $sut->get_local_qty() );
+			$this->assertEquals( $global_stock_qty, $sut->get_global_qty() );
+			$this->assertEquals( $expected, $sut->get_stock() );
 		}
+
 	}
