@@ -17,12 +17,12 @@
 		 * @test
 		 * it should default to local stock
 		 */
-		public function it_should_default_to_unlimited_stock() {
+		public function it_should_default_to_local_stock() {
 
 			list( $mock_ticket, $mock_ticket_meta ) = $this->get_mock_ticket_and_meta();
 			$sut = new TribeEventsTicketStockObject( $mock_ticket, $mock_ticket_meta );
 
-			$this->assertInstanceOf( 'TribeEventsTickets_Stock_UnlimitedType', $sut->type );
+			$this->assertInstanceOf( 'TribeEventsTickets_Stock_LocalType', $sut->type );
 		}
 
 		/**
@@ -202,5 +202,13 @@ public function new_glocal_values(){
 			$this->assertEquals( $expected_local_qty, $sut->get_local_qty() );
 			$this->assertEquals( $expected_global_qty, $sut->get_global_qty() );
 			$this->assertEquals( $expected_stock, $sut->get_stock() );
+		}
+
+		/**
+		 * @test
+		 * it should handle unlimited stock ticket setting not setting the stock
+		 */
+		public function it_should_handle_unlimited_stock_ticket_setting_not_setting_the_stock() {
+
 		}
 	}

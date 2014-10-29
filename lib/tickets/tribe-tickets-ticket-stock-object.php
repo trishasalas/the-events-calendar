@@ -17,7 +17,7 @@
 			public function __construct( TribeEventsTicketObject $ticket, TribeEventsTicket_TicketMeta $ticket_meta = null, TribeEventsTicket_Stock_Type $type = null ) {
 				$this->ticket = $ticket;
 				$this->ticket_meta = $ticket_meta ? $ticket_meta : $this->ticket->get_ticket_meta_object();
-				$this->type = $type ? $type : new TribeEventsTickets_Stock_UnlimitedType();
+				$this->type = $type ? $type : new TribeEventsTickets_Stock_LocalType();
 			}
 
 			public function set_stock( $value ) {
