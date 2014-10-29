@@ -177,6 +177,30 @@
 				return $this->ticket_meta_object;
 			}
 
+			public function has_global_stock() {
+				$has_local_stock = $this->stock_object->type->is_global() || $this->stock_object->type->is_global_and_local();
+
+				return $has_local_stock;
+			}
+
+			public function has_local_stock() {
+				$has_global_stock = $this->stock_object->type->is_local() || $this->stock_object->type->is_global_and_local();
+
+				return $has_global_stock;
+			}
+
+			public function has_unlimited_stock() {
+				return $this->stock_object->type->is_unlimited();
+			}
+
+			public function use_global_stock( $value ) {
+				$this->stock_object->use_global( $value );
+			}
+
+			public function use_local_stock( $value ) {
+				$this->stock_object->use_local( $value );
+			}
+
 		}
 	}
 
@@ -282,15 +306,18 @@
 			}
 
 			public function get_event_stock_meta( $key = null ) {
-				$this->event_meta = self::get_event_stock_meta_defaults();
+				if ( ! $this->event_meta ) {
+					$this->event_meta = self::get_event_stock_meta_defaults();
+				}
 				if ( ! $this->ticket->ID ) {
 					return $this->event_meta;
 				}
 				$event = TribeEventsTickets::find_matching_event( $this->ticket->ID );
-				$this->event = $event;
-				$event_meta = get_post_meta( $event->ID, TribeEventsTicketObject::GLOBAL_STOCKS_META, true );
-
-				$this->event_meta = wp_parse_args( $this->event_meta, $event_meta );
+				if ( $event ) {
+					$this->event = $event;
+					$event_meta = get_post_meta( $event->ID, TribeEventsTicketObject::GLOBAL_STOCKS_META, true );
+					$this->event_meta = wp_parse_args( $this->event_meta, $event_meta );
+				}
 
 				if ( is_string( $key ) ) {
 					if ( isset( $this->event_meta[ $key ] ) ) {
