@@ -121,7 +121,7 @@
 				'use_global' => $use_global, 'use_local' => $use_local, 'local_qty' => $local_qty,
 				'global_stock_id' => $global_stock_id
 			);
-			$mock_ticket_meta->expects( $this->any() )->method( 'get_meta' )->will( $this->returnValue( $meta ) );
+			$mock_ticket_meta->expects( $this->any() )->method( 'get_stock_meta' )->will( $this->returnValue( $meta ) );
 			$mock_ticket_meta->expects( $this->any() )->method( 'get_local_qty' )
 			                 ->will( $this->returnValue( $local_qty ) );
 			$mock_ticket_meta->expects( $this->any() )->method( 'get_global_qty' )
@@ -157,7 +157,7 @@
 			$meta = array(
 				'use_global' => true, 'use_local' => true, 'local_qty' => $local_qty, 'global_stock_id' => 'default'
 			);
-			$mock_ticket_meta->expects( $this->any() )->method( 'get_meta' )->will( $this->returnValue( $meta ) );
+			$mock_ticket_meta->expects( $this->any() )->method( 'get_stock_meta' )->will( $this->returnValue( $meta ) );
 			$mock_ticket_meta->expects( $this->any() )->method( 'get_local_qty' )
 			                 ->will( $this->returnValue( $local_qty ) );
 			$mock_ticket_meta->expects( $this->any() )->method( 'get_global_qty' )
@@ -191,7 +191,7 @@
 			$meta = array(
 				'use_global' => true, 'use_local' => true, 'local_qty' => $local_qty, 'global_stock_id' => 'default'
 			);
-			$mock_ticket_meta->expects( $this->any() )->method( 'get_meta' )->will( $this->returnValue( $meta ) );
+			$mock_ticket_meta->expects( $this->any() )->method( 'get_stock_meta' )->will( $this->returnValue( $meta ) );
 			$mock_ticket_meta->expects( $this->any() )->method( 'get_local_qty' )
 			                 ->will( $this->returnValue( $local_qty ) );
 			$mock_ticket_meta->expects( $this->any() )->method( 'get_global_qty' )
