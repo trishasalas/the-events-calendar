@@ -8,68 +8,74 @@
 			protected $ticket;
 
 			/** @var TribeEventsTicket_Stock_Type */
-			public    $type;
-			protected $local_qty;
+			public $type;
+
+			/**
+			 * @var string
+			 */
 			protected $global_stock_id;
-			protected $event_stock_meta;
+
+			/**
+			 * @var TribeEventsTickets_TicketMeta
+			 */
 			protected $ticket_meta;
 
-			public function __construct( TribeEventsTicketObject $ticket, TribeEventsTicket_TicketMeta $ticket_meta = null, TribeEventsTicket_Stock_Type $type = null ) {
-				$this->ticket = $ticket;
-				$this->ticket_meta = $ticket_meta ? $ticket_meta : $this->ticket->get_ticket_meta_object();
-				$this->type = $type ? $type : new TribeEventsTickets_Stock_LocalType();
+			public static function from_ticket( TribeEventsTicketObject $ticket, TribeEventsTickets_TicketMeta $ticket_meta = null, TribeEventsTicket_Stock_Type $type = null ) {
+				$instance = new self;
+				$instance->ticket = $ticket;
+				$instance->set_ticket_meta( $ticket_meta );
+				$instance->type = $type ? $type : new TribeEventsTickets_Stock_LocalType();
+
+				return $instance;
 			}
 
 			public function set_stock( $value ) {
 				if ( $this->type->is_unlimited() ) {
 					return;
 				}
+
 				$delta = $this->get_stock() - $value;
+
 				if ( $this->type->is_local() || $this->type->is_global_and_local() ) {
-					$this->local_qty = $this->local_qty - $delta;
+					$new_local_qty = $this->ticket_meta->get_local_qty() - $delta;
+					$this->ticket_meta->set_local_qty( $new_local_qty );
 				}
 				if ( $this->type->is_global_and_local() || $this->type->is_global() ) {
-					$this->set_global_qty( $this->get_global_qty() - $delta );
+					$new_global_qty = $this->ticket_meta->get_global_qty( $this->global_stock_id ) - $delta;
+					$this->ticket_meta->set_global_qty( $this->global_stock_id, $new_global_qty );
 				}
-//				if ( ! is_numeric( value ) ) {
-//					throw new Exception( 'Stock value must be a number' );
-//				}
-//				$event = TribeEventsTickets::find_matching_event( $this->ticket->ID );
-//				$new_global_stocks = $old_global_stocks = $this->get_global_stocks( $event );
-//				$new_global_stocks[ $this->ticket->global_stock_id ] = (int) $value;
-//				update_post_meta( $event->ID, TribeEventsTicketObject::GLOBAL_STOCKS_META, $new_global_stocks, $old_global_stocks );
 			}
 
 			public function get_local_qty() {
-				return ( $this->type->is_local() || $this->type->is_global_and_local() ) ? $this->local_qty : false;
+				return ( $this->type->is_local() || $this->type->is_global_and_local() ) ? $this->ticket_meta->get_local_qty() : false;
 			}
 
 			public function get_global_qty() {
-				return ( $this->type->is_global() || $this->type->is_global_and_local() ) ? $this->event_stock_meta[ $this->global_stock_id ] : false;
+				return ( $this->type->is_global() || $this->type->is_global_and_local() ) ? $this->ticket_meta->get_global_qty( $this->global_stock_id ) : false;
 			}
 
 			public function get_global_stock_id() {
 				return $this->global_stock_id ? $this->global_stock_id : '';
 			}
 
-			public function set_stock_meta( $meta = null ) {
-				if ( ! is_array( $meta ) ) {
+			public function update_from_meta() {
+				if ( ! $this->ticket_meta ) {
 					return;
 				}
+
+				$meta = $this->ticket_meta->get_meta();
+				$this->global_stock_id = $meta['global_stock_id'];
+
+				// reset the ticket type
+				$this->use_local( false );
+				$this->use_global( false );
+
 				if ( isset( $meta['use_global'] ) ) {
 					$this->use_global( (bool) $meta['use_global'] );
 				}
 				if ( isset( $meta['use_local'] ) ) {
 					$this->use_local( (bool) $meta['use_local'] );
 				}
-				if ( isset( $meta['local_qty'] ) && is_numeric( $meta['local_qty'] ) ) {
-					$this->local_qty = (int) $meta['local_qty'];
-				}
-				if ( isset( $meta['global_stock_id'] ) && is_string( $meta['global_stock_id'] ) ) {
-					$this->global_stock_id = $meta['global_stock_id'];
-				}
-
-				$this->event_stock_meta = $this->ticket_meta->get_event_stock_meta();
 			}
 
 			/**
@@ -99,11 +105,11 @@
 
 			public function get_stock() {
 				if ( $this->type->is_local() ) {
-					return $this->local_qty;
+					return $this->ticket_meta->get_local_qty();
 				} else if ( $this->type->is_global() ) {
-					return $this->get_global_qty();
+					return $this->ticket_meta->get_global_qty( $this->global_stock_id );
 				} else if ( $this->type->is_global_and_local() ) {
-					return min( $this->local_qty, $this->get_global_qty() );
+					return min( $this->ticket_meta->get_local_qty(), $this->ticket_meta->get_global_qty( $this->global_stock_id ) );
 				}
 
 				return TribeEventsTicketObject::UNLIMITED_STOCK;
@@ -124,6 +130,12 @@
 
 			protected function set_type( TribeEventsTicket_Stock_Type $type ) {
 				$this->type = $type;
+				if ( $this->type->is_global() || $this->type->is_global_and_local() ) {
+					$this->ticket_meta->set_use_global( true );
+				}
+				if ( $this->type->is_local() || $this->type->is_global_and_local() ) {
+					$this->ticket_meta->set_use_local( true );
+				}
 			}
 
 			public function use_global( $value ) {
@@ -136,8 +148,15 @@
 
 			private function set_global_qty( $value ) {
 				if ( $this->type->is_global() || $this->type->is_global_and_local() ) {
-					$this->event_stock_meta[ $this->global_stock_id ] = $value;
+					$this->ticket_meta->set_global_qty( $this->global_stock_id, $value );
 				}
+			}
+
+			/**
+			 * @param TribeEventsTickets_TicketMeta $ticket_meta
+			 */
+			public function set_ticket_meta( TribeEventsTickets_TicketMeta $ticket_meta = null ) {
+				$this->ticket_meta = $ticket_meta ? $ticket_meta : $this->ticket->get_ticket_meta_object();
 			}
 
 		}

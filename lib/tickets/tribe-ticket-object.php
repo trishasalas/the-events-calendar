@@ -74,7 +74,7 @@
 			/**
 			 * @var TribeEventsTickets_TicketMeta
 			 */
-			protected $meta_object;
+			protected $ticket_meta_object;
 
 			/**
 			 * Amount of tickets of this kind sold
@@ -104,9 +104,9 @@
 			 */
 			public $end_date;
 
-			final public function __construct( TribeEventsTickets_TicketMeta $meta_object = null, TribeEventsTicketsStockObject $stockObject = null ) {
-				$this->meta_object = $meta_object ? $meta_object : new TribeEventsTickets_TicketMeta( $this );
-				$this->stock_object = $stockObject ? $stockObject : new TribeEventsTicketStockObject( $this );
+			final public function __construct( TribeEventsTickets_TicketMeta $meta_object = null, TribeEventsTicketStockObject $stockObject = null ) {
+				$this->ticket_meta_object = $meta_object ? $meta_object : TribeEventsTickets_TicketMeta::from_ticket( $this );
+				$this->stock_object = $stockObject ? $stockObject : TribeEventsTicketStockObject::from_ticket( $this );
 			}
 
 			public function __set( $property, $value ) {
@@ -115,8 +115,8 @@
 
 					return;
 				} else if ( $property == 'ID' ) {
-					$meta = $this->meta_object->get_meta();
-					$this->stock_object->set_stock_meta( $meta['stock_meta'] );
+					$this->ticket_meta_object->fetch_meta();
+					$this->stock_object->update_from_meta();
 				}
 
 				$this->$property = $value;
@@ -165,15 +165,15 @@
 			}
 
 			public function set_meta_object( TribeEventsTickets_TicketMeta $meta_object ) {
-				$this->meta_object = $meta_object;
+				$this->ticket_meta_object = $meta_object;
 			}
 
 			public function get_event_stock_meta() {
-				return $this->meta_object->get_event_stock_meta();
+				return $this->ticket_meta_object->get_event_stock_meta();
 			}
 
 			public function get_ticket_meta_object() {
-				return $this->meta_object;
+				return $this->ticket_meta_object;
 			}
 
 		}
@@ -184,43 +184,146 @@
 
 			protected $ticket;
 
-			public function __construct( TribeEventsTicketObject $ticket ) {
-				$this->ticket = $ticket;
+			protected $event;
+
+			protected $meta_key = 'tribe_tickets_ticket_meta';
+			protected $meta;
+			protected $event_meta;
+
+			public static function from_ticket( TribeEventsTicketObject $ticket ) {
+				$instance = new self();
+				$instance->ticket = $ticket;
+
+				return $instance;
 			}
 
-			public function get_meta() {
-				if ( ! $this->ticket->ID ) {
-					return array();
-				}
-				if ( $meta = get_post_meta( $this->ticket->ID, 'tribe_tickets_ticket_meta', true ) ) {
-					return wp_parse_args( self::get_meta_defaults(), $meta );
+			public function get_use_local() {
+				return $this->get_meta( 'use_local' );
+			}
+
+			public function set_use_local( $value = null ) {
+				$this->meta['use_local'] = (bool) $value;
+				$this->update_ticket_meta();
+			}
+
+			public function get_use_global() {
+				return $this->get_meta( 'use_global' );
+			}
+
+			public function set_use_global( $value = null ) {
+				$this->meta['use_global'] = (bool) $value;
+				$this->update_ticket_meta();
+			}
+
+			public function get_local_qty() {
+				return $this->get_meta( 'local_qty' );
+			}
+
+			public function set_local_qty( $value ) {
+				$this->meta['local_qty'] = (int) $value;
+				$this->update_ticket_meta();
+			}
+
+			public function get_global_stock_id() {
+				return $this->get_meta( 'global_stock_id' );
+			}
+
+			public function set_global_stock_id( $global_stock_id ) {
+				$this->meta['global_stock_id'] = '' . $global_stock_id;
+				$this->update_ticket_meta();
+			}
+
+			public function get_global_qty( $stock_id ) {
+				return $this->get_event_stock_meta( $stock_id );
+			}
+
+			public function set_global_qty( $stock_id, $value ) {
+				$this->event_meta[ (string) $stock_id ] = (int) $value;
+				$this->update_event_meta();
+			}
+
+			public function get_meta( $key = null ) {
+				$this->fetch_meta();
+
+				if ( is_string( $key ) ) {
+					if ( isset( $this->meta[ $key ] ) ) {
+						return $this->meta[ $key ];
+					}
+
+					return '';
 				}
 
-				return array( self::get_meta_defaults() );
+				return $this->meta;
 			}
 
 			public static function get_meta_defaults() {
 				return array(
 					'stock_meta' => array(
 						'use_global'      => false,
-						'use_local'       => false,
+						'use_local'       => true,
 						'local_qty'       => TribeEventsTicketObject::UNLIMITED_STOCK,
 						'global_stock_id' => 'default'
 					)
 				);
 			}
 
-			public function get_event_stock_meta() {
+			public function get_event_stock_meta( $key = null ) {
+				$this->event_meta = self::get_event_stock_meta_defaults();
+				if ( ! $this->ticket->ID ) {
+					return $this->event_meta;
+				}
 				$event = TribeEventsTickets::find_matching_event( $this->ticket->ID );
-				$meta = get_post_meta( $event->ID, TribeEventsTicketObject::GLOBAL_STOCKS_META, true );
+				$this->event = $event;
+				$event_meta = get_post_meta( $event->ID, TribeEventsTicketObject::GLOBAL_STOCKS_META, true );
 
-				return wp_parse_args( self::get_event_stock_meta_defaults(), $meta );
+				$this->event_meta = wp_parse_args( $this->event_meta, $event_meta );
+
+				if ( is_string( $key ) ) {
+					if ( isset( $this->event_meta[ $key ] ) ) {
+						return $this->event_meta[ $key ];
+					}
+
+					return '';
+				}
+
+				return $this->event_meta;
 			}
 
 			public static function get_event_stock_meta_defaults() {
 				return array(
 					'default' => TribeEventsTicketObject::UNLIMITED_STOCK
 				);
+			}
+
+			protected function update_ticket_meta() {
+				if ( ! $this->ticket->ID ) {
+					return;
+				}
+
+				udpate_post_meta( $this->ticket->ID, $this->meta_key, $this->meta );
+			}
+
+			private function update_event_meta() {
+				if ( ! $this->event ) {
+					return;
+				}
+
+				udpate_post_meta( $this->event->ID, TribeEventsTicketObject::GLOBAL_STOCKS_META, $this->event_meta );
+			}
+
+			public function __destruct() {
+				$this->update_ticket_meta();
+				$this->update_event_meta();
+			}
+
+			public function fetch_meta() {
+				if ( $this->meta ) {
+					return;
+				}
+				$this->meta = self::get_meta_defaults();
+				if ( $this->ticket->ID && $ticket_meta = get_post_meta( $this->ticket->ID, $this->meta_key, true ) ) {
+					$this->meta = wp_parse_args( $this->meta, $ticket_meta );
+				}
 			}
 		}
 	}
