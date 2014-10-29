@@ -10,6 +10,34 @@ if ( ! class_exists( 'TribeEventsTickets' ) ) {
 	abstract class TribeEventsTickets {
 
 		/**
+		 * The meta key that will store a ticket global stock data
+		 *
+		 * The meta value is an array in the format:
+		 *
+*@var bool global_stock_use True if a ticket affects a global stock, false ohterwise.
+		 *      @var string global_stock_id The name of the global stock, stored in the event meta
+		 *             this ticket sale will affect.
+		 *
+		 * Defaults to ['global_stock_use': false, 'global_stock_id': 'default']
+		 *
+		 * @var string
+		 */
+		private static $global_stock_key = '_ticket_global_stock_data';
+
+		/**
+		 * The meta key an event will use to store the global stocks information.
+		 *
+		 * The meta value is an array in the format of key/value pairs like
+		 *      @var string the global stock name
+		 *      @var int the current amount of tickets the global stock contains
+		 *
+		 * Defaults to ['default': '']
+		 *
+		 * @var string
+		 */
+		private static $global_ticket_stocks_key = '_global_ticket_stocks';
+
+		/**
 		 * All TribeEventsTickets api consumers. It's static, so it's shared across all child.
 		 *
 		 * @var array
@@ -672,6 +700,19 @@ if ( ! class_exists( 'TribeEventsTickets' ) ) {
 			}
 
 			return apply_filters( 'tribe_events_tickets_template_' . $template, $file );
+		}
+
+		protected function get_global_stock_data( $event_id, $ticket_id ) {
+			$global_stock_data = get_post_meta( $ticket_id, $this->global_stock_key, true );
+			$global_stock_use = is_array( $global_stock_data && isset( $global_stock_data['global_stock_use'] ) ) ? $global_stock_data['global_stock_use'] : false;
+			$global_stock_value = TribeEventsTicketObject::UNLIMITED_STOCK;
+			if ( $global_stock_use ) {
+				$global_stock_id = isset( $global_stock_data['global_stock_id'] ) ? $global_stock_data['global_stock_id'] : 'default';
+				$global_stock_event_meta = get_post_meta( $event_id, $this->global_ticket_stocks_key, true );
+				$global_stock_value = is_array( $global_stock_event_meta ) && isset( $global_stock_event_meta[ $global_stock_id ] ) ? $global_stock_event_meta[ $global_stock_id ] : TribeEventsTicketObject::UNLIMITED_STOCK;
+			}
+
+			return array( $global_stock_use, $global_stock_value );
 		}
 		// end Helpers
 	}
