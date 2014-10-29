@@ -63,45 +63,20 @@
 					return;
 				}
 
-				$meta = $this->ticket_meta->get_meta();
-				$this->global_stock_id = $meta['global_stock_id'];
+				$stock_meta = $this->ticket_meta->get_stock_meta();
+				$this->global_stock_id = $stock_meta['global_stock_id'];
 
 				// reset the ticket type
 				$this->use_local( false );
 				$this->use_global( false );
 
-				if ( isset( $meta['use_global'] ) ) {
-					$this->use_global( (bool) $meta['use_global'] );
+				if ( isset( $stock_meta['use_global'] ) ) {
+					$this->use_global( (bool) $stock_meta['use_global'] );
 				}
-				if ( isset( $meta['use_local'] ) ) {
-					$this->use_local( (bool) $meta['use_local'] );
+				if ( isset( $stock_meta['use_local'] ) ) {
+					$this->use_local( (bool) $stock_meta['use_local'] );
 				}
 			}
-
-			/**
-			 * Returns the global stocks array stored as an event meta.
-			 *
-			 * @param bool /WP_Post $event Either a `WP_Post` instance or `false`
-			 *
-			 * @return array The global stocks stored in the event meta.
-			 *               The array will have the format `global_stock_id/value`:
-			 *
-			 *                  ['global_stock_1': 20, 'global_stock_2': 10]
-			 *
-			 * @throws Exception if the event object is false
-			 */
-//			protected function get_global_stocks( $event ) {
-//				if ( ! $event ) {
-//					throw new Exception( 'There was a problem retrieving the event for the ticket' );
-//				}
-//				$global_stocks = $event->{TribeEventsTicketObject::GLOBAL_STOCKS_META};
-//				if ( ! $global_stocks ) {
-//					$global_stocks = array();
-//					$this->update_event_stock_meta( $event, $global_stocks );
-//				}
-//
-//				return $global_stocks;
-//			}
 
 			public function get_stock() {
 				if ( $this->type->is_local() ) {
@@ -113,20 +88,7 @@
 				}
 
 				return TribeEventsTicketObject::UNLIMITED_STOCK;
-//				$event = TribeEventsTickets::find_matching_event( $this->ticket->ID );
-//				$global_stocks = $this->get_global_stocks( $event );
-//				if ( ! isset( $global_stocks[ $this->ticket->global_stock_id ] ) ) {
-//					$global_stocks[ $this->ticket->global_stock_id ] = 0;
-//					$this->update_event_stock_meta( $event, $global_stocks );
-//				}
-
-//				return $global_stocks[ $this->ticket->global_stock_id ];
 			}
-
-//			protected function update_event_stock_meta( $event, array $global_stocks ) {
-//				$meta_key = TribeEventsTicketObject::GLOBAL_STOCKS_META;
-//				update_post_meta( $event->ID, $meta_key, $global_stocks );
-//			}
 
 			protected function set_type( TribeEventsTicket_Stock_Type $type ) {
 				$this->type = $type;
