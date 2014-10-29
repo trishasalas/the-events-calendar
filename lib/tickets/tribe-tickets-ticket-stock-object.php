@@ -108,6 +108,10 @@
 				$this->set_type( $this->type->use_local( $value ) );
 			}
 
+			public function set_global_stock_id( $global_stock_id = 'default' ) {
+				$this->global_stock_id = $global_stock_id;
+			}
+
 			private function set_global_qty( $value ) {
 				if ( $this->type->is_global() || $this->type->is_global_and_local() ) {
 					$this->ticket_meta->set_global_qty( $this->global_stock_id, $value );

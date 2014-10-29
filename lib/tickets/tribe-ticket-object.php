@@ -177,10 +177,14 @@
 				return $this->ticket_meta_object;
 			}
 
-			public function has_global_stock() {
-				$has_local_stock = $this->stock_object->type->is_global() || $this->stock_object->type->is_global_and_local();
+			public function has_global_stock( $global_stock_id = null ) {
+				$check = $this->stock_object->type->is_global() || $this->stock_object->type->is_global_and_local();
+				if ( $global_stock_id ) {
+					$same_global_stock_id = $this->stock_object->get_global_stock_id() == (string) $global_stock_id;
+					$check = $check && $same_global_stock_id;
+				}
 
-				return $has_local_stock;
+				return $check;
 			}
 
 			public function has_local_stock() {
@@ -193,7 +197,8 @@
 				return $this->stock_object->type->is_unlimited();
 			}
 
-			public function use_global_stock( $value ) {
+			public function use_global_stock( $value, $global_stock_id = 'default' ) {
+				$this->stock_object->set_global_stock_id( $global_stock_id );
 				$this->stock_object->use_global( $value );
 			}
 
