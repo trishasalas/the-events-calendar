@@ -42,6 +42,7 @@ var ticketHeaderImage = window.ticketHeaderImage || {};
 	};
 
 
+
 	$( document ).ready( function() {
 
 		var datepickerOpts = {
@@ -282,6 +283,13 @@ var ticketHeaderImage = window.ticketHeaderImage || {};
 							$( '.ticket_end_time' ).show();
 						}
 
+						$('#ticket_stock' ).val(response.data.stock);
+						var $global_stock_use_checkbox = $( '#ticket_global_stock_use' ), $global_stock_value_input = $( '#ticket_global_stock_value' );
+						$global_stock_use_checkbox.prop('checked', response.data.global_stock_use);
+						$global_stock_value_input.val(response.data.global_stock_value);
+
+						set_global_stock_input_visibility( $global_stock_use_checkbox, $global_stock_value_input );
+
 						$( 'tr.ticket_advanced_' + response.data.provider_class ).remove();
 						$( 'tr.ticket.bottom' ).before( response.data.advanced_fields );
 
@@ -323,6 +331,11 @@ var ticketHeaderImage = window.ticketHeaderImage || {};
 
 		} );
 
+		/* Handle showing/hiding the global stock fields */
+		$('#ticket_global_stock_use' ).change(function(){
+			set_global_stock_input_visibility();
+		});
+
 		/* Helper functions */
 
 		function ticket_clear_form() {
@@ -352,6 +365,23 @@ var ticketHeaderImage = window.ticketHeaderImage || {};
 		function tribe_fix_image_width() {
 			if ( $( '#tribetickets' ).width() < $tiximg.width() ) {
 				$tiximg.css( "width", '95%' );
+			}
+		}
+
+		function set_global_stock_input_visibility( $global_stock_use_checkbox, $global_stock_value_input ) {
+			var $cb = $global_stock_use_checkbox || $( '#ticket_global_stock_use' );
+
+			if (!$cb ) {
+				return;
+			}
+
+			var $input = $global_stock_value_input || $( '#ticket_global_stock_value' );
+			var $input_row = $input.closest('tr.ticket' );
+
+			if ( $cb.prop( 'checked' ) === false ) {
+				$input_row.hide();
+			} else {
+				$input_row.show();
 			}
 		}
 
