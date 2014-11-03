@@ -10,19 +10,26 @@ if ( ! class_exists( 'TribeEventsTickets' ) ) {
 	abstract class TribeEventsTickets {
 
 		/**
-		 * The meta key that will store a ticket global stock data
+		 * The meta key the tickes uses to store the global stock option.
 		 *
-		 * The meta value is an array in the format:
-		 *
-*@var bool global_stock_use True if a ticket affects a global stock, false ohterwise.
-		 *      @var string global_stock_id The name of the global stock, stored in the event meta
-		 *             this ticket sale will affect.
-		 *
-		 * Defaults to ['global_stock_use': false, 'global_stock_id': 'default']
+		 * The stored value will be read and written as truthy or falsy and should
+		 * be used a toggle.
 		 *
 		 * @var string
 		 */
-		private static $global_stock_key = '_ticket_global_stock_data';
+		private $global_stock_use_key = '_ticket_global_stock_use';
+
+		/**
+		 * The meta key the ticket will use to store the id of the global
+		 * stock it uses.
+		 *
+		 * This will default to "default" and should match one of the keys
+		 * of the array stored under the "_global_ticket_stocks" meta key
+		 * by the event.
+		 *
+		 * @var string
+		 */
+		private $global_stock_id_key = '_ticket_global_stock_id';
 
 		/**
 		 * The meta key an event will use to store the global stocks information.
@@ -30,12 +37,12 @@ if ( ! class_exists( 'TribeEventsTickets' ) ) {
 		 * The meta value is an array in the format of key/value pairs like
 		 *      @var string the global stock name
 		 *      @var int the current amount of tickets the global stock contains
-		 *
+		 *      e.g. ['default': '', 'upper_balcony': 100, 'lower_balcony': 150 ]
 		 * Defaults to ['default': '']
 		 *
 		 * @var string
 		 */
-		private static $global_ticket_stocks_key = '_global_ticket_stocks';
+		private $event_global_stocks_key = '_global_ticket_stocks';
 
 		/**
 		 * All TribeEventsTickets api consumers. It's static, so it's shared across all child.
@@ -702,18 +709,78 @@ if ( ! class_exists( 'TribeEventsTickets' ) ) {
 			return apply_filters( 'tribe_events_tickets_template_' . $template, $file );
 		}
 
-		protected function get_global_stock_data( $event_id, $ticket_id ) {
-			$global_stock_data = get_post_meta( $ticket_id, $this->global_stock_key, true );
-			$global_stock_use = is_array( $global_stock_data && isset( $global_stock_data['global_stock_use'] ) ) ? $global_stock_data['global_stock_use'] : false;
-			$global_stock_value = TribeEventsTicketObject::UNLIMITED_STOCK;
-			if ( $global_stock_use ) {
-				$global_stock_id = isset( $global_stock_data['global_stock_id'] ) ? $global_stock_data['global_stock_id'] : 'default';
-				$global_stock_event_meta = get_post_meta( $event_id, $this->global_ticket_stocks_key, true );
-				$global_stock_value = is_array( $global_stock_event_meta ) && isset( $global_stock_event_meta[ $global_stock_id ] ) ? $global_stock_event_meta[ $global_stock_id ] : TribeEventsTicketObject::UNLIMITED_STOCK;
+		/**
+		 * Checks if a ticket affects a global stock or not.
+		 *
+		 * @see get_post_meta
+		 * @param $ticket_id
+		 *
+		 * @return bool|void Will return null if `ticket_id` is not numeric.
+		 */
+		protected  function uses_global_stock($ticket_id)	{
+			if (!is_numeric($ticket_id) ) {
+				return;
 			}
+			$meta = get_post_meta((int)$ticket_id, $this->global_stock_use_key, true);
+			$global_stock_use = is_array( $meta && isset( $meta[ $this->$global_stock_use_key ] ) ) ? $meta[ $this->$global_stock_use_key ] : false;
 
-			return array( $global_stock_use, $global_stock_value );
+			return $global_stock_use;
 		}
+
+		/**
+		 * Gets the id of the global stock a ticket affects or should affect.
+		 *
+		 * Note that the ticket might NOT be affecting any global stock due to
+		 * "_global_stock_use" meta key setting but this function will return the
+		 * global stock id nonetheless.
+		 *
+		 * @see get_post_meta
+		 *
+		 * @param $ticket_id
+		 *
+		 * @return string|void The global stock id or null if `ticket_id` is not numeric.
+		 */
+		protected function get_global_stock_id($ticket_id){
+			if (!is_numeric($ticket_id)) {
+				return false;
+			}
+			$meta = get_post_meta($ticket_id, $this->$global_stock_key, true);
+				$global_stock_id = isset( $global_stock_data[ $this->$global_stock_meta_data_key ] ) ? $global_stock_data[ $this->$global_stock_meta_data_key ] : 'default';
+
+			return $global_stock_id;
+		}
+
+		/**
+		 * Returns the value of the global stock the ticket affects.
+		 *
+		 * Please note that if the ticket is set to affect a global stock but no
+		 * global stock identified by the ticket global stock id is present in the
+		 * event meta then the unlimited stock value will be returned.
+		 *
+		 * @param $ticket_id
+		 * @param $event_id
+		 *
+		 * @return bool|string|void Null if the ticket or evetn IDs are not numeric; false
+		 *                          if the ticket does not affect a global stock; the global
+		 *                          stock value otherwise.
+		 */
+		protected function get_global_stock_value($ticket_id, $event_id){
+			$event_id = $this->get_event_for_ticket($this->ID);
+			if (!(is_numeric($ticket_id) && is_numeric($event_id)) ) {
+				return;
+			}
+			$ticket_global_stock_use = $this->uses_global_stock($ticket_id);
+			if (!$ticket_global_stock_use) {
+				return false;
+			}
+			$ticket_global_stock_id = $this->get_global_stock_id($ticket_id);
+			$event_global_stocks = get_post_meta($event_id, $this->event_global_stocks_key, true);
+			if (!(is_array($event_global_stocks) && count($event_global_stocks) && isset($event_global_stocks[$ticket_global_stock_id]))) {
+				return $event_global_stocks[$ticket_global_stock_id];
+			}
+			return TribeEventsTicketObject::UNLIMITED_STOCK;
+		}
+
 		// end Helpers
 	}
 }
