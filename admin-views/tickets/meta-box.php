@@ -173,6 +173,30 @@ $modules = TribeEventsTickets::modules();
 					</td>
 				</tr>
 
+				<tr class="ticket">
+					<td><label for="ticket_stock"><?php esc_html_e( 'Stock:', 'tribe-events-calendar' ); ?></label></td>
+					<td>
+						<input type='text' id='ticket_stock' name='ticket_stock' class="ticket_field" size='7'
+						       value='<?php echo esc_attr( '5' ); ?>'/>
+						<p class="description"><?php esc_html_e( "(Total available # of this ticket type. Once they're gone, ticket type is sold out)", 'tribe-events-calendar' ); ?></p>
+					</td>
+				</tr>
+
+				<tr class="ticket">
+					<td><label for="ticket_global_stock_use"><?php esc_html_e( 'Use global stock:', 'tribe-events-calendar' ); ?></label></td>
+					<td>
+						<input type='checkbox' id='ticket_global_stock_use' name='ticket_global_stock_use' class="ticket_field" value='global_stock_use'/>
+						<p class="description"><?php esc_html_e( "This ticket will affect the global stock.", 'tribe-events-calendar' ); ?></p>
+					</td>
+				</tr>
+
+				<tr class="ticket">
+					<td><label for="ticket_global_stock_value"><?php esc_html_e( 'Global stock:', 'tribe-events-calendar' ); ?></label></td>
+					<td>
+						<input type='text' id='ticket_global_stock_value' name='ticket_global_stock_value' class="ticket_field" size='7' value=''/>
+						<p class="description"><?php esc_html_e( "No matter the ticket stock when this is 0 no more tickets will be sold.", 'tribe-events-calendar' ); ?></p>
+					</td>
+				</tr>
 
 				<?php do_action( 'tribe_events_tickets_metabox_advanced', get_the_ID(), null ); ?>
 
