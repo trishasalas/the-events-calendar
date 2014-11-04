@@ -287,6 +287,7 @@ if ( ! class_exists( 'TribeEvents' ) ) {
 			require_once 'tickets/tribe-ticket-object.php';
 			require_once 'tickets/tribe-tickets.php';
 			require_once 'tickets/tribe-tickets-metabox.php';
+			require_once 'tickets/tribe-tickets-global-stock.php';
 
 			// CSV Importer
 			require_once 'io/csv/ecp-events-importer.php';
