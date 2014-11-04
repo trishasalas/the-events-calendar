@@ -144,6 +144,10 @@
 			return $this->event_global_stocks[ $this->global_stock_id ];
 		}
 
+		public function get_global_stock_data() {
+			return array( $this->global_stock_use, $this->get_global_stock_value() );
+		}
+
 //		protected function update_event_global_stock_meta( $event_id, $ticket_global_stock_id, $value ) {
 //			$event_stock_meta = get_post_meta( $event_id, $this->event_global_stocks_key, true );
 //			$event_stock_meta = is_array( $event_stock_meta ) ? $event_stock_meta : array();
