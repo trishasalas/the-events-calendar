@@ -85,5 +85,19 @@ if ( ! class_exists( 'TribeEventsTicketObject' ) ) {
 		 */
 		public $end_date;
 
+		/**
+		 * Whether the ticket will affect a global stock or not.
+		 *
+		 * @var bool
+		 */
+		public $global_stock_use;
+
+		/**
+		 * The amount of the affected global stock.
+		 *
+		 * @var int
+		 */
+		public $global_stock_value;
+
 	}
 }
