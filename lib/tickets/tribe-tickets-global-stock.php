@@ -128,15 +128,10 @@
 		 * no matter if the ticket affects a global stock or not.
 		 *
 		 * @return int|string Either the value of the global stock or the string
-		 *                    that represents the unlimited stock if the ticket
-		 *                    does not affect a global stock or the affected global
-		 *                    stock is not stored in the event meta.
+		 *                    that represents the unlimited stock if the global
+		 *                    stock value is not set.
 		 */
 		public function get_global_stock_value() {
-			if ( ! $this->global_stock_use ) {
-				return TribeEventsTicketObject::UNLIMITED_STOCK;
-			}
-
 			if ( ! isset( $this->event_global_stocks[ $this->global_stock_id ] ) ) {
 				return TribeEventsTicketObject::UNLIMITED_STOCK;
 			}
@@ -144,28 +139,31 @@
 			return $this->event_global_stocks[ $this->global_stock_id ];
 		}
 
+		/**
+		 * Gets the ticket global stock use option and global stock value.
+		 *
+		 * @return array [global_stock_use, global_stock_value]
+		 */
 		public function get_global_stock_data() {
 			return array( $this->global_stock_use, $this->get_global_stock_value() );
 		}
 
-//		protected function update_event_global_stock_meta( $event_id, $ticket_global_stock_id, $value ) {
-//			$event_stock_meta = get_post_meta( $event_id, $this->event_global_stocks_key, true );
-//			$event_stock_meta = is_array( $event_stock_meta ) ? $event_stock_meta : array();
-//			$event_stock_meta[ $ticket_global_stock_id ] = $value;
-//
-//			update_post_meta( $event_id, $this->event_global_stocks_key, $event_stock_meta );
-//		}
-//
-//		protected function maybe_update_global_stock( $event_id, $ticket, $raw_data ) {
-//			$ticket_uses_global_stock = isset( $raw_data['ticket_global_stock_use'] ) ? true : false;
-//			update_post_meta( $ticket->ID, $this->global_stock_use_key, $ticket_uses_global_stock );
-//
-//			if ( $ticket_uses_global_stock ) {
-//				$ticket_global_stock_id = $this->get_global_stock_id( $ticket->ID );
-//				$value = isset( $raw_data['ticket_global_stock_value'] ) && is_numeric( $raw_data['ticket_global_stock_value'] ) ? (int) $raw_data['ticket_global_stock_value'] : TribeEventsTicketObject::UNLIMITED_STOCK;
-//				$this->update_event_global_stock_meta( $event_id, $ticket_global_stock_id, $value );
-//			}
-//		}
+		public function save_global_stock_information( array $formData = array() ) {
+			$use_key = 'ticket_global_stock_use';
+			$value_key = 'ticket_global_stock_value';
+			// might be a form input in the future
+			$global_stock_id = $this->global_stock_id;
+			$ticket_uses_global_stock = isset( $formData[ $use_key ] ) ? 1 : 0;
+			$global_stock_value = ( isset( $formData[ $value_key ] ) && is_numeric( $formData[ $value_key ] ) ) ? $formData[ $value_key ] : TribeEventsTicketObject::UNLIMITED_STOCK;
+
+			$this->event_global_stocks[ $global_stock_id ] = $global_stock_value;
+			$this->global_stock_use = $ticket_uses_global_stock;
+			// might be used to save the new global stock id in the future
+			// $this->global_stock_id = $global_stock_id;
+
+			$this->update_event_global_stocks_meta();
+			$this->update_ticket_global_stocks_meta();
+		}
 
 		private function init_from_meta() {
 			$this->global_stock_id = get_post_meta( $this->ticket_id, $this->global_stock_id_key, true );
@@ -178,5 +176,15 @@
 			$this->global_stock_id = $this->global_stock_id !== '' ? $this->global_stock_id : 'default';
 			// event global stock information will be empty by default
 			$this->event_global_stocks = is_array( $this->event_global_stocks ) ? $this->event_global_stocks : array();
+		}
+
+		protected function update_event_global_stocks_meta() {
+			update_post_meta( $this->event_id, $this->event_global_stocks_key, $this->event_global_stocks );
+		}
+
+		protected function update_ticket_global_stocks_meta() {
+			update_post_meta( $this->ticket_id, $this->global_stock_use_key, $this->global_stock_use );
+			// there might be the option to set the ticket global stock meta in the future
+			// update_post_meta( $this->ticket_id, $this->global_stock_id_key, $this->global_stock_id );
 		}
 	}
