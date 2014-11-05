@@ -95,9 +95,26 @@ if ( ! class_exists( 'TribeEventsTicketObject' ) ) {
 		/**
 		 * The amount of the affected global stock.
 		 *
-		 * @var int
+		 * @var int|string Either an int or the UNLIMITED_STOCK constant.
 		 */
 		public $global_stock_value;
+
+		/**
+		 * The amount of a ticket stock taking the global stock into account.
+		 *
+		 * A ticket not affecting a global stock will store its stock value,
+		 * a ticket affecting a global stock will store the minimum between
+		 * the global stock and the ticket own stock.
+		 * If a ticket has a stock of 20 and the global stock is 100 then this
+		 * value will be 20; if a ticket has a stock of 20 and the global stock
+		 * is 10 then this value will be 10.
+		 * If one value is unlimited this value will be the integer one, smaller
+		 * by definition.
+		 * If both values are unlimited then this value will be UNLIMITED_STOCK.
+		 *
+		 * @var int|string Either an int or the UNLIMITED_STOCK constant.
+		 */
+		public $global_stock_wise_value;
 
 	}
 }
