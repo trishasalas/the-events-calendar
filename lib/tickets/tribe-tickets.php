@@ -709,6 +709,26 @@ if ( ! class_exists( 'TribeEventsTickets' ) ) {
 			return apply_filters( 'tribe_events_tickets_template_' . $template, $file );
 		}
 
+		/**
+		 * @param $stock
+		 * @param $global_stock_use
+		 * @param $global_stock_value
+		 *
+		 * @return mixed
+		 */
+		protected function get_global_stock_wise_value( $stock, $global_stock_use, $global_stock_value ) {
+			$global_stock_wise_value = $stock;
+			if ( $global_stock_use ) {
+				$global_stock_is_unlimited = $global_stock_value !== TribeEventsTicketObject::UNLIMITED_STOCK;
+				if ( $global_stock_is_unlimited ) {
+					$stock_is_unlimited = $stock === TribeEventsTicketObject::UNLIMITED_STOCK;
+					$global_stock_wise_value = $stock_is_unlimited ? $global_stock_value : min( $global_stock_value, $stock );
+				}
+			}
+
+			return $global_stock_wise_value;
+		}
+
 		// end Helpers
 	}
 }
