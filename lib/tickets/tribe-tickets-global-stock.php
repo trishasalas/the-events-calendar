@@ -188,7 +188,7 @@
 			$this->event_global_stocks = get_post_meta( $this->event_id, $this->event_global_stocks_key, true );
 
 			// will not use the global stock by default
-			$this->global_stock_use = is_bool( $this->global_stock_use ) ? $this->global_stock_use : false;
+			$this->global_stock_use = is_bool( (bool)$this->global_stock_use ) ? (bool)$this->global_stock_use : false;
 			// will use the 'default' global stock by default
 			$this->global_stock_id = $this->global_stock_id !== '' ? $this->global_stock_id : 'default';
 			// event global stock information will be empty by default
