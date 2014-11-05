@@ -148,6 +148,11 @@
 			return array( $this->global_stock_use, $this->get_global_stock_value() );
 		}
 
+		/**
+		 * Saves a ticket global stock related information.
+		 *
+		 * @param array $formData
+		 */
 		public function save_global_stock_information( array $formData = array() ) {
 			$use_key = 'ticket_global_stock_use';
 			$value_key = 'ticket_global_stock_value';
