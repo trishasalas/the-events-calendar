@@ -76,6 +76,14 @@
 		 */
 		protected $event_id;
 
+		/**
+		 * Returns a global stock information object built on the ticket.
+		 *
+		 * @param int              $ticket_id
+		 * @param null|int|WP_Post $event_id
+		 *
+		 * @return null|Tribe__Events__Tickets__Global_Stock null if `$ticket_id` is not numeric, `$event_id` is not null or an int or a WP_Post or if any other issue arises; an instance of the class otherwise.
+		 */
 		public static function from_ticket( $ticket_id, $event_id = null ) {
 			if ( ! is_numeric( $ticket_id ) ) {
 				return null;
@@ -90,6 +98,10 @@
 				$instance->event_id = is_a( $event_id, 'WP_Post' ) ? $event_id->ID : (int) $event_id;
 			} else {
 				$instance->event_id = $instance->tribe_events_tickets->get_event_for_ticket( $instance->ticket_id );
+			}
+
+			if ( ! $instance->event_id ) {
+				return null;
 			}
 
 			$instance->init_from_meta();
