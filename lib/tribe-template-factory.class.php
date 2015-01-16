@@ -142,11 +142,11 @@ if ( ! class_exists( 'Tribe_Template_Factory' ) ) {
 
 		/**
 		 * @param string $name The asset name in the `hyphen-separated-format`
-		 * @param array $deps the
-		 * @param $vendor_url
-		 * @param $prefix
-		 * @param $resources_url
-		 * @param $tec
+		 * @param array $deps An array of dependency handles
+		 * @param string $vendor_url URL to vendor scripts and styles dir
+		 * @param string $prefix MT script and style prefix
+		 * @param string $resources_url URL to resources scripts and styles dir
+		 * @param TribeEvents $tec An instance of the main plugin class
 		 */
 		protected static function handle_asset_package_request( $name, $deps, $vendor_url, $prefix, $resources_url, $tec ) {
 
