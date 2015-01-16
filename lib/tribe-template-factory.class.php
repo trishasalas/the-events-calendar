@@ -141,6 +141,8 @@ if ( ! class_exists( 'Tribe_Template_Factory' ) ) {
 		}
 
 		/**
+		 * Handles an asset package request.
+		 *
 		 * @param string $name The asset name in the `hyphen-separated-format`
 		 * @param array $deps An array of dependency handles
 		 * @param string $vendor_url URL to vendor scripts and styles dir
