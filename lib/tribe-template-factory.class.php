@@ -166,7 +166,7 @@ if ( ! class_exists( 'Tribe_Template_Factory' ) ) {
 		}
 
 		/**
-		 * @param string $script_handle
+		 * @param string $script_handle A registered script handle.
 		 */
 		public static function add_vendor_script( $script_handle ) {
 			if ( in_array( $script_handle, self::$vendor_scripts ) ) {
