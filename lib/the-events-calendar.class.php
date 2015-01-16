@@ -271,6 +271,8 @@ if ( ! class_exists( 'TribeEvents' ) ) {
 			require_once 'Backcompat.php';
 			require_once $this->pluginPath . 'lib/Credits.php';
 			require_once $this->pluginPath . 'lib/Admin/Event_Meta_Box.php';
+			// @todo remove when autoloading in place
+			require_once $this->pluginPath . 'lib/Asset/Factory.php';
 
 			// Load Template Classes
 			require_once 'template-classes/month.php';
