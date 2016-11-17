@@ -1,5 +1,7 @@
 .DS_Store
 .idea
+.floo
+.flooignore
 
 node_modules
 
@@ -17,13 +19,16 @@ vendor
 !vendor/jquery
 !vendor/jquery-placeholder
 !vendor/jquery-resize
-!vendor/select2
 !vendor/tickets
 !vendor/tribe-common-libraries
+!vendor/ForceUTF8
+!vendor/php-date-formatter
 
 # Tests - local config files
 codeception.yml
 tests/acceptance.suite.yml
+tests/integration.suite.yml
+tests/muintegration.suite.yml
 tests/functional.suite.yml
 tests/unit.suite.yml
 
@@ -36,5 +41,4 @@ tests/acceptance/_bootstrap.php
 tests/functional/_bootstrap.php
 tests/unit/_bootstrap.php
 
-# Tests - local data files
-tests/_data/dump.sql
+tests/_output/*

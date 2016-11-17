@@ -1,3 +1,100 @@
+var tribe_timepickers = tribe_timepickers || {};
+
+( function ( $, obj ) {
+	"use strict";
+
+	obj.selector = {
+		container  : '.tribe-datetime-block',
+		timepicker : '.tribe-timepicker',
+		all_day    : '#allDayCheckbox',
+		timezone   : '.tribe-field-timezone'
+	};
+
+	obj.timepicker = {
+		opts: {
+			forceRoundTime: false,
+			step: 30,
+		}
+	};
+
+	obj.timezone = {
+		link: _.template( '<a href="#" class="tribe-change-timezone"><%= label %> <%= timezone %></a>' )
+	}
+
+	obj.$ = {};
+
+	obj.container = function( k, container ) {
+		var $container = $( container ),
+			$all_day = $container.find( obj.selector.all_day ),
+			$timepicker = $container.find( obj.selector.timepicker ),
+			$timezone = $container.find( obj.selector.timezone ),
+
+			// Create the Link
+			$timezone_link = $( obj.timezone.link( { label: $timezone.data( 'timezoneLabel' ), timezone: $timezone.data( 'timezoneValue' ) } ) );
+
+		// Toggle Timepickers on All Day change
+		$all_day.on( 'change', function() {
+			if ( true === $all_day.prop( 'checked' ) ) {
+				$timepicker.hide();
+			} else {
+				$timepicker.show();
+			}
+		} ).trigger( 'change' );
+
+		obj.setup_timepickers( $timepicker );
+
+		// Attach a Click action the Timezone Link
+		$timezone_link.on( 'click', function( e ) {
+			e.preventDefault();
+
+			$timezone_link.hide();
+			$timezone.show().select2();
+		} );
+
+		// Append the Link to the Timezone
+		$timezone.after( $timezone_link );
+	};
+
+	obj.init = function() {
+		obj.$.containers = $( obj.selector.container );
+		obj.$.containers.each( obj.container );
+	};
+
+	/**
+	 * Initializes timepickers
+	 */
+	obj.setup_timepickers = function( $timepickers ) {
+		// Setup all Timepickers
+		$timepickers.each( function() {
+			var $item = $( this ),
+				opts = $.extend( {}, obj.timepicker.opts );
+
+			if ( $item.data( 'format' ) ) {
+				opts.timeFormat = $item.data( 'format' );
+			}
+
+			// By default the step is 15
+			if ( $item.data( 'step' ) ) {
+				opts.step = $item.data( 'step' );
+			}
+
+			// Passing anything but 0 or 'false' will make it round to the nearest step
+			var round = $item.data( 'round' );
+			if (
+				round &&
+				0 != round &&
+				'false' !== round
+			) {
+				opts.forceRoundTime = true;
+			}
+
+			$item.timepicker( opts ).trigger( 'change' );
+		} );
+	};
+
+	$( document ).ready( obj.init );
+} ( jQuery, tribe_timepickers ) );
+
 /*
  * Date Format 1.2.3
  * (c) 2007-2009 Steven Levithan <stevenlevithan.com>
@@ -146,6 +243,9 @@ jQuery( document ).ready( function( $ ) {
 
 	$( '.bumpdown-trigger' ).bumpdown();
 
+	/**
+	 * Setup Datepicker
+	 */
 	var $date_format      = $( '[data-datepicker_format]' ),
 		$view_select      = $( '.tribe-field-dropdown_select2 select' ),
 		viewCalLinkHTML   = $( '#view-calendar-link-div' ).html(),
@@ -201,46 +301,112 @@ jQuery( document ).ready( function( $ ) {
 	}
 
 
-	var setup_organizer_fields = function() {
-		var saved_organizer_template = wp.template('tribe-select-organizer');
-		var create_organizer_template = wp.template('tribe-create-organizer');
-		var organizer_section = $('#event_organizer');
-		var organizer_rows = organizer_section.find('.saved_organizer');
+	var setup_linked_post_fields = function( post_type ) {
+		var saved_template = $( document.getElementById( 'tmpl-tribe-select-' + post_type ) ).length ? wp.template( 'tribe-select-' + post_type ) : null;
+		var create_template = $( document.getElementById( 'tmpl-tribe-create-' + post_type ) ).length ? wp.template( 'tribe-create-' + post_type ) : null;
+		var section = $( document.getElementById( 'event_' + post_type ) );
+		var rows = section.find( '.saved-linked-post' );
 
-		organizer_section.on( 'click', '.tribe-add-organizer', function(e) {
+		section.on( 'click', '.tribe-add-post', function(e) {
 			e.preventDefault();
-			var dropdown = $( saved_organizer_template({}) );
+			var dropdown = $({}), fields = $({});
+
+			if ( saved_template ) {
+				dropdown = $( saved_template({}) );
+			}
+
 			if ( dropdown.find( '.nosaved' ).length ) {
 				var label = dropdown.find( 'label' );
-				label.text( label.data( 'l10n-create-organizer' ) );
+				label.text( label.data( 'l10n-create-' + post_type ) );
 				dropdown.find( '.nosaved' ).remove();
 			}
-			var fields = $( create_organizer_template({}) );
-			organizer_section.find('tfoot').before( fields );
+
+			if ( create_template ) {
+				fields = $( create_template({}) );
+			}
+
+			section.find( 'tfoot' ).before( fields );
 			fields.prepend( dropdown );
-			fields.find('.chosen').chosen().trigger('change');
+			fields.find( '.chosen' ).chosen().trigger( 'change' );
 		});
 
-		organizer_section.on('change', '.organizer-dropdown', toggle_organizer_fields);
-		organizer_rows.each( function () {
+		section.on( 'change', '.linked-post-dropdown', toggle_linked_post_fields );
+
+		/**
+		 * Populates the linked post type fields with previously submitted data to
+		 * give them sticky form qualities.
+		 *
+		 * @param fields
+		 */
+		function add_sticky_linked_post_data( post_type, container, fields ) {
+			// Bail if expected global sticky data array is not set
+			if ( 'undefined' === typeof window['tribe_sticky_' + post_type + '_fields'] || ! $.isArray( window['tribe_sticky_' + post_type + '_fields'] ) ) {
+				return;
+			}
+
+			var $fields = $( fields );
+
+			// bail if the fields are not about this container
+			if ( $fields.filter( 'tr.linked-post.' + container ).length === 0 ) {
+				return;
+			}
+
+			// The linked post type fields also need sticky field behaviour: populate
+			// them if we've been provided with the necessary data to do so
+			var sticky_data = window['tribe_sticky_' + post_type + '_fields'].shift();
+
+			if ( 'object' === typeof sticky_data ) {
+				for ( var key in sticky_data ) {
+					// Check to see if we have a field of this name
+					var $field = $( fields ).find( 'input[name="' + container + '[' + key + '][]"]' );
+
+					if ( ! $field.length ) {
+						continue;
+					}
+
+					// Set the value accordingly
+					$field.val( sticky_data[ key ] );
+				}
+			}
+		}
+
+		rows.each( function () {
 			var row = $( this );
 			var group = row.closest( 'tbody' );
-			var fields = $( create_organizer_template( {} ) ).find( '.organizer' ); // we already have our tbody
-			var dropdown = row.find( '.organizer-dropdown' );
+			var fields;
+
+			if ( create_template ) {
+				fields = $( create_template( {} ) ).find( 'tr' ); // we already have our tbody
+			} else {
+				fields = group.find( 'tr' ).slice( 2 );
+			}
+
+			var dropdown = row.find( '.linked-post-dropdown' );
 			if ( dropdown.length ) {
 				var value = dropdown.val();
-				if ( value != '0' ) {
-					fields.hide();
+				if ( 0 !== parseInt( value, 10 ) ) {
+					//hide all fields, but those with not-linked class i.e. Google Map Settings
+					fields.not( '.remain-visible' ).hide();
 				}
 			} else if ( row.find( '.nosaved' ).length ) {
 				var label = row.find( 'label' );
-				label.text( label.data( 'l10n-create-organizer' ) );
+				label.text( label.data( 'l10n-create-' + post_type ) );
 				row.find( '.nosaved' ).remove();
 			}
+
+			// Populate the fields with any sticky data then add them to the page
+			for ( var i in tribe_events_linked_posts.post_types ) {
+				if ( ! tribe_events_linked_posts.post_types.hasOwnProperty( i ) ) {
+					continue;
+				}
+
+				add_sticky_linked_post_data( i, tribe_events_linked_posts.post_types[ i ], fields );
+			}
+
 			group.append( fields );
 		} );
 
-		organizer_section.on( 'click', '.delete-organizer-group', function(e) {
+		section.on( 'click', '.tribe-delete-this', function(e) {
 			e.preventDefault();
 			var group = $(this).closest( 'tbody' );
 			group.fadeOut( 500, function() { $(this).remove(); } );
@@ -252,27 +418,27 @@ jQuery( document ).ready( function( $ ) {
 			sortable_items = 'table ' + sortable_items;
 		}
 
-		organizer_section.sortable({
+		section.sortable({
 			items: sortable_items,
-			handle: '.move-organizer-group',
+			handle: '.move-linked-post-group',
 			axis: 'y',
-			delay: 100,
+			delay: 100
 		});
 
 	};
 
-	var toggle_organizer_fields = function() {
-		var dropdown = $(this);
-		var selected_organizer_id = dropdown.val();
-		var group = dropdown.closest('tbody');
-		var edit_link = group.find('.edit-organizer-link a');
+	var toggle_linked_post_fields = function() {
+		var dropdown           = $( this );
+		var selected_id        = dropdown.val();
+		var group              = dropdown.closest( 'tbody' );
+		var edit_link          = group.find( '.edit-linked-post-link a' );
 		var edit_link_base_url = edit_link.attr( 'data-admin-url' );
 
-		if ( selected_organizer_id != '0' ) {
-			group.find('.organizer').fadeOut().find('input').val('');
-			edit_link.attr( 'href', edit_link_base_url + selected_organizer_id).show();
+		if ( selected_id != '0' ) {
+			group.find( '.linked-post' ).fadeOut().find( 'input' ).val( '' );
+			edit_link.attr( 'href', edit_link_base_url + selected_id ).show();
 		} else {
-			group.find('.organizer').fadeIn();
+			group.find( '.linked-post' ).fadeIn();
 			edit_link.hide();
 		}
 	};
@@ -333,20 +499,22 @@ jQuery( document ).ready( function( $ ) {
 						.datepicker( 'option', option, endDate )
 						.datepicker( 'setDate', endDate );
 				} else {
+
 					dates
 						.not( this )
 						.not( '.tribe-no-end-date-update' )
 						.datepicker( 'option', option, date );
 				}
+
+				// fire the change and blur handlers on the field
+				$( this ).change();
+				$( this ).blur();
 			}
 		};
 
 		$.extend( tribe_datepicker_opts, TEC );
 
 		var dates = $( '.tribe-datepicker' ).datepicker( tribe_datepicker_opts );
-		var $all_day_check = $( '#allDayCheckbox' );
-		var $tod_options = $( ".timeofdayoptions" );
-		var $time_format = $( "#EventTimeFormatDiv" );
 		var $start_end_month = $( "select[name='EventStartMonth'], select[name='EventEndMonth']" );
 		var $start_month = $( "select[name='EventStartMonth']" );
 		var $end_month = $( 'select[name="EventEndMonth"]' );
@@ -363,26 +531,6 @@ jQuery( document ).ready( function( $ ) {
 				( '' !== $el.val() ) && $el.val( tribeDateFormat( $el.val(), datepicker_format ) );
 			})
 		}
-
-		// toggle time input
-
-		function toggleDayTimeDisplay() {
-			if ( $all_day_check.prop( 'checked' ) === true ) {
-				$tod_options.hide();
-				$time_format.hide();
-			}
-			else {
-				$tod_options.show();
-				$time_format.show();
-			}
-		}
-
-		$all_day_check
-			.click( function() {
-				toggleDayTimeDisplay();
-			} );
-
-		toggleDayTimeDisplay();
 
 		var tribeDaysPerMonth = [29, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 
@@ -436,57 +584,39 @@ jQuery( document ).ready( function( $ ) {
 			$end_month.change();
 		} );
 
-		// hide unnecessary fields
-		var venueFields = $( ".venue" ),
-			savedVenue = $( "#saved_venue" );
+		for ( var i in tribe_events_linked_posts.post_types ) {
+			if ( ! tribe_events_linked_posts.post_types.hasOwnProperty( i ) ) {
+				continue;
+			}
 
-		if ( savedVenue.length > 0 && savedVenue.val() != '0' ) {
-			venueFields.hide();
-			$( '[name="venue[Venue]"]' ).val( '' );
+			setup_linked_post_fields( i );
 		}
-
-		savedVenue.change( function() {
-			var selected_venue_id = $(this).val(),
-				current_edit_link = $('.edit-venue-link a').attr( 'data-admin-url' );
-
-			if ( selected_venue_id == '0' ) {
-				venueFields.fadeIn();
-				$( "#EventCountry" ).val( 0 ).trigger( "chosen:updated" );
-				$( "#StateProvinceSelect" ).val( 0 ).trigger( "chosen:updated" );
-				tribeShowHideCorrectStateProvinceInput( '' );
-				$('.edit-venue-link').hide();
-			}
-			else {
-				venueFields.fadeOut();
-				$('.edit-venue-link').show();
-
-				// Change edit link
-
-				$('.edit-venue-link a').attr( 'href', current_edit_link + selected_venue_id );
-			}
-		} );
-
-		setup_organizer_fields();
 	}
 
 	//show state/province input based on first option in countries list, or based on user input of country
 
 	var $state_prov_chzn = $( "#StateProvinceSelect_chosen" ),
+		$state_prov_select = $( "#StateProvinceSelect" ),
 		$state_prov_text = $( "#StateProvinceText" );
 
 
 	function tribeShowHideCorrectStateProvinceInput( country ) {
 		if ( country == 'US' || country == 'United States' ) {
 			$state_prov_chzn.show();
+			if ( $state_prov_chzn.length < 1 ) {
+				$state_prov_select.show();
+			}
 			$state_prov_text.hide();
 		}
 		else if ( country != '' ) {
 			$state_prov_text.show();
 			$state_prov_chzn.hide();
+			$state_prov_select.hide();
 		}
 		else {
-			$state_prov_text.hide();
+			$state_prov_text.show();
 			$state_prov_chzn.hide();
+			$state_prov_select.hide();
 		}
 	}
 
@@ -656,40 +786,3 @@ jQuery( document ).ready( function( $ ) {
 	} );
 
 });
-
-
-/**
- * Re-initialize chosen on widgets when moved
- * credits: http://www.johngadbois.com/adding-your-own-callbacks-to-wordpress-ajax-requests/
- */
-jQuery( document ).ajaxSuccess( function( e, xhr, settings ) {
-	if ( typeof settings !== 'undefined' && typeof settings.data !== 'undefined' && settings.data.search( 'action=save-widget' ) != - 1 ) {
-		jQuery( "#widgets-right .chosen" ).chosen();
-	}
-} );
-
-/**
- * Manage the timezone selector user interface.
- */
-jQuery( document ).ready( function( $ ) {
-	var $row           = $( "#EventInfo" ).find( "tr.event-timezone" );
-	var $label         = $row.find( "label" );
-	var $selector      = $row.find( "select" );
-	var $dropdown      = $row.find( ".chosen-container" );
-	var $selector_cell = $selector.parent( "td" );
-
-	var label_text  = $label.html();
-	var selected_tz = $selector.find( "option:selected").html();
-	var tz_link     = "<a href='#' class='change_tz'>" + label_text + " " + selected_tz + "</a>";
-
-	$label.hide();
-	$dropdown.hide();
-
-	$selector_cell.append( tz_link );
-	$selector_cell.find( "a.change_tz" ).click( function( event ) {
-		event.stopImmediatePropagation();
-		$( this ).hide();
-		$dropdown.show();
-		return false;
-	} );
-} );

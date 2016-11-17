@@ -57,6 +57,30 @@ $display_tab_fields = Tribe__Main::array_insert_before_key(
 	)
 );
 
+
+$display_tab_fields = Tribe__Main::array_insert_before_key(
+	'datepickerFormat',
+	$display_tab_fields,
+	array(
+		'dateWithYearFormat'                 => array(
+			'type'            => 'text',
+			'label'           => esc_html__( 'Date with year', 'the-events-calendar' ),
+			'tooltip'         => esc_html__( 'Enter the format to use for displaying dates with the year. Used when displaying a date in a future year.', 'the-events-calendar' ),
+			'default'         => get_option( 'date_format' ),
+			'size'            => 'medium',
+			'validation_type' => 'html',
+		),
+		'dateTimeSeparator'                  => array(
+			'type'            => 'text',
+			'label'           => esc_html__( 'Date time separator', 'the-events-calendar' ),
+			'tooltip'         => esc_html__( 'Enter the separator that will be placed between the date and time, when both are shown.', 'the-events-calendar' ),
+			'default'         => ' @ ',
+			'size'            => 'small',
+			'validation_type' => 'html',
+		),
+	)
+);
+
 $display_tab_fields = Tribe__Main::array_insert_after_key(
 	'dateWithYearFormat',
 	$display_tab_fields,

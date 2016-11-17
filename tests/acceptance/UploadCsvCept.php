@@ -4,9 +4,6 @@ $I = new AcceptanceTester( $scenario );
 $I->am( 'administrator' );
 $I->wantTo( 'Test events CSV import' );
 
-// arrange
-$I->activate_tec();
-
 // act
 $I->loginAsAdmin();
 $I->amOnAdminPage( '/edit.php?post_type=tribe_events&page=events-importer&tab=csv-importer' );
@@ -29,6 +26,7 @@ $I->submitForm( 'form#import',
 	'submit' );
 
 $I->waitForJqueryAjax( 10 );
+$I->wait(2);
 $I->seeElement( '.tribe-import-success' );
 
 $I->amOnAdminPage( '/edit.php?post_type=tribe_events&page=events-importer&tab=csv-importer' );
@@ -48,6 +46,7 @@ $I->submitForm( 'form#import',
 	'submit' );
 
 $I->waitForJqueryAjax( 10 );
+$I->wait(2);
 $I->seeElement( '.tribe-import-success' );
 
 $I->amOnAdminPage( '/edit.php?post_type=tribe_events&page=events-importer&tab=csv-importer' );
@@ -77,6 +76,7 @@ $I->submitForm( 'form#import',
 	'submit' );
 
 $I->waitForJqueryAjax( 10 );
+$I->wait(2);
 
 // assert
 $I->seeElement( '.tribe-import-success' );
